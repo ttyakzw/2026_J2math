@@ -179,7 +179,9 @@ body {
   color: var(--text);
   line-height: 1;
 }
-.hud-val.danger { color: var(--red); }
+.hud-val.danger  { color: var(--red); }
+.hud-correct     { color: var(--correct); }
+.hud-wrong       { color: var(--wrong); }
 .hud-label {
   font-size: 0.6rem;
   letter-spacing: 0.2em;
@@ -546,6 +548,38 @@ body {
 /* section gap */
 .gap { margin-top: 12px; }
 
+/* ===== 正解・不正解サマリー ===== */
+.go-stats {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 20px;
+}
+.go-stat { text-align: center; }
+.go-stat-val {
+  font-family: 'Lora', serif;
+  font-size: 2.2rem;
+  font-weight: 600;
+  line-height: 1;
+}
+.go-stat-val.correct { color: var(--correct); }
+.go-stat-val.wrong   { color: var(--wrong); }
+.go-stat-val.total   { color: var(--muted); }
+.go-stat-label {
+  font-size: 0.65rem;
+  letter-spacing: 0.18em;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-top: 4px;
+}
+.go-stat-sep {
+  font-size: 1.4rem;
+  color: var(--border);
+  font-weight: 300;
+  margin-top: -10px;
+}
+
 /* ===== 名前入力・ログ送信 ===== */
 .name-section {
   padding: 0 24px 0;
@@ -654,13 +688,18 @@ body {
     </div>
     <div class="hud-divider"></div>
     <div class="hud-item">
-      <div class="hud-val" id="hud-combo">×0</div>
-      <div class="hud-label">Combo</div>
+      <div class="hud-val hud-correct" id="hud-correct">0</div>
+      <div class="hud-label">正解</div>
     </div>
     <div class="hud-divider"></div>
     <div class="hud-item">
-      <div class="hud-val" id="hud-score">0</div>
-      <div class="hud-label">Score</div>
+      <div class="hud-val hud-wrong" id="hud-wrong">0</div>
+      <div class="hud-label">不正解</div>
+    </div>
+    <div class="hud-divider"></div>
+    <div class="hud-item">
+      <div class="hud-val" id="hud-combo">×0</div>
+      <div class="hud-label">Combo</div>
     </div>
   </div>
   <div class="timer-bar-wrap">
@@ -683,6 +722,22 @@ body {
     <div class="go-score-wrap">
       <div class="go-score-label">Final Score</div>
       <div class="go-score" id="go-score">0</div>
+    </div>
+    <div class="go-stats">
+      <div class="go-stat">
+        <div class="go-stat-val correct" id="go-correct">0</div>
+        <div class="go-stat-label">正解</div>
+      </div>
+      <div class="go-stat-sep">/</div>
+      <div class="go-stat">
+        <div class="go-stat-val total" id="go-total">0</div>
+        <div class="go-stat-label">問題数</div>
+      </div>
+      <div class="go-stat-sep"> </div>
+      <div class="go-stat">
+        <div class="go-stat-val wrong" id="go-wrong">0</div>
+        <div class="go-stat-label">不正解</div>
+      </div>
     </div>
   </div>
   <div class="mistakes-section">
@@ -763,7 +818,10 @@ function clearTimer() {
 }
 
 function gameOver() {
-  document.getElementById('go-score').textContent = score;
+  document.getElementById('go-score').textContent   = score;
+  document.getElementById('go-correct').textContent = correctQ;
+  document.getElementById('go-wrong').textContent   = wrongQ;
+  document.getElementById('go-total').textContent   = totalQ;
   renderMistakes();
   // 名前欄・送信状態をリセット
   document.getElementById('student-name').value = '';
@@ -862,8 +920,9 @@ function updateHUD() {
   const bar = document.getElementById('timer-bar');
   bar.style.width = (timeLeft / 30 * 100) + '%';
   bar.className = 'timer-bar' + (timeLeft <= 10 ? ' danger' : '');
-  document.getElementById('hud-combo').textContent = '×' + combo;
-  document.getElementById('hud-score').textContent = score;
+  document.getElementById('hud-correct').textContent = correctQ;
+  document.getElementById('hud-wrong').textContent   = wrongQ;
+  document.getElementById('hud-combo').textContent   = '×' + combo;
 }
 
 function showFeedback(correct) {
