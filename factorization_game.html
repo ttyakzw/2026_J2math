@@ -348,20 +348,21 @@ body {
   text-transform: uppercase;
   margin-bottom: 4px;
 }
-.num-row-btns { display: flex; gap: 4px; }
+.num-row-btns { display: flex; flex-wrap: wrap; gap: 4px; }
 .num-btn {
-  flex: 1;
+  flex: 0 0 calc(10% - 4px);
+  min-width: 36px;
   background: var(--surface);
   border: 1.5px solid var(--border);
   border-radius: 8px;
-  padding: 9px 2px;
+  padding: 8px 2px;
   color: var(--text);
   font-family: 'Lora', serif;
-  font-size: 0.9rem;
+  font-size: 0.82rem;
   cursor: pointer;
   text-align: center;
   transition: all 0.15s;
-  min-height: 38px;
+  min-height: 36px;
 }
 .num-btn.sel { background: #f0f4ec; border-color: var(--accent); color: var(--accent); font-weight: 600; }
 .num-btn:active { opacity: 0.7; }
@@ -882,7 +883,7 @@ function handle(correct) {
   totalQ++;
   if (correct) { score++; combo++; correctQ++; }
   else {
-    score = Math.max(0, score - 1); combo = 0; wrongQ++;
+    combo = 0; wrongQ++;  // スコアは下げない（加点制）
     mistakes.push({ text: currentQ.text, answer: currentQ.cf[0] });
   }
   updateHUD();
@@ -1221,7 +1222,7 @@ function checkLv2() {
 }
 
 // --- Lv3 ---
-const PAD_NUMS = [-5,-4,-3,-2,-1,1,2,3,4,5];
+const PAD_NUMS = [-10,-9,-8,-7,-6,-5,-4,-3,-2,-1,1,2,3,4,5,6,7,8,9,10];
 const K_PAD_NUMS = [1,2,3,4,5];
 const AC_PAD_NUMS = [1,2,3];
 
