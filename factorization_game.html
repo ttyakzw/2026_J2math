@@ -313,13 +313,13 @@ body {
   background: var(--surface);
   border: 1.5px solid var(--border);
   border-radius: 8px;
-  padding: 9px 2px;
+  padding: 7px 2px;
   color: var(--text);
-  font-size: 0.78rem;
+  font-size: 0.72rem;
   cursor: pointer;
   text-align: center;
   transition: all 0.15s;
-  min-height: 38px;
+  min-height: 34px;
   display: flex; align-items: center; justify-content: center;
 }
 .option-btn.sel { background: #f0f4ec; border-color: var(--accent); color: var(--accent); }
@@ -1246,26 +1246,34 @@ function renderAnswerArea() {
 // --- Lv2 ---
 const LV2_OPTS = (() => {
   const a = [];
-  for (let n=-6; n<=6; n++) if (n!==0) a.push(`(x${sgn(n)})`);
+  // -10〜+10（0除く）
+  for (let n=-10; n<=10; n++) if (n!==0) a.push(`(x${sgn(n)})`);
   return a;
 })();
 
 function renderLv2(area) {
-  const row1 = LV2_OPTS.slice(0,6), row2 = LV2_OPTS.slice(6);
+  // 20個を5個ずつ4行に分割
+  const rows = [
+    LV2_OPTS.slice(0,5),   // -10〜-6
+    LV2_OPTS.slice(5,10),  // -5〜-1
+    LV2_OPTS.slice(10,15), // +1〜+5
+    LV2_OPTS.slice(15,20), // +6〜+10
+  ];
   const slot = (i) => `<div class="lv2-slot ${lv2sel[i]?'filled':''}" id="lv2slot${i}">
     ${lv2sel[i] ? kString(lv2sel[i]) : '?'}
   </div>`;
   const optBtn = (o, idx) =>
     `<button class="option-btn ${lv2sel[idx]===o?'sel':''}" onclick="lv2pick(${idx},'${o}',this)">${kString(o)}</button>`;
+  const optRows = (idx) => rows.map(row =>
+    `<div class="option-grid">${row.map(o=>optBtn(o,idx)).join('')}</div>`
+  ).join('');
 
   area.innerHTML = `
     <div class="lv2-preview-row">${slot(0)}${slot(1)}</div>
     <div class="opt-section-label">1つ目</div>
-    <div class="option-grid">${row1.map(o=>optBtn(o,0)).join('')}</div>
-    <div class="option-grid">${row2.map(o=>optBtn(o,0)).join('')}</div>
+    ${optRows(0)}
     <div class="opt-section-label gap">2つ目</div>
-    <div class="option-grid">${row1.map(o=>optBtn(o,1)).join('')}</div>
-    <div class="option-grid">${row2.map(o=>optBtn(o,1)).join('')}</div>
+    ${optRows(1)}
     <button class="submit-btn" id="lv2-submit" onclick="checkLv2()"
       ${lv2sel[0]&&lv2sel[1]?'':'disabled'}>決定</button>`;
 }
