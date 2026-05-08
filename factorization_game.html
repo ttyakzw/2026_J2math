@@ -940,7 +940,7 @@ function handle(correct) {
   handling = true;
   showFeedback(correct);
   totalQ++;
-  if (correct) { score++; combo++; correctQ++; }
+  if (correct) { score++; combo++; correctQ++; timeLeft = Math.min(timeLeft + 3, 99); }
   else {
     combo = 0; wrongQ++;  // スコアは下げない（加点制）
     mistakes.push({ text: currentQ.text, answer: currentQ.cf[0] });
@@ -1050,7 +1050,7 @@ function genSumProduct() {
   const B=p+q, C=p*q;
   const text = polyLatex(1, B, C);
   const cf = [`(x${sgn(p)})(x${sgn(q)})`];
-  return { text, cf, expA:1, expB:B, expC:C, type:'sum' };
+  return { text, cf, expA:1, expB:B, expC:C, type:'sum', p, q };
 }
 
 // --- k(x+p)(x+q) 型（共通因数あり） ---
@@ -1136,57 +1136,175 @@ function genLv3() {
 }
 
 // 積 (A)(B) の交換形 (B)(A) を返す
+// 積 k(A)(B) → k(B)(A) に交換（kが無い場合も対応）
 function swapped(expr) {
-  // "(A)(B)" → "(B)(A)" のシンプルな変換
-  // 括弧の対応を取って最初と2番目の因数を入れ替える
+  // 先頭の数字prefix（例: "2"）を抽出
+  const prefixMatch = expr.match(/^(\d+)/);
+  const prefix = prefixMatch ? prefixMatch[1] : '';
+  const body = prefix ? expr.slice(prefix.length) : expr;
+
   const parts = [];
   let depth = 0, start = 0;
-  for (let i = 0; i < expr.length; i++) {
-    if (expr[i] === '(') { if (depth===0) start=i; depth++; }
-    else if (expr[i] === ')') {
+  for (let i = 0; i < body.length; i++) {
+    if (body[i] === '(') { if (depth===0) start=i; depth++; }
+    else if (body[i] === ')') {
       depth--;
       if (depth===0) {
-        // 直後に^{2}が続く場合は含める
         let end = i+1;
-        if (expr.slice(i+1, i+4) === '^{2') end = i+5; // ^{2}
-        parts.push(expr.slice(start, end));
+        if (body.slice(i+1, i+4) === '^{2') end = i+5;
+        parts.push(body.slice(start, end));
         i = end-1;
       }
     }
   }
-  if (parts.length === 2) return parts[1] + parts[0];
-  return expr; // 入れ替え不可なら元のまま
+  if (parts.length === 2) return prefix + parts[1] + parts[0];
+  return expr;
 }
 
-// ダミー選択肢生成（正解の型に合わせて生成・交換形重複も除去）
+// 選択肢を正規化: (x+a)(x+a) → (x+a)^{2} に統一し、交換形も同一視
+function canonicalize(expr) {
+  const prefixMatch = expr.match(/^(\d+)/);
+  const prefix = prefixMatch ? prefixMatch[1] : '';
+  const body = prefix ? expr.slice(prefix.length) : expr;
+  const parts = [];
+  let depth = 0, start = 0;
+  for (let i = 0; i < body.length; i++) {
+    if (body[i] === '(') { if (depth===0) start=i; depth++; }
+    else if (body[i] === ')') {
+      depth--;
+      if (depth===0) {
+        let end = i+1;
+        if (body.slice(i+1, i+4) === '^{2') end = i+5;
+        parts.push(body.slice(start, end));
+        i = end-1;
+      }
+    }
+  }
+  if (parts.length === 2) {
+    // (x+a)(x+a) → (x+a)^{2} に統一
+    const p0 = parts[0].replace(/\^\{2\}$/, '');
+    const p1 = parts[1].replace(/\^\{2\}$/, '');
+    if (p0 === p1) return prefix + p0 + '^{2}';
+    // 交換形をソートして正規化
+    const sorted = [...parts].sort();
+    return prefix + sorted[0] + sorted[1];
+  }
+  // (x+a)^{2} はそのまま
+  return expr;
+}
+
+function normalKey(expr) {
+  return canonicalize(expr);
+}
+
+// 選択肢を表示用に正規化（(x+a)(x+a) → (x+a)^{2}）
+function displayChoice(expr) {
+  return canonicalize(expr);
+}
+
+// ============================================================
+//  ダミー選択肢生成
+//  方針: 積（定数項C）は同じにして符号違い・別の因数ペアを優先的に作る
+//  → 「積に注目したらすぐ正解」を防ぐ
+// ============================================================
+
+// 整数nの約数ペア列挙 (p*q = n, p<=q, p,q≠0, |p|,|q|<=10)
+function factorPairs(n) {
+  const pairs = [];
+  for (let p = -10; p <= 10; p++) {
+    if (p === 0) continue;
+    if (n % p !== 0) continue;
+    const q = n / p;
+    if (Math.abs(q) > 10 || q === 0) continue;
+    pairs.push([p, q]);
+  }
+  return pairs;
+}
+
 function makeChoices(correct, q) {
-  const arr = [...correct];
+  // normalKey で交換形を同一視して重複を完全に防ぐ
   const seen = new Set();
-  for (const c of correct) { seen.add(c); seen.add(swapped(c)); }
+  const addSeen = (s) => seen.add(normalKey(s));
+  const hasSeen = (s) => seen.has(normalKey(s));
+  for (const c of correct) addSeen(c);
 
+  const arr = [...correct];
   const type = q ? q.type : 'sum';
-  let tries = 0;
+  const prefix = (type === 'ksum' && q) ? `${q.k}` : '';
 
-  while (arr.length < 4 && tries < 600) {
+  // --- 優先①: 積Cが同じで別の因数ペア（符号違い含む） ---
+  if (q && q.expC !== 0 && type !== 'ksum') {
+    const C = q.expC;
+    const pairs = factorPairs(C);
+    // シャッフルして多様性を出す
+    pairs.sort(() => Math.random() - 0.5);
+    for (const [p2, q2] of pairs) {
+      if (arr.length >= 4) break;
+      const w  = `(x${sgn(p2)})(x${sgn(q2)})`;
+      const ws = swapped(w);
+      if (!hasSeen(w)) {
+        addSeen(w);
+        arr.push(canonicalize(w));
+      }
+    }
+  }
+
+  // --- 優先②: 符号だけ逆のパターン ---
+  // 正解が (x+p)(x+q) なら (x-p)(x+q), (x+p)(x-q), (-p)(-q)符号逆 など
+  if (q && q.p !== undefined && arr.length < 4) {
+    const signFlips = [
+      [q.p, -q.q],
+      [-q.p, q.q],
+      [-q.p, -q.q],
+    ];
+    for (const [fp, fq] of signFlips) {
+      if (arr.length >= 4) break;
+      if (fp===0||fq===0||Math.abs(fp)>10||Math.abs(fq)>10) continue;
+      const w  = `${prefix}(x${sgn(fp)})(x${sgn(fq)})`;
+      const ws = swapped(w);
+      if (!hasSeen(w)) {
+        addSeen(w);
+        arr.push(canonicalize(w));
+      }
+    }
+  }
+
+  // --- 優先③: 和Bが同じで積が違うペア ---
+  if (q && q.expB !== undefined && type !== 'ksum' && arr.length < 4) {
+    const B = q.expA === 1 ? q.expB : Math.round(q.expB / q.expA);
+    for (let p2 = -10; p2 <= 10 && arr.length < 4; p2++) {
+      if (p2 === 0) continue;
+      const q2 = B - p2;
+      if (q2 === 0 || Math.abs(q2) > 10 || p2 === q2) continue;
+      const w  = `(x${sgn(p2)})(x${sgn(q2)})`;
+      const ws = swapped(w);
+      if (!hasSeen(w)) {
+        addSeen(w);
+        arr.push(canonicalize(w));
+      }
+    }
+  }
+
+  // --- フォールバック: ランダム生成 ---
+  let tries = 0;
+  while (arr.length < 4 && tries < 800) {
     tries++;
     let w;
-    if (type === 'ksum') {
-      // k(x+p)(x+q) 型のダミー: 同じkを使い p,q だけ変える
+    if (type === 'ksum' && q) {
       const dp = randInt(-10,10), dq = randInt(-10,10);
       if (dp===0||dq===0||dp===dq) continue;
       w = `${q.k}(x${sgn(dp)})(x${sgn(dq)})`;
     } else {
-      // (x+p)(x+q) 型のダミー
       const dp = randInt(-10,10), dq = randInt(-10,10);
       if (dp===0||dq===0||dp===dq) continue;
       w = `(x${sgn(dp)})(x${sgn(dq)})`;
     }
-    const ws = swapped(w);
-    if (!seen.has(w) && !seen.has(ws)) {
-      seen.add(w); seen.add(ws);
-      arr.push(w);
+    if (!hasSeen(w)) {
+      addSeen(w);
+      arr.push(canonicalize(w));
     }
   }
+
   return arr.sort(() => Math.random() - 0.5);
 }
 
@@ -1233,7 +1351,7 @@ function renderAnswerArea() {
   if (level === 'lv1') {
     area.innerHTML = `<div class="choices">
       ${currentQ.choices.map((c,i) =>
-        `<button class="choice-btn" onclick="checkLv1(${i})">${kString(c)}</button>`
+        `<button class="choice-btn" onclick="checkLv1(${i})">${kString(canonicalize(c))}</button>`
       ).join('')}
     </div>`;
   } else if (level === 'lv2') {
@@ -1285,7 +1403,8 @@ function lv2pick(idx, val, btn) {
 
 function checkLv2() {
   const ab = lv2sel[0]+lv2sel[1];
-  handle(currentQ.cf.includes(ab) || currentQ.cf.includes(swapped(ab)));
+  const abKey = normalKey(ab);
+  handle(currentQ.cf.some(c => normalKey(c) === abKey));
 }
 
 // --- Lv3 ---
@@ -1347,7 +1466,8 @@ function checkLv3() {
 // --- Lv1 ---
 function checkLv1(idx) {
   const chosen = currentQ.choices[idx];
-  handle(currentQ.cf.includes(chosen) || currentQ.cf.includes(swapped(chosen)));
+  const chosenKey = normalKey(chosen);
+  handle(currentQ.cf.some(c => normalKey(c) === chosenKey));
 }
 
 // ============================================================
