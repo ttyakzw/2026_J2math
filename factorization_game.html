@@ -439,21 +439,48 @@ body {
   margin: 0 auto;
   width: 100%;
 }
-.mistakes-title {
+.mistakes-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: none;
+  border: none;
+  padding: 4px 0 14px;
+  cursor: pointer;
+  gap: 10px;
+}
+#mistakes-toggle-label {
   font-size: 0.68rem;
   letter-spacing: 0.22em;
   color: var(--muted);
   text-transform: uppercase;
-  margin-bottom: 14px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
 }
-.mistakes-title::after {
+#mistakes-toggle-icon {
+  font-size: 0.75rem;
+  color: var(--muted);
+  transition: transform 0.25s;
+  flex-shrink: 0;
+}
+.mistakes-toggle::after {
   content: '';
   flex: 1;
   height: 1px;
   background: var(--border);
+  order: 1;
+}
+#mistakes-toggle-label { order: 0; }
+#mistakes-toggle-icon  { order: 2; }
+
+#mistakes-list {
+  overflow: hidden;
+  max-height: 2000px;
+  transition: max-height 0.3s ease, opacity 0.25s;
+  opacity: 1;
+}
+#mistakes-list.mistakes-closed {
+  max-height: 0;
+  opacity: 0;
 }
 .no-mistakes {
   text-align: center;
@@ -547,6 +574,89 @@ body {
 
 /* section gap */
 .gap { margin-top: 12px; }
+
+/* ===== 一時停止ボタン ===== */
+.pause-btn {
+  background: none;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  padding: 5px 10px;
+  font-family: 'Noto Sans JP', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  color: var(--muted);
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.pause-btn:active { background: var(--border); }
+.pause-btn.pausing {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+/* ===== 一時停止オーバーレイ ===== */
+#pause-overlay {
+  display: none;
+  position: absolute;
+  inset: 0;
+  background: rgba(245,243,238,0.92);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 100;
+  align-items: center;
+  justify-content: center;
+}
+#pause-overlay.active { display: flex; }
+
+#game-screen { position: relative; }
+
+.pause-modal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 36px 32px;
+  width: 88%;
+  max-width: 360px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.08);
+}
+.pause-title {
+  font-size: 1.1rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+  text-align: center;
+  margin-bottom: 4px;
+}
+.pause-modal-btn {
+  width: 100%;
+  padding: 15px;
+  border: none;
+  border-radius: var(--radius);
+  font-family: 'Noto Sans JP', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  letter-spacing: 0.05em;
+  transition: all 0.15s;
+  background: var(--bg);
+  color: var(--text);
+  border: 1.5px solid var(--border);
+}
+.pause-modal-btn:active { opacity: 0.7; }
+.pause-modal-btn.restart {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+.pause-modal-btn.back {
+  color: var(--muted);
+}
 
 /* ===== 正解・不正解サマリー ===== */
 .go-stats {
@@ -701,10 +811,24 @@ body {
       <div class="hud-val" id="hud-combo">×0</div>
       <div class="hud-label">Combo</div>
     </div>
+    <div class="hud-divider"></div>
+    <div class="hud-item">
+      <button class="pause-btn" id="pause-btn" onclick="togglePause()">一時停止</button>
+    </div>
   </div>
   <div class="timer-bar-wrap">
     <div class="timer-bar" id="timer-bar" style="width:100%"></div>
   </div>
+  <!-- 一時停止オーバーレイ -->
+  <div id="pause-overlay">
+    <div class="pause-modal">
+      <div class="pause-title">一時停止</div>
+      <button class="pause-modal-btn" onclick="togglePause()">▶ 再開</button>
+      <button class="pause-modal-btn restart" onclick="confirmRestart()">↺ 再スタート</button>
+      <button class="pause-modal-btn back" onclick="confirmBack()">← レベル選択へ</button>
+    </div>
+  </div>
+
   <div class="game-body">
     <div class="question-card">
       <div class="question-hint">因数分解せよ</div>
@@ -741,8 +865,11 @@ body {
     </div>
   </div>
   <div class="mistakes-section">
-    <div class="mistakes-title">間違えた問題</div>
-    <div id="mistakes-list"></div>
+    <button class="mistakes-toggle" id="mistakes-toggle" onclick="toggleMistakes()">
+      <span id="mistakes-toggle-label">間違えた問題</span>
+      <span id="mistakes-toggle-icon">▼</span>
+    </button>
+    <div id="mistakes-list" class="mistakes-open"></div>
   </div>
   <div class="name-section">
     <div class="name-label">記録を送信する</div>
@@ -778,6 +905,9 @@ let lv2sel = ['', ''];
 let lv3vals = { k:'', a:'', b:'', c:'', d:'' };
 let mistakes = [];   // { text, answer } の配列
 let handling = false;
+let paused = false;
+let lastChoice = null;   // 最後に選んだ選択肢
+let sameCount  = 0;      // 同じ選択肢を連続で押した回数
 
 // ============================================================
 //  画面制御
@@ -792,13 +922,51 @@ function selectLevel(lv, btn) {
   document.querySelectorAll('.level-btn').forEach(b => b.classList.remove('selected'));
   btn.classList.add('selected');
 }
-function backToStart() { clearTimer(); show('start-screen'); }
+function backToStart() { clearTimer(); paused = false; show('start-screen'); }
+
+function togglePause() {
+  paused = !paused;
+  const overlay = document.getElementById('pause-overlay');
+  const btn = document.getElementById('pause-btn');
+  if (paused) {
+    clearTimer();
+    overlay.classList.add('active');
+    btn.textContent = '再開';
+    btn.classList.add('pausing');
+  } else {
+    overlay.classList.remove('active');
+    btn.textContent = '一時停止';
+    btn.classList.remove('pausing');
+    // タイマー再開
+    timerID = setInterval(() => {
+      timeLeft--;
+      updateHUD();
+      if (timeLeft <= 0) { clearTimer(); gameOver(); }
+    }, 1000);
+  }
+}
+
+function confirmRestart() {
+  document.getElementById('pause-overlay').classList.remove('active');
+  const btn = document.getElementById('pause-btn');
+  btn.textContent = '一時停止'; btn.classList.remove('pausing');
+  paused = false;
+  startGame();
+}
+
+function confirmBack() {
+  document.getElementById('pause-overlay').classList.remove('active');
+  const btn = document.getElementById('pause-btn');
+  btn.textContent = '一時停止'; btn.classList.remove('pausing');
+  paused = false;
+  backToStart();
+}
 
 // ============================================================
 //  ゲーム開始・終了
 // ============================================================
 function startGame() {
-  handling = false;
+  handling = false; lastChoice = null; sameCount = 0;
   score = 0; combo = 0; timeLeft = 30;
   totalQ = 0; correctQ = 0; wrongQ = 0;
   mistakes = [];
@@ -831,8 +999,28 @@ function gameOver() {
   show('gameover-screen');
 }
 
+function toggleMistakes() {
+  const list = document.getElementById('mistakes-list');
+  const icon = document.getElementById('mistakes-toggle-icon');
+  const isOpen = !list.classList.contains('mistakes-closed');
+  if (isOpen) {
+    list.classList.add('mistakes-closed');
+    icon.style.transform = 'rotate(-90deg)';
+  } else {
+    list.classList.remove('mistakes-closed');
+    icon.style.transform = 'rotate(0deg)';
+  }
+}
+
 function renderMistakes() {
   const el = document.getElementById('mistakes-list');
+  // トグルラベルにミス数を表示
+  const label = document.getElementById('mistakes-toggle-label');
+  if (label) label.textContent = `間違えた問題（${mistakes.filter((m,i,a)=>a.findIndex(x=>x.text===m.text)===i).length}件）`;
+  // デフォルトで開いた状態
+  document.getElementById('mistakes-list').classList.remove('mistakes-closed');
+  document.getElementById('mistakes-toggle-icon').style.transform = 'rotate(0deg)';
+
   if (mistakes.length === 0) {
     el.innerHTML = '<div class="no-mistakes">ミスなし！パーフェクト 🎉</div>';
     return;
@@ -936,13 +1124,13 @@ function showFeedback(correct) {
 }
 
 function handle(correct) {
-  if (handling) return;
+  if (handling || paused) return;
   handling = true;
   showFeedback(correct);
   totalQ++;
-  if (correct) { score++; combo++; correctQ++; timeLeft = Math.min(timeLeft + 3, 99); }
+  if (correct) { score++; combo++; correctQ++; timeLeft = Math.min(timeLeft + 1, 99); }
   else {
-    combo = 0; wrongQ++;  // スコアは下げない（加点制）
+    combo = 0; wrongQ++; timeLeft = Math.max(timeLeft - 2, 0);  // 不正解で-2秒
     mistakes.push({ text: currentQ.text, answer: currentQ.cf[0] });
   }
   updateHUD();
@@ -1335,6 +1523,7 @@ function generateQuestion() {
 //  次の問題
 // ============================================================
 function nextQuestion() {
+  lastChoice = null; sameCount = 0;
   lv2sel = ['',''];
   lv3vals = {k:'',a:'',b:'',c:'',d:''};
   currentQ = generateQuestion();
@@ -1466,6 +1655,13 @@ function checkLv3() {
 // --- Lv1 ---
 function checkLv1(idx) {
   const chosen = currentQ.choices[idx];
+  // 同じ選択肢を連続5回押したら強制終了
+  if (lastChoice === idx) {
+    sameCount++;
+    if (sameCount >= 5) { clearTimer(); gameOver(); return; }
+  } else {
+    lastChoice = idx; sameCount = 1;
+  }
   const chosenKey = normalKey(chosen);
   handle(currentQ.cf.some(c => normalKey(c) === chosenKey));
 }
