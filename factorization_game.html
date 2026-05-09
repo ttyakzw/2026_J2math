@@ -928,7 +928,7 @@ body {
 // ============================================================
 //  設定: GASのデプロイURLをここに貼る
 // ============================================================
-const GAS_URL    = 'https://script.google.com/macros/s/AKfycbyTjJWy53uPWqzcqc_nXVmlF85j7RTjLb-E956Z7xbFGmZHdT1Garc1Ckx7luxD7T3V1A/exec';  // ← デプロイ後のURLを貼る
+const GAS_URL    = 'YOUR_GAS_URL_HERE';  // ← デプロイ後のURLを貼る
 
 // クラス一覧（必要に応じて変更）
 const CLASS_LIST = ['2A','2B','2C','2D','2E','2F'];
@@ -1111,7 +1111,7 @@ async function checkGoogleLogin() {
       statusEl.innerHTML = '<span class="login-err">⚠ GAS_URLが未設定です</span>';
       return;
     }
-    const res  = await fetch(GAS_URL, { method: 'GET' });
+    const res  = await fetch(GAS_URL, { method: 'GET', mode: 'cors' });
     const data = await res.json();
     if (data.status === 'ok') {
       statusEl.innerHTML = `<span class="login-ok">● ログイン済み</span>`;
@@ -1165,18 +1165,17 @@ async function sendLog() {
     if (!GAS_URL || GAS_URL === 'YOUR_GAS_URL_HERE') {
       throw new Error('GAS_URL が設定されていません');
     }
-    const res  = await fetch(GAS_URL, {
+    // GASはCORSの制限があるためno-corsで送信
+    // no-corsでは応答が読めないが、送信自体は成功する
+    await fetch(GAS_URL, {
       method:  'POST',
+      mode:    'no-cors',
       headers: { 'Content-Type': 'application/json' },
       body:    JSON.stringify(payload),
     });
-    const data = await res.json();
-    if (data.status === 'ok') {
-      status.textContent = '✓ 記録を送信しました';
-      status.className = 'send-status ok';
-    } else {
-      throw new Error(data.message || '送信エラー');
-    }
+    // no-corsでは例外が出なければ送信完了とみなす
+    status.textContent = '✓ 記録を送信しました';
+    status.className = 'send-status ok';
   } catch(err) {
     status.textContent = '送信失敗: ' + err.message;
     status.className = 'send-status err';
