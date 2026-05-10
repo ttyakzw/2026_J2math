@@ -901,11 +901,9 @@ body {
   </div>
   <div class="name-section">
     <div class="name-label">記録を送信する</div>
-    <div class="login-status" id="login-status">
-      <span class="login-checking">● Googleアカウント確認中...</span>
-    </div>
-    <div class="send-form" id="send-form" style="display:none">
-      <div class="send-email-row" id="send-email-row"></div>
+    <div class="login-status" id="login-status" style="display:none"></div>
+    <div class="send-form" id="send-form" style="display:flex; flex-direction:column; gap:0">
+      <div class="send-email-row" id="send-email-row" style="display:none"></div>
       <div class="send-row">
         <select class="send-select" id="student-class" onchange="checkSendReady()">
           <option value="">クラスを選択</option>
@@ -928,7 +926,7 @@ body {
 // ============================================================
 //  設定: GASのデプロイURLをここに貼る
 // ============================================================
-const GAS_URL    = 'https://script.google.com/a/macros/mita-is.ed.jp/s/AKfycby_aG6Rl5GPq-eVq-jfwa9Wqg8AZTUGFHZPvl7pZ8mhm0cE3poXxTGaQz-wsBbnAKMD-Q/exec';  // ← デプロイ後のURLを貼る
+const GAS_URL    = 'https://script.google.com/a/macros/mita-is.ed.jp/s/AKfycbx6tdb6CyXCzGaFo1Q9V19g6mYUGY33HfJYk6Kdvz9Sf_bah67gcMmrJdu9hjBrk2-L8w/exec';  // ← デプロイ後のURLを貼る
 
 // クラス一覧（必要に応じて変更）
 const CLASS_LIST = ['2A','2B','2C','2D','2E','2F'];
@@ -1036,8 +1034,8 @@ function gameOver() {
   document.getElementById('send-btn').disabled = true;
   document.getElementById('send-status').textContent = '';
   document.getElementById('send-status').className = 'send-status';
-  document.getElementById('send-form').style.display = 'none';
-  document.getElementById('login-status').innerHTML = '<span class="login-checking">● Googleアカウント確認中...</span>';
+  document.getElementById('send-form').style.display = 'flex';
+  document.getElementById('login-status').innerHTML = '';
 
   // クラスプルダウン生成
   const sel = document.getElementById('student-class');
@@ -1103,26 +1101,12 @@ function renderMistakes() {
 // ============================================================
 //  ログ送信
 // ============================================================
-// Googleアカウント確認
-async function checkGoogleLogin() {
+// フォームをそのまま表示（GASがサーバー側でメール取得）
+function checkGoogleLogin() {
   const statusEl = document.getElementById('login-status');
-  try {
-    if (!GAS_URL || GAS_URL === 'YOUR_GAS_URL_HERE') {
-      statusEl.innerHTML = '<span class="login-err">⚠ GAS_URLが未設定です</span>';
-      return;
-    }
-    const res  = await fetch(GAS_URL, { method: 'GET', mode: 'cors' });
-    const data = await res.json();
-    if (data.status === 'ok') {
-      statusEl.innerHTML = `<span class="login-ok">● ログイン済み</span>`;
-      document.getElementById('send-email-row').textContent = data.email;
-      document.getElementById('send-form').style.display = 'flex';
-    } else {
-      statusEl.innerHTML = `<span class="login-err">⚠ 学校アカウントでログインしてください</span>`;
-    }
-  } catch(err) {
-    statusEl.innerHTML = `<span class="login-err">⚠ 接続エラー: ${err.message}</span>`;
-  }
+  statusEl.innerHTML = '<span class="login-ok">● 学校アカウントでログイン済みの場合、送信できます</span>';
+  document.getElementById('send-email-row').textContent = '';
+  document.getElementById('send-form').style.display = 'flex';
 }
 
 function checkSendReady() {
