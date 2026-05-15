@@ -926,10 +926,10 @@ body {
 // ============================================================
 //  設定: GASのデプロイURLをここに貼る
 // ============================================================
-const GAS_URL    = 'https://script.google.com/a/macros/mita-is.ed.jp/s/AKfycbxMmxwdJR6mRhKiXN_eLQZ0NVnhBTK5Vi3JK_LkU0kyH6yQYfZFHaxADjHgmLWhA0NmcA/exec';  // ← デプロイ後のURLを貼る
+const GAS_URL    = 'https://script.google.com/macros/s/AKfycbyg--tf55nzMBOoRYtdOFSRjk0GAa7Bm-LMa6ZC-n8qpW9qpFOAmmdTbVWaaG8pCqeeIQ/exec';  // ← デプロイ後のURLを貼る
 
 // クラス一覧（必要に応じて変更）
-const CLASS_LIST = ['2A','2B','2C','2D','2E','2F'];
+const CLASS_LIST = ['2A','2B','2C','2D'];
 
 // ============================================================
 //  状態
@@ -1109,41 +1109,22 @@ function checkGoogleLogin() {
   document.getElementById('send-form').style.display = 'flex';
 }
 
-// フォーム送信（iframe経由でCORSを回避）
-function sendViaForm(url, data) {
+// GASへのデータ送信（URLパラメータ + Image beacon方式）
+function sendViaBeacon(url, data) {
   return new Promise((resolve) => {
-    // 既存のiframe・formを削除
-    ['__gas_iframe','__gas_form'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.remove();
-    });
-
-    const iframe = document.createElement('iframe');
-    iframe.id = '__gas_iframe';
-    iframe.name = '__gas_iframe';
-    iframe.style.display = 'none';
-    document.body.appendChild(iframe);
-
-    const form = document.createElement('form');
-    form.id = '__gas_form';
-    form.method = 'POST';
-    form.action = url;
-    form.target = '__gas_iframe';
-    form.style.display = 'none';
-
-    // データをJSON文字列として1つのフィールドに
-    const input = document.createElement('input');
-    input.type = 'hidden';
-    input.name = 'data';
-    input.value = JSON.stringify(data);
-    form.appendChild(input);
-    document.body.appendChild(form);
-
-    // 送信完了を待つ（iframeのload or タイムアウト）
-    iframe.onload = () => resolve();
-    setTimeout(resolve, 3000); // 3秒でタイムアウト
-
-    form.submit();
+    // 方法1: sendBeacon（最も確実）
+    if (navigator.sendBeacon) {
+      const fd = new FormData();
+      fd.append('data', JSON.stringify(data));
+      const ok = navigator.sendBeacon(url, fd);
+      if (ok) { resolve('beacon'); return; }
+    }
+    // 方法2: Image タグ（GETリクエスト、CORSなし）
+    const params = encodeURIComponent(JSON.stringify(data));
+    const img = new Image();
+    img.onload = img.onerror = () => resolve('image');
+    img.src = `${url}?data=${params}&t=${Date.now()}`;
+    setTimeout(() => resolve('timeout'), 5000);
   });
 }
 
@@ -1188,8 +1169,8 @@ async function sendLog() {
     if (!GAS_URL || GAS_URL === 'YOUR_GAS_URL_HERE') {
       throw new Error('GAS_URL が設定されていません');
     }
-    // iframeを使ってGASにフォーム送信（CORSを完全に回避）
-    await sendViaForm(GAS_URL, payload);
+    // GASへ送信
+    await sendViaBeacon(GAS_URL, payload);
     status.textContent = '✓ 記録を送信しました';
     status.className = 'send-status ok';
   } catch(err) {
