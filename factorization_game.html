@@ -926,7 +926,7 @@ body {
 // ============================================================
 //  設定: GASのデプロイURLをここに貼る
 // ============================================================
-const GAS_URL    = 'https://script.google.com/a/macros/mita-is.ed.jp/s/AKfycbxBMY95BW4oy8RJAfdeGpmyQxV_BLZPVj9zIcWeyUKHi7dV5cJeF1P1ZiXiWOll22K5QQ/exec';  // ← デプロイ後のURLを貼る
+const GAS_URL    = 'https://script.google.com/a/macros/mita-is.ed.jp/s/AKfycbxMmxwdJR6mRhKiXN_eLQZ0NVnhBTK5Vi3JK_LkU0kyH6yQYfZFHaxADjHgmLWhA0NmcA/exec';  // ← デプロイ後のURLを貼る
 
 // クラス一覧（必要に応じて変更）
 const CLASS_LIST = ['2A','2B','2C','2D','2E','2F'];
@@ -935,7 +935,7 @@ const CLASS_LIST = ['2A','2B','2C','2D','2E','2F'];
 //  状態
 // ============================================================
 let level = 'lv1';
-let score = 0, combo = 0, timeLeft = 30;
+let score = 0, combo = 0, maxCombo = 0, timeLeft = 30;
 let totalQ = 0, correctQ = 0, wrongQ = 0;  // 問題数カウンタ
 let timerID = null;
 let currentQ = null;
@@ -1005,7 +1005,7 @@ function confirmBack() {
 // ============================================================
 function startGame() {
   handling = false; lastChoice = null; sameCount = 0;
-  score = 0; combo = 0; timeLeft = 30;
+  score = 0; combo = 0; maxCombo = 0; timeLeft = 30;
   totalQ = 0; correctQ = 0; wrongQ = 0;
   mistakes = [];
   updateHUD();
@@ -1109,6 +1109,44 @@ function checkGoogleLogin() {
   document.getElementById('send-form').style.display = 'flex';
 }
 
+// フォーム送信（iframe経由でCORSを回避）
+function sendViaForm(url, data) {
+  return new Promise((resolve) => {
+    // 既存のiframe・formを削除
+    ['__gas_iframe','__gas_form'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.remove();
+    });
+
+    const iframe = document.createElement('iframe');
+    iframe.id = '__gas_iframe';
+    iframe.name = '__gas_iframe';
+    iframe.style.display = 'none';
+    document.body.appendChild(iframe);
+
+    const form = document.createElement('form');
+    form.id = '__gas_form';
+    form.method = 'POST';
+    form.action = url;
+    form.target = '__gas_iframe';
+    form.style.display = 'none';
+
+    // データをJSON文字列として1つのフィールドに
+    const input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = 'data';
+    input.value = JSON.stringify(data);
+    form.appendChild(input);
+    document.body.appendChild(form);
+
+    // 送信完了を待つ（iframeのload or タイムアウト）
+    iframe.onload = () => resolve();
+    setTimeout(resolve, 3000); // 3秒でタイムアウト
+
+    form.submit();
+  });
+}
+
 function checkSendReady() {
   const name  = document.getElementById('student-name').value.trim();
   const cls   = document.getElementById('student-class').value;
@@ -1139,6 +1177,7 @@ async function sendLog() {
     className: cls,
     level:     levelLabel,
     score,
+    maxCombo,
     total:     totalQ,
     correct:   correctQ,
     wrong:     wrongQ,
@@ -1149,15 +1188,8 @@ async function sendLog() {
     if (!GAS_URL || GAS_URL === 'YOUR_GAS_URL_HERE') {
       throw new Error('GAS_URL が設定されていません');
     }
-    // GASはCORSの制限があるためno-corsで送信
-    // no-corsでは応答が読めないが、送信自体は成功する
-    await fetch(GAS_URL, {
-      method:  'POST',
-      mode:    'no-cors',
-      headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify(payload),
-    });
-    // no-corsでは例外が出なければ送信完了とみなす
+    // iframeを使ってGASにフォーム送信（CORSを完全に回避）
+    await sendViaForm(GAS_URL, payload);
     status.textContent = '✓ 記録を送信しました';
     status.className = 'send-status ok';
   } catch(err) {
@@ -1197,7 +1229,7 @@ function handle(correct) {
   handling = true;
   showFeedback(correct);
   totalQ++;
-  if (correct) { score++; combo++; correctQ++; timeLeft = Math.min(timeLeft + 1, 99); }
+  if (correct) { score++; combo++; correctQ++; timeLeft = Math.min(timeLeft + 1, 99); if (combo > maxCombo) maxCombo = combo; }
   else {
     combo = 0; wrongQ++; timeLeft = Math.max(timeLeft - 2, 0);  // 不正解で-2秒
     mistakes.push({ text: currentQ.text, answer: currentQ.cf[0] });
