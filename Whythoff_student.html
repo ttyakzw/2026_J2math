@@ -206,26 +206,31 @@ body::before {
 
 .stone-grid {
   display: grid;
-  grid-template-columns: repeat(4, 26px);
-  gap: 5px;
-  padding: 10px;
+  grid-template-columns: repeat(4, 36px);
+  gap: 7px;
+  padding: 12px;
   background: rgba(255,255,255,0.03);
   border: 1px solid var(--border);
   border-radius: 10px;
-  min-width: 128px;
-  min-height: 80px;
-  align-content: end;
+  min-width: 172px;
+  min-height: 100px;
+  align-content: start;
   justify-content: center;
-  align-items: end;
+  align-items: start;
 }
 
 .stone {
-  width: 26px;
-  height: 26px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   cursor: pointer;
   transition: transform 0.12s, box-shadow 0.12s;
   position: relative;
+  /* タッチ操作向け: ダブルタップズーム無効・ハイライト消去 */
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
 }
 .stone-a {
   background: radial-gradient(circle at 38% 35%, #f7e080, #b8920a);
@@ -238,13 +243,13 @@ body::before {
 .stone:hover { transform: scale(1.12); }
 .stone.sel-a {
   background: radial-gradient(circle at 38% 35%, #ffdd55, #e8500a);
-  box-shadow: 0 0 12px rgba(232,80,10,0.7), 0 2px 4px rgba(0,0,0,0.4);
-  transform: scale(1.15);
+  box-shadow: 0 0 14px rgba(232,80,10,0.8), 0 2px 4px rgba(0,0,0,0.4);
+  transform: scale(1.18);
 }
 .stone.sel-b {
   background: radial-gradient(circle at 38% 35%, #99f8c0, #0a8a3c);
-  box-shadow: 0 0 12px rgba(10,138,60,0.7), 0 2px 4px rgba(0,0,0,0.4);
-  transform: scale(1.15);
+  box-shadow: 0 0 14px rgba(10,138,60,0.8), 0 2px 4px rgba(0,0,0,0.4);
+  transform: scale(1.18);
 }
 .stone.disabled {
   cursor: default;
@@ -701,42 +706,40 @@ body::before {
 </div><!-- /wrapper -->
 
 <script>
-// ─── State ───────────────────────────────────
+// ─── P位置の計算 ─────────────────────────────
 const PHI = (1 + Math.sqrt(5)) / 2;
 const P_SET = new Set();
-
 (function buildP() {
   for (let n = 0; n <= 35; n++) {
     const a = Math.floor(n * PHI), b = Math.floor(n * PHI * PHI);
     P_SET.add(`${a},${b}`); P_SET.add(`${b},${a}`);
   }
 })();
-
 function isP(a, b) { return P_SET.has(`${a},${b}`); }
 
 function bestMove(a, b) {
-  // find a P-position move
   for (let x = 0; x < a; x++) if (isP(x, b)) return {na:x, nb:b};
   for (let x = 0; x < b; x++) if (isP(a, x)) return {na:a, nb:x};
   for (let d = 1; d <= Math.min(a,b); d++) if (isP(a-d,b-d)) return {na:a-d, nb:b-d};
-  // no winning move: pick min from larger
   if (a >= b && a > 0) return {na:a-1, nb:b};
   if (b > 0) return {na:a, nb:b-1};
   return {na:a, nb:b};
 }
 
+// ─── ゲーム状態 ──────────────────────────────
 let pileA = 7, pileB = 9;
-let selA = 0, selB = 0;
-let player = 1; // 1 or 2
+// selA / selB : 選択された石のインデックスの Set（1個ずつトグル）
+let selA = new Set(), selB = new Set();
+let player = 1;
 let over = false;
-let aiMode = 'none'; // 'none' | 'p2' | 'p1'
-let history = []; // for undo
+let aiMode = 'none';
+let gameHistory = [];
 let prediction = null;
 
-// ─── Render stones ───────────────────────────
+// ─── 描画 ────────────────────────────────────
 function render() {
-  renderPile('a', pileA, selA, 'stone-a', 'sel-a');
-  renderPile('b', pileB, selB, 'stone-b', 'sel-b');
+  renderPile('a');
+  renderPile('b');
   document.getElementById('cnt-a').textContent = pileA;
   document.getElementById('cnt-b').textContent = pileB;
   document.getElementById('header-state').textContent = `山A: ${pileA}個 ／ 山B: ${pileB}個`;
@@ -744,74 +747,72 @@ function render() {
   updateSelInfo();
 }
 
-function renderPile(which, count, sel, baseClass, selClass) {
+function renderPile(which) {
+  const count    = which === 'a' ? pileA : pileB;
+  const selSet   = which === 'a' ? selA  : selB;
+  const baseCls  = which === 'a' ? 'stone-a' : 'stone-b';
+  const selCls   = which === 'a' ? 'sel-a'   : 'sel-b';
   const grid = document.getElementById('grid-' + which);
   grid.innerHTML = '';
+
   for (let i = 0; i < count; i++) {
     const s = document.createElement('div');
-    const selected = i >= count - sel && sel > 0;
-    s.className = 'stone ' + (selected ? selClass : baseClass) + (over ? ' disabled' : '');
-    s.onclick = () => { if (!over) clickStone(which, i); };
+    s.className = 'stone ' + (selSet.has(i) ? selCls : baseCls) + (over ? ' disabled' : '');
+
+    // ── タッチ操作（iPad対応）────────────────
+    // touchend で処理し、直後に来る synthetic click をキャンセル
+    s.addEventListener('touchend', function(e) {
+      e.preventDefault();           // synthetic click の発火を防ぐ
+      e.stopPropagation();
+      toggleStone(which, i);
+    }, { passive: false });
+
+    // ── マウスクリック（PC）─────────────────
+    // isTrusted + pointerType で touch 由来を除外
+    s.addEventListener('click', function(e) {
+      if (!e.isTrusted) return;
+      // PointerEvent が使えるブラウザでは pointerType を確認
+      if (e.pointerType === 'touch') return;
+      toggleStone(which, i);
+    });
+
     grid.appendChild(s);
   }
 }
 
-function clickStone(which, idx) {
+// 石を1個ずつトグル選択
+function toggleStone(which, idx) {
   if (over) return;
   const isAITurn = (aiMode === 'p1' && player === 1) || (aiMode === 'p2' && player === 2);
   if (isAITurn) return;
-
-  const countInPile = which === 'a' ? pileA : pileB;
-  const newSel = countInPile - idx;
-
-  if (which === 'a') {
-    selA = newSel; selB = 0;
+  const targetSet = which === 'a' ? selA : selB;
+  if (targetSet.has(idx)) {
+    targetSet.delete(idx);
   } else {
-    selB = newSel; selA = 0;
+    targetSet.add(idx);
   }
   render();
 }
 
-// Double-click for equal-take (both piles)
-document.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('grid-a').addEventListener('click', e => {
-    if (!e.target.classList.contains('stone')) return;
-    const stones = [...e.target.parentElement.children];
-    const idx = stones.indexOf(e.target);
-    if (selB > 0) { // B already selected: set A to match
-      selA = pileA - idx;
-    }
-    render();
-  });
-  document.getElementById('grid-b').addEventListener('click', e => {
-    if (!e.target.classList.contains('stone')) return;
-    const stones = [...e.target.parentElement.children];
-    const idx = stones.indexOf(e.target);
-    if (selA > 0) { // A already selected: set B to match
-      selB = pileB - idx;
-    }
-    render();
-  });
-});
-
 function updateSelInfo() {
   const info = document.getElementById('sel-info');
-  const btn = document.getElementById('btn-take');
+  const btn  = document.getElementById('btn-take');
   if (over) { btn.disabled = true; return; }
-  if (selA === 0 && selB === 0) {
-    info.textContent = '石をクリックして選択してください（2山目は選択後にクリック）';
+  const cA = selA.size, cB = selB.size;
+  if (cA === 0 && cB === 0) {
+    info.textContent = '石をタップして1個ずつ選択 → 「とる」で確定（両山から同数選ぶと手(ii)）';
     btn.disabled = true;
-  } else if (selA > 0 && selB === 0) {
-    info.textContent = `山A から ${selA} 個 選択中 — 手(i)`;
+  } else if (cA > 0 && cB === 0) {
+    info.textContent = `山A から ${cA} 個 選択中 — 手(i)`;
     btn.disabled = false;
-  } else if (selB > 0 && selA === 0) {
-    info.textContent = `山B から ${selB} 個 選択中 — 手(i)`;
+  } else if (cB > 0 && cA === 0) {
+    info.textContent = `山B から ${cB} 個 選択中 — 手(i)`;
     btn.disabled = false;
-  } else if (selA === selB) {
-    info.textContent = `両山から各 ${selA} 個 選択中 — 手(ii) ✓`;
+  } else if (cA === cB) {
+    info.textContent = `両山から各 ${cA} 個 選択中 — 手(ii) ✓`;
     btn.disabled = false;
   } else {
-    info.textContent = `A:${selA}個 / B:${selB}個 — 手(ii)は同数が必要`;
+    info.textContent = `A:${cA}個 / B:${cB}個 — 手(ii)は同数が必要`;
     btn.disabled = true;
   }
 }
@@ -825,16 +826,21 @@ function updateChips() {
   c2.textContent = (player === 2 && !over ? '▶ ' : '') + 'プレイヤー2';
 }
 
-// ─── Game actions ─────────────────────────────
+// ─── ゲーム操作 ──────────────────────────────
 function takeStones() {
-  if (over || (selA === 0 && selB === 0)) return;
-  if (selA > 0 && selB > 0 && selA !== selB) return;
+  if (over) return;
+  const cA = selA.size, cB = selB.size;
+  if (cA === 0 && cB === 0) return;
+  if (cA > 0 && cB > 0 && cA !== cB) {
+    setStatus('手(ii)は両山から同じ個数をとる必要があります', 'warn');
+    return;
+  }
 
-  history.push({pileA, pileB, player, selA, selB});
+  gameHistory.push({ pileA, pileB, player, selA: new Set(selA), selB: new Set(selB) });
 
-  const dA = selA, dB = selB;
-  pileA -= selA; pileB -= selB;
-  selA = 0; selB = 0;
+  const dA = cA, dB = cB;
+  pileA -= dA; pileB -= dB;
+  selA = new Set(); selB = new Set();
 
   addLog(player, dA, dB, pileA, pileB);
 
@@ -856,32 +862,32 @@ function doAIMove() {
   if (over) return;
   const m = bestMove(pileA, pileB);
   const dA = pileA - m.na, dB = pileB - m.nb;
-  selA = dA; selB = dB;
+  // selA/selB にAIの選択を設定（最後のdA/dB個をSetに入れる）
+  selA = new Set(); selB = new Set();
+  for (let i = pileA - dA; i < pileA; i++) selA.add(i);
+  for (let i = pileB - dB; i < pileB; i++) selB.add(i);
   render();
-  setTimeout(() => {
-    takeStones();
-  }, 500);
+  setTimeout(() => takeStones(), 600);
 }
 
 function endGame(winner) {
   over = true;
-  const cls = winner === 1 ? 'win' : 'lose';
-  setStatus(`🎉 プレイヤー${winner} の勝利！`, cls);
+  setStatus(`🎉 プレイヤー${winner} の勝利！`, winner === 1 ? 'win' : 'lose');
   addLogResult(winner);
   spawnSparkles();
 }
 
 function clearSel() {
-  selA = 0; selB = 0;
+  selA = new Set(); selB = new Set();
   render();
 }
 
 function undoMove() {
-  if (history.length === 0) return;
-  const prev = history.pop();
+  if (gameHistory.length === 0) return;
+  const prev = gameHistory.pop();
   pileA = prev.pileA; pileB = prev.pileB;
   player = prev.player;
-  selA = 0; selB = 0;
+  selA = new Set(); selB = new Set();
   over = false;
   setStatus(`プレイヤー${player} の番`, '');
   render();
@@ -891,16 +897,14 @@ function undoMove() {
 function resetGame() {
   const a = parseInt(document.getElementById('inp-a').value) || 7;
   const b = parseInt(document.getElementById('inp-b').value) || 9;
-  pileA = a; pileB = b;
-  selA = 0; selB = 0;
+  pileA = Math.max(0, Math.min(30, a));
+  pileB = Math.max(0, Math.min(30, b));
+  selA = new Set(); selB = new Set();
   player = 1; over = false;
-  history = [];
-  setStatus(`プレイヤー1 の番 — 石を選んで「とる」を押す`, '');
+  gameHistory = [];
+  setStatus('プレイヤー1 の番 — 石を選んで「とる」を押す', '');
   render();
-
-  if (aiMode === 'p1') {
-    setTimeout(doAIMove, 800);
-  }
+  if (aiMode === 'p1') setTimeout(doAIMove, 800);
 }
 
 function applySetup() {
@@ -910,12 +914,11 @@ function applySetup() {
   resetGame();
 }
 
-// ─── Log ─────────────────────────────────────
+// ─── ログ ────────────────────────────────────
 function addLog(p, dA, dB, rA, rB) {
   const hist = document.getElementById('history');
   const empty = hist.querySelector('.log-empty');
   if (empty) empty.remove();
-
   const el = document.createElement('div');
   const cls = p === 1 ? 'log-p1' : 'log-p2';
   let action;
@@ -941,9 +944,8 @@ function removeLastLog() {
   const hist = document.getElementById('history');
   const entries = hist.querySelectorAll('.log-entry:not(.log-empty)');
   if (entries.length > 0) entries[entries.length-1].remove();
-  if (hist.querySelectorAll('.log-entry').length === 0) {
+  if (hist.querySelectorAll('.log-entry').length === 0)
     hist.innerHTML = '<div class="log-entry log-empty">— まだ手が記録されていません —</div>';
-  }
 }
 
 function clearLog() {
@@ -951,14 +953,14 @@ function clearLog() {
     '<div class="log-entry log-empty">— まだ手が記録されていません —</div>';
 }
 
-// ─── Status ──────────────────────────────────
+// ─── ステータス ───────────────────────────────
 function setStatus(msg, cls) {
   const el = document.getElementById('status');
   el.textContent = msg;
   el.className = 'status-bar' + (cls ? ' ' + cls : '');
 }
 
-// ─── AI mode ─────────────────────────────────
+// ─── AIモード ─────────────────────────────────
 function setAI(mode) {
   aiMode = mode;
   document.querySelectorAll('.ai-btn').forEach(b => b.classList.remove('active'));
@@ -968,14 +970,14 @@ function setAI(mode) {
   resetGame();
 }
 
-// ─── Prediction ──────────────────────────────
+// ─── 予想 ─────────────────────────────────────
 function setPred(p) {
   prediction = p;
   document.getElementById('pred-first').classList.toggle('sel', p === 'first');
   document.getElementById('pred-second').classList.toggle('sel', p === 'second');
 }
 
-// ─── Notes ───────────────────────────────────
+// ─── メモ ─────────────────────────────────────
 function saveNotes() {
   try {
     localStorage.setItem('wythoff-notes', document.getElementById('notes').value);
@@ -985,7 +987,6 @@ function saveNotes() {
     setTimeout(() => note.style.opacity = '0', 2000);
   } catch(e) {}
 }
-
 (function loadNotes() {
   try {
     const saved = localStorage.getItem('wythoff-notes');
@@ -993,7 +994,7 @@ function saveNotes() {
   } catch(e) {}
 })();
 
-// ─── Sparkles ────────────────────────────────
+// ─── 花火 ─────────────────────────────────────
 function spawnSparkles() {
   const emojis = ['✨','⭐','🌟','💫'];
   for (let i = 0; i < 8; i++) {
@@ -1009,35 +1010,8 @@ function spawnSparkles() {
   }
 }
 
-// ─── Override click handlers to support equal-take ──
-// We need to re-attach after DOMContentLoaded
-window.addEventListener('load', () => {
-  const gA = document.getElementById('grid-a');
-  const gB = document.getElementById('grid-b');
-
-  gA.addEventListener('click', e => {
-    if (!e.target.classList.contains('stone') || over) return;
-    const isAI = (aiMode === 'p1' && player === 1) || (aiMode === 'p2' && player === 2);
-    if (isAI) return;
-    const stones = [...gA.querySelectorAll('.stone')];
-    const idx = stones.indexOf(e.target);
-    selA = pileA - idx;
-    // if B already selected and different, allow independent A selection (will need equal check on take)
-    render();
-  });
-
-  gB.addEventListener('click', e => {
-    if (!e.target.classList.contains('stone') || over) return;
-    const isAI = (aiMode === 'p1' && player === 1) || (aiMode === 'p2' && player === 2);
-    if (isAI) return;
-    const stones = [...gB.querySelectorAll('.stone')];
-    const idx = stones.indexOf(e.target);
-    selB = pileB - idx;
-    render();
-  });
-
-  render();
-});
+// ─── 初期化 ───────────────────────────────────
+window.addEventListener('load', () => { render(); });
 </script>
 </body>
 </html>
