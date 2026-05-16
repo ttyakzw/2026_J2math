@@ -427,12 +427,14 @@ body {
 }
 .name-input:focus { border-color: var(--accent); }
 .number-input {
-  width: 72px; flex: none; padding: 12px 8px; text-align: center;
+  width: 80px; flex: none; padding: 12px 8px; text-align: center;
   border: 1.5px solid var(--border); border-radius: var(--radius);
   font-family: 'Lora', serif; font-size: 1rem;
   background: var(--surface); color: var(--text); outline: none; transition: border-color 0.15s;
 }
 .number-input:focus { border-color: var(--accent); }
+.send-row-top { display: flex; gap: 8px; align-items: center; margin-bottom: 0; }
+.send-label-sm { font-size: 0.7rem; color: var(--muted); white-space: nowrap; }
 .send-btn {
   width: 100%; padding: 13px 20px; background: var(--gold); color: #fff; border: none;
   border-radius: var(--radius); font-family: 'Noto Sans JP', sans-serif;
@@ -572,11 +574,15 @@ body {
   <div class="name-section">
     <div class="name-label">記録を送信する</div>
     <div class="send-form" id="send-form">
-      <!-- 行1: 出席番号 ＋ クラス ＋ 名前 -->
-      <div class="send-row">
+      <!-- 行1: 出席番号 -->
+      <div class="send-row-top">
+        <span class="send-label-sm">出席番号</span>
         <input class="number-input" id="student-number" type="number"
-          placeholder="番号" min="1" max="50"
+          placeholder="例: 12" min="1" max="50"
           oninput="checkSendReady()" title="出席番号">
+      </div>
+      <!-- 行2: クラス ＋ 名前 -->
+      <div class="send-row">
         <select class="send-select" id="student-class" onchange="checkSendReady()">
           <option value="">クラス</option>
         </select>
@@ -605,7 +611,7 @@ body {
 // ============================================================
 // 設定
 // ============================================================
-const GAS_URL    = 'https://script.google.com/macros/s/AKfycbzXXAtIRxHERSxwKFFaSCEVAPA3c-AqL9CONXhpgkHorDfz3l6LR9o8vcXAVxpYnxT_rQ/exec';
+const GAS_URL    = 'https://script.google.com/macros/s/AKfycbyg--tf55nzMBOoRYtdOFSRjk0GAa7Bm-LMa6ZC-n8qpW9qpFOAmmdTbVWaaG8pCqeeIQ/exec';
 const CLASS_LIST = ['2A','2B','2C','2D'];
 
 // ============================================================
