@@ -1,0 +1,1017 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>石とりゲーム</title>
+<link href="https://fonts.googleapis.com/css2?family=Kaisei+Decol:wght@400;700&family=Noto+Sans+JP:wght@400;500;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0f1117;
+  --surface: #1a1d27;
+  --surface2: #222636;
+  --border: #2e3348;
+  --accent: #e8c547;
+  --accent2: #5b8dee;
+  --red: #e85d5d;
+  --green: #5dcc8a;
+  --text: #e8e4d8;
+  --muted: #7a7e99;
+  --stone-a: #e8c547;
+  --stone-b: #5b8dee;
+  --serif: 'Kaisei Decol', serif;
+  --sans: 'Noto Sans JP', sans-serif;
+  --mono: 'JetBrains Mono', monospace;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* starfield bg */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    radial-gradient(1px 1px at 15% 20%, rgba(255,255,255,0.25) 0%, transparent 100%),
+    radial-gradient(1px 1px at 45% 10%, rgba(255,255,255,0.15) 0%, transparent 100%),
+    radial-gradient(1px 1px at 70% 35%, rgba(255,255,255,0.2) 0%, transparent 100%),
+    radial-gradient(1px 1px at 85% 15%, rgba(255,255,255,0.12) 0%, transparent 100%),
+    radial-gradient(1px 1px at 30% 60%, rgba(255,255,255,0.1) 0%, transparent 100%),
+    radial-gradient(1px 1px at 60% 75%, rgba(255,255,255,0.18) 0%, transparent 100%),
+    radial-gradient(1px 1px at 90% 55%, rgba(255,255,255,0.12) 0%, transparent 100%),
+    radial-gradient(1px 1px at 10% 85%, rgba(255,255,255,0.15) 0%, transparent 100%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.wrapper { position: relative; z-index: 1; }
+
+/* ── Header ── */
+.header {
+  text-align: center;
+  padding: 2.5rem 1.5rem 1.5rem;
+  border-bottom: 1px solid var(--border);
+}
+.header-eyebrow {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.25em;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-bottom: 0.6rem;
+}
+.header h1 {
+  font-family: var(--serif);
+  font-size: clamp(1.8rem, 5vw, 2.8rem);
+  color: var(--accent);
+  letter-spacing: 0.04em;
+  text-shadow: 0 0 40px rgba(232,197,71,0.35);
+}
+.header-sub {
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin-top: 0.4rem;
+}
+
+/* ── Layout ── */
+.main {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 1.5rem;
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 1.5rem;
+}
+@media (max-width: 760px) {
+  .main { grid-template-columns: 1fr; }
+}
+
+/* ── Panel ── */
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.panel-header {
+  background: var(--surface2);
+  padding: 0.65rem 1.2rem;
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.15em;
+  color: var(--muted);
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.panel-header .dot {
+  width: 7px; height: 7px; border-radius: 50%;
+}
+.dot-yellow { background: var(--accent); box-shadow: 0 0 6px var(--accent); }
+.dot-blue   { background: var(--accent2); box-shadow: 0 0 6px var(--accent2); }
+.dot-green  { background: var(--green); box-shadow: 0 0 6px var(--green); }
+.dot-red    { background: var(--red); box-shadow: 0 0 6px var(--red); }
+
+.panel-body { padding: 1.2rem; }
+
+/* ── Problem statement ── */
+.problem-text {
+  font-size: 0.88rem;
+  line-height: 2;
+  color: #c8c4b8;
+}
+.rule-row {
+  display: flex;
+  gap: 0.6rem;
+  margin: 0.5rem 0;
+  align-items: flex-start;
+}
+.rule-badge {
+  flex-shrink: 0;
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+  background: var(--border);
+  color: var(--accent);
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  margin-top: 0.4rem;
+  letter-spacing: 0.05em;
+}
+.question-block {
+  margin-top: 1rem;
+  border-top: 1px solid var(--border);
+  padding-top: 0.8rem;
+}
+.q-item {
+  display: flex;
+  gap: 0.6rem;
+  margin: 0.4rem 0;
+  font-size: 0.88rem;
+  align-items: flex-start;
+}
+.q-badge {
+  flex-shrink: 0;
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+  background: rgba(232,197,71,0.15);
+  color: var(--accent);
+  border: 1px solid rgba(232,197,71,0.3);
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  margin-top: 0.35rem;
+}
+
+/* ── Game arena ── */
+.arena {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.piles-row {
+  display: flex;
+  gap: 2.5rem;
+  align-items: flex-end;
+  justify-content: center;
+  min-height: 200px;
+}
+
+.pile-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.pile-name {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+}
+
+.stone-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 36px);
+  gap: 7px;
+  padding: 12px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  min-width: 172px;
+  min-height: 100px;
+  align-content: start;
+  justify-content: center;
+  align-items: start;
+}
+
+.stone {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: transform 0.12s, box-shadow 0.12s;
+  position: relative;
+  /* タッチ操作向け: ダブルタップズーム無効・ハイライト消去 */
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.stone-a {
+  background: radial-gradient(circle at 38% 35%, #f7e080, #b8920a);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.5), inset 0 1px 2px rgba(255,255,255,0.2);
+}
+.stone-b {
+  background: radial-gradient(circle at 38% 35%, #90b8f8, #2a5cbf);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.5), inset 0 1px 2px rgba(255,255,255,0.2);
+}
+.stone:hover { transform: scale(1.12); }
+.stone.sel-a {
+  background: radial-gradient(circle at 38% 35%, #ffdd55, #e8500a);
+  box-shadow: 0 0 14px rgba(232,80,10,0.8), 0 2px 4px rgba(0,0,0,0.4);
+  transform: scale(1.18);
+}
+.stone.sel-b {
+  background: radial-gradient(circle at 38% 35%, #99f8c0, #0a8a3c);
+  box-shadow: 0 0 14px rgba(10,138,60,0.8), 0 2px 4px rgba(0,0,0,0.4);
+  transform: scale(1.18);
+}
+.stone.disabled {
+  cursor: default;
+  transform: none !important;
+  opacity: 0.6;
+}
+
+.pile-count {
+  font-family: var(--mono);
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1;
+}
+.count-a { color: var(--accent); text-shadow: 0 0 20px rgba(232,197,71,0.5); }
+.count-b { color: var(--accent2); text-shadow: 0 0 20px rgba(91,141,238,0.5); }
+
+.vs-divider {
+  font-family: var(--serif);
+  font-size: 1.8rem;
+  color: var(--border);
+  padding-bottom: 1.5rem;
+  user-select: none;
+}
+
+/* ── Status bar ── */
+.status-bar {
+  width: 100%;
+  text-align: center;
+  padding: 0.65rem 1rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-family: var(--sans);
+  min-height: 2.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.3s, color 0.3s;
+  background: var(--surface2);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+.status-bar.win {
+  background: rgba(93,204,138,0.15);
+  border-color: var(--green);
+  color: var(--green);
+  font-weight: 700;
+  font-size: 1rem;
+}
+.status-bar.lose {
+  background: rgba(232,93,93,0.15);
+  border-color: var(--red);
+  color: var(--red);
+  font-weight: 700;
+  font-size: 1rem;
+}
+.status-bar.warn {
+  background: rgba(232,197,71,0.12);
+  border-color: rgba(232,197,71,0.4);
+  color: var(--accent);
+}
+
+/* ── Controls ── */
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+  width: 100%;
+}
+
+.btn {
+  font-family: var(--sans);
+  font-size: 0.82rem;
+  font-weight: 500;
+  padding: 0.5rem 1.1rem;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.15s;
+  letter-spacing: 0.02em;
+}
+.btn:hover { border-color: var(--accent); color: var(--accent); }
+.btn.primary {
+  background: var(--accent);
+  color: #1a1200;
+  border-color: var(--accent);
+  font-weight: 700;
+}
+.btn.primary:hover { background: #f0d060; }
+.btn:disabled { opacity: 0.3; cursor: not-allowed; }
+.btn:disabled:hover { border-color: var(--border); color: var(--text); }
+
+/* ── Player indicator ── */
+.player-row {
+  display: flex;
+  gap: 0.8rem;
+  width: 100%;
+  justify-content: center;
+}
+.player-chip {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  padding: 0.3rem 0.8rem;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  transition: all 0.2s;
+}
+.player-chip.active-p1 {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: rgba(232,197,71,0.1);
+  box-shadow: 0 0 12px rgba(232,197,71,0.2);
+}
+.player-chip.active-p2 {
+  border-color: var(--accent2);
+  color: var(--accent2);
+  background: rgba(91,141,238,0.1);
+  box-shadow: 0 0 12px rgba(91,141,238,0.2);
+}
+
+/* ── Selection info ── */
+.sel-info {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  color: var(--muted);
+  text-align: center;
+  min-height: 1.2rem;
+  letter-spacing: 0.05em;
+}
+
+/* ── History log ── */
+.history {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  color: var(--muted);
+  padding: 0 1.2rem 1.2rem;
+  max-height: 220px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.history::-webkit-scrollbar { width: 4px; }
+.history::-webkit-scrollbar-track { background: transparent; }
+.history::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+.log-entry {
+  padding: 0.2rem 0.5rem;
+  border-left: 2px solid var(--border);
+  transition: border-color 0.15s;
+}
+.log-p1 { border-left-color: rgba(232,197,71,0.4); }
+.log-p2 { border-left-color: rgba(91,141,238,0.4); }
+.log-result { border-left-color: var(--green); color: var(--green); font-weight: 700; }
+.log-empty { color: #444; font-style: italic; }
+
+/* ── Notes area ── */
+.notes-area {
+  width: 100%;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  padding: 0.7rem;
+  resize: vertical;
+  min-height: 100px;
+  line-height: 1.7;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.notes-area:focus { border-color: var(--accent2); }
+.notes-area::placeholder { color: var(--muted); }
+
+/* ── Prediction tracker ── */
+.predict-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.82rem;
+}
+.predict-label { color: var(--muted); font-size: 0.78rem; white-space: nowrap; }
+.predict-btn {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.predict-btn.sel { border-color: var(--accent); color: var(--accent); background: rgba(232,197,71,0.1); }
+
+/* ── Custom setup ── */
+.setup-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.setup-label {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  color: var(--muted);
+  letter-spacing: 0.08em;
+}
+.num-input {
+  width: 52px;
+  text-align: center;
+  font-family: var(--mono);
+  font-size: 0.9rem;
+  font-weight: 700;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 0.3rem 0.4rem;
+  border-radius: 5px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.num-input:focus { border-color: var(--accent2); }
+
+/* ── AI mode toggle ── */
+.ai-row {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.ai-label { font-size: 0.78rem; color: var(--muted); font-family: var(--mono); }
+.ai-btn {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.ai-btn.active { border-color: var(--accent2); color: var(--accent2); background: rgba(91,141,238,0.1); }
+
+/* ── Win celebration ── */
+@keyframes sparkle {
+  0%   { opacity: 0; transform: scale(0.3) rotate(0deg); }
+  50%  { opacity: 1; transform: scale(1.1) rotate(180deg); }
+  100% { opacity: 0; transform: scale(0.5) rotate(360deg); }
+}
+.sparkle {
+  position: fixed;
+  pointer-events: none;
+  font-size: 1.5rem;
+  animation: sparkle 1s ease-out forwards;
+  z-index: 100;
+}
+
+/* ── Section label ── */
+.sec-label {
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.18em;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-bottom: 0.5rem;
+}
+
+.divider { border: none; border-top: 1px solid var(--border); margin: 0.8rem 0; }
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body>
+<div class="wrapper">
+
+<div class="header">
+  <div class="header-eyebrow">Game Theory · Exploration</div>
+  <h1>石とりゲーム</h1>
+  <div class="header-sub">ワイソフのゲーム — 必勝法を自分の力で発見しよう</div>
+</div>
+
+<div class="main">
+
+  <!-- ── Left: game ── -->
+  <div style="display:flex;flex-direction:column;gap:1.2rem">
+
+    <!-- Game panel -->
+    <div class="panel">
+      <div class="panel-header">
+        <span class="dot dot-yellow"></span>
+        GAME BOARD
+        <span style="margin-left:auto;font-size:0.68rem" id="header-state">山A: 7個 ／ 山B: 9個</span>
+      </div>
+      <div class="arena">
+
+        <div class="player-row">
+          <div class="player-chip active-p1" id="chip-p1">▶ プレイヤー1</div>
+          <div class="player-chip" id="chip-p2">プレイヤー2</div>
+        </div>
+
+        <div class="piles-row">
+          <div class="pile-col">
+            <div class="pile-name">山 A</div>
+            <div class="stone-grid" id="grid-a"></div>
+            <div class="pile-count count-a" id="cnt-a">7</div>
+          </div>
+          <div class="vs-divider">⚔</div>
+          <div class="pile-col">
+            <div class="pile-name">山 B</div>
+            <div class="stone-grid" id="grid-b"></div>
+            <div class="pile-count count-b" id="cnt-b">9</div>
+          </div>
+        </div>
+
+        <div class="sel-info" id="sel-info">石をクリックして選択してください</div>
+        <div class="status-bar" id="status">プレイヤー1 の番 — 石を選んで「とる」を押す</div>
+
+        <div class="controls">
+          <button class="btn primary" id="btn-take" onclick="takeStones()" disabled>✓ とる</button>
+          <button class="btn" onclick="clearSel()">✗ 解除</button>
+          <button class="btn" onclick="undoMove()">↩ 1手戻す</button>
+          <button class="btn" onclick="resetGame()">↺ リセット</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Setup panel -->
+    <div class="panel">
+      <div class="panel-header">
+        <span class="dot dot-blue"></span>
+        SETUP
+      </div>
+      <div class="panel-body" style="display:flex;flex-direction:column;gap:0.8rem">
+
+        <div>
+          <div class="sec-label">石の個数を自由に設定</div>
+          <div class="setup-row">
+            <span class="setup-label">山A</span>
+            <input type="number" class="num-input" id="inp-a" value="7" min="0" max="30">
+            <span class="setup-label">山B</span>
+            <input type="number" class="num-input" id="inp-b" value="9" min="0" max="30">
+            <button class="btn primary" onclick="applySetup()">セット</button>
+          </div>
+        </div>
+
+        <hr class="divider">
+
+        <div>
+          <div class="sec-label" style="margin-bottom:0.4rem">AIモード</div>
+          <div class="ai-row">
+            <span class="ai-label">相手：</span>
+            <button class="ai-btn active" id="ai-none" onclick="setAI('none')">人</button>
+            <button class="ai-btn" id="ai-p2" onclick="setAI('p2')">AI（後手）</button>
+            <button class="ai-btn" id="ai-p1" onclick="setAI('p1')">AI（先手）</button>
+            <span class="ai-label" style="margin-left:0.3rem" id="ai-note"></span>
+          </div>
+        </div>
+
+        <hr class="divider">
+
+        <div>
+          <div class="sec-label" style="margin-bottom:0.4rem">予想を記録（問(1)・問(2)）</div>
+          <div class="predict-row">
+            <span class="predict-label">現在の設定：</span>
+            <button class="predict-btn" id="pred-first" onclick="setPred('first')">先手必勝</button>
+            <button class="predict-btn" id="pred-second" onclick="setPred('second')">後手必勝</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── Right: side panels ── -->
+  <div style="display:flex;flex-direction:column;gap:1.2rem">
+
+    <!-- Problem -->
+    <div class="panel">
+      <div class="panel-header">
+        <span class="dot dot-yellow"></span>
+        PROBLEM
+      </div>
+      <div class="panel-body">
+        <div class="problem-text">
+          16個の石を<strong>7個と9個</strong>の2山に分ける．2人が交互に次のルールで石をとる．<strong>最後の石をとった人が勝ち．</strong>
+        </div>
+        <div style="margin:0.8rem 0; display:flex;flex-direction:column;gap:0.4rem">
+          <div class="rule-row">
+            <span class="rule-badge">(i)</span>
+            <span class="problem-text">片方の山から，好きな個数だけとる．</span>
+          </div>
+          <div class="rule-row">
+            <span class="rule-badge">(ii)</span>
+            <span class="problem-text">両方の山から，<strong>同じ個数</strong>ずつとる．</span>
+          </div>
+        </div>
+        <div class="question-block">
+          <div class="q-item">
+            <span class="q-badge">Q1</span>
+            <span class="problem-text">両者最善のとき，先手・後手どちらが必勝か？</span>
+          </div>
+          <div class="q-item">
+            <span class="q-badge">Q2</span>
+            <span class="problem-text">16個の分け方を変えると結果はどうなるか？</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- History log -->
+    <div class="panel">
+      <div class="panel-header">
+        <span class="dot dot-blue"></span>
+        MOVE LOG
+        <button onclick="clearLog()" style="margin-left:auto;background:transparent;border:none;color:var(--muted);cursor:pointer;font-size:0.7rem;font-family:var(--mono)">CLR</button>
+      </div>
+      <div class="history" id="history">
+        <div class="log-entry log-empty">— まだ手が記録されていません —</div>
+      </div>
+    </div>
+
+    <!-- Notes -->
+    <div class="panel">
+      <div class="panel-header">
+        <span class="dot dot-green"></span>
+        MY NOTES
+      </div>
+      <div class="panel-body" style="padding-bottom:1rem">
+        <div class="sec-label">気づいたこと・予想・パターンを書こう</div>
+        <textarea class="notes-area" id="notes" placeholder="例：
+・(0,0) になったら負け
+・(1,2) は何をしても…
+・差が一定だと気づいた？
+・黄金比との関係？"></textarea>
+        <div style="text-align:right;margin-top:0.4rem">
+          <button class="btn" onclick="saveNotes()" style="font-size:0.75rem;padding:0.3rem 0.7rem">💾 保存</button>
+          <span id="save-note" style="font-family:var(--mono);font-size:0.7rem;color:var(--green);margin-left:0.5rem;opacity:0;transition:opacity 0.5s"></span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div><!-- /main -->
+
+</div><!-- /wrapper -->
+
+<script>
+// ─── P位置の計算 ─────────────────────────────
+const PHI = (1 + Math.sqrt(5)) / 2;
+const P_SET = new Set();
+(function buildP() {
+  for (let n = 0; n <= 35; n++) {
+    const a = Math.floor(n * PHI), b = Math.floor(n * PHI * PHI);
+    P_SET.add(`${a},${b}`); P_SET.add(`${b},${a}`);
+  }
+})();
+function isP(a, b) { return P_SET.has(`${a},${b}`); }
+
+function bestMove(a, b) {
+  for (let x = 0; x < a; x++) if (isP(x, b)) return {na:x, nb:b};
+  for (let x = 0; x < b; x++) if (isP(a, x)) return {na:a, nb:x};
+  for (let d = 1; d <= Math.min(a,b); d++) if (isP(a-d,b-d)) return {na:a-d, nb:b-d};
+  if (a >= b && a > 0) return {na:a-1, nb:b};
+  if (b > 0) return {na:a, nb:b-1};
+  return {na:a, nb:b};
+}
+
+// ─── ゲーム状態 ──────────────────────────────
+let pileA = 7, pileB = 9;
+// selA / selB : 選択された石のインデックスの Set（1個ずつトグル）
+let selA = new Set(), selB = new Set();
+let player = 1;
+let over = false;
+let aiMode = 'none';
+let gameHistory = [];
+let prediction = null;
+
+// ─── 描画 ────────────────────────────────────
+function render() {
+  renderPile('a');
+  renderPile('b');
+  document.getElementById('cnt-a').textContent = pileA;
+  document.getElementById('cnt-b').textContent = pileB;
+  document.getElementById('header-state').textContent = `山A: ${pileA}個 ／ 山B: ${pileB}個`;
+  updateChips();
+  updateSelInfo();
+}
+
+function renderPile(which) {
+  const count    = which === 'a' ? pileA : pileB;
+  const selSet   = which === 'a' ? selA  : selB;
+  const baseCls  = which === 'a' ? 'stone-a' : 'stone-b';
+  const selCls   = which === 'a' ? 'sel-a'   : 'sel-b';
+  const grid = document.getElementById('grid-' + which);
+  grid.innerHTML = '';
+
+  for (let i = 0; i < count; i++) {
+    const s = document.createElement('div');
+    s.className = 'stone ' + (selSet.has(i) ? selCls : baseCls) + (over ? ' disabled' : '');
+
+    // ── タッチ操作（iPad対応）────────────────
+    // touchend で処理し、直後に来る synthetic click をキャンセル
+    s.addEventListener('touchend', function(e) {
+      e.preventDefault();           // synthetic click の発火を防ぐ
+      e.stopPropagation();
+      toggleStone(which, i);
+    }, { passive: false });
+
+    // ── マウスクリック（PC）─────────────────
+    // isTrusted + pointerType で touch 由来を除外
+    s.addEventListener('click', function(e) {
+      if (!e.isTrusted) return;
+      // PointerEvent が使えるブラウザでは pointerType を確認
+      if (e.pointerType === 'touch') return;
+      toggleStone(which, i);
+    });
+
+    grid.appendChild(s);
+  }
+}
+
+// 石を1個ずつトグル選択
+function toggleStone(which, idx) {
+  if (over) return;
+  const isAITurn = (aiMode === 'p1' && player === 1) || (aiMode === 'p2' && player === 2);
+  if (isAITurn) return;
+  const targetSet = which === 'a' ? selA : selB;
+  if (targetSet.has(idx)) {
+    targetSet.delete(idx);
+  } else {
+    targetSet.add(idx);
+  }
+  render();
+}
+
+function updateSelInfo() {
+  const info = document.getElementById('sel-info');
+  const btn  = document.getElementById('btn-take');
+  if (over) { btn.disabled = true; return; }
+  const cA = selA.size, cB = selB.size;
+  if (cA === 0 && cB === 0) {
+    info.textContent = '石をタップして1個ずつ選択 → 「とる」で確定（両山から同数選ぶと手(ii)）';
+    btn.disabled = true;
+  } else if (cA > 0 && cB === 0) {
+    info.textContent = `山A から ${cA} 個 選択中 — 手(i)`;
+    btn.disabled = false;
+  } else if (cB > 0 && cA === 0) {
+    info.textContent = `山B から ${cB} 個 選択中 — 手(i)`;
+    btn.disabled = false;
+  } else if (cA === cB) {
+    info.textContent = `両山から各 ${cA} 個 選択中 — 手(ii) ✓`;
+    btn.disabled = false;
+  } else {
+    info.textContent = `A:${cA}個 / B:${cB}個 — 手(ii)は同数が必要`;
+    btn.disabled = true;
+  }
+}
+
+function updateChips() {
+  const c1 = document.getElementById('chip-p1');
+  const c2 = document.getElementById('chip-p2');
+  c1.className = 'player-chip' + (player === 1 && !over ? ' active-p1' : '');
+  c2.className = 'player-chip' + (player === 2 && !over ? ' active-p2' : '');
+  c1.textContent = (player === 1 && !over ? '▶ ' : '') + 'プレイヤー1';
+  c2.textContent = (player === 2 && !over ? '▶ ' : '') + 'プレイヤー2';
+}
+
+// ─── ゲーム操作 ──────────────────────────────
+function takeStones() {
+  if (over) return;
+  const cA = selA.size, cB = selB.size;
+  if (cA === 0 && cB === 0) return;
+  if (cA > 0 && cB > 0 && cA !== cB) {
+    setStatus('手(ii)は両山から同じ個数をとる必要があります', 'warn');
+    return;
+  }
+
+  gameHistory.push({ pileA, pileB, player, selA: new Set(selA), selB: new Set(selB) });
+
+  const dA = cA, dB = cB;
+  pileA -= dA; pileB -= dB;
+  selA = new Set(); selB = new Set();
+
+  addLog(player, dA, dB, pileA, pileB);
+
+  if (pileA === 0 && pileB === 0) {
+    endGame(player);
+    render();
+    return;
+  }
+
+  player = player === 1 ? 2 : 1;
+  render();
+  setStatus(`プレイヤー${player} の番`, '');
+
+  const isAITurn = (aiMode === 'p1' && player === 1) || (aiMode === 'p2' && player === 2);
+  if (isAITurn) setTimeout(doAIMove, 700);
+}
+
+function doAIMove() {
+  if (over) return;
+  const m = bestMove(pileA, pileB);
+  const dA = pileA - m.na, dB = pileB - m.nb;
+  // selA/selB にAIの選択を設定（最後のdA/dB個をSetに入れる）
+  selA = new Set(); selB = new Set();
+  for (let i = pileA - dA; i < pileA; i++) selA.add(i);
+  for (let i = pileB - dB; i < pileB; i++) selB.add(i);
+  render();
+  setTimeout(() => takeStones(), 600);
+}
+
+function endGame(winner) {
+  over = true;
+  setStatus(`🎉 プレイヤー${winner} の勝利！`, winner === 1 ? 'win' : 'lose');
+  addLogResult(winner);
+  spawnSparkles();
+}
+
+function clearSel() {
+  selA = new Set(); selB = new Set();
+  render();
+}
+
+function undoMove() {
+  if (gameHistory.length === 0) return;
+  const prev = gameHistory.pop();
+  pileA = prev.pileA; pileB = prev.pileB;
+  player = prev.player;
+  selA = new Set(); selB = new Set();
+  over = false;
+  setStatus(`プレイヤー${player} の番`, '');
+  render();
+  removeLastLog();
+}
+
+function resetGame() {
+  const a = parseInt(document.getElementById('inp-a').value) || 7;
+  const b = parseInt(document.getElementById('inp-b').value) || 9;
+  pileA = Math.max(0, Math.min(30, a));
+  pileB = Math.max(0, Math.min(30, b));
+  selA = new Set(); selB = new Set();
+  player = 1; over = false;
+  gameHistory = [];
+  setStatus('プレイヤー1 の番 — 石を選んで「とる」を押す', '');
+  render();
+  if (aiMode === 'p1') setTimeout(doAIMove, 800);
+}
+
+function applySetup() {
+  prediction = null;
+  document.getElementById('pred-first').classList.remove('sel');
+  document.getElementById('pred-second').classList.remove('sel');
+  resetGame();
+}
+
+// ─── ログ ────────────────────────────────────
+function addLog(p, dA, dB, rA, rB) {
+  const hist = document.getElementById('history');
+  const empty = hist.querySelector('.log-empty');
+  if (empty) empty.remove();
+  const el = document.createElement('div');
+  const cls = p === 1 ? 'log-p1' : 'log-p2';
+  let action;
+  if (dA > 0 && dB === 0) action = `山A から ${dA}個`;
+  else if (dB > 0 && dA === 0) action = `山B から ${dB}個`;
+  else action = `両山から各${dA}個`;
+  el.className = `log-entry ${cls}`;
+  el.textContent = `P${p}: ${action} → (${rA}, ${rB})`;
+  hist.appendChild(el);
+  hist.scrollTop = hist.scrollHeight;
+}
+
+function addLogResult(winner) {
+  const hist = document.getElementById('history');
+  const el = document.createElement('div');
+  el.className = 'log-entry log-result';
+  el.textContent = `★ プレイヤー${winner} 勝利！`;
+  hist.appendChild(el);
+  hist.scrollTop = hist.scrollHeight;
+}
+
+function removeLastLog() {
+  const hist = document.getElementById('history');
+  const entries = hist.querySelectorAll('.log-entry:not(.log-empty)');
+  if (entries.length > 0) entries[entries.length-1].remove();
+  if (hist.querySelectorAll('.log-entry').length === 0)
+    hist.innerHTML = '<div class="log-entry log-empty">— まだ手が記録されていません —</div>';
+}
+
+function clearLog() {
+  document.getElementById('history').innerHTML =
+    '<div class="log-entry log-empty">— まだ手が記録されていません —</div>';
+}
+
+// ─── ステータス ───────────────────────────────
+function setStatus(msg, cls) {
+  const el = document.getElementById('status');
+  el.textContent = msg;
+  el.className = 'status-bar' + (cls ? ' ' + cls : '');
+}
+
+// ─── AIモード ─────────────────────────────────
+function setAI(mode) {
+  aiMode = mode;
+  document.querySelectorAll('.ai-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('ai-' + mode).classList.add('active');
+  const notes = {none:'', p1:'AIが先手で指します（あなたは後手）', p2:'AIが後手で指します（あなたは先手）'};
+  document.getElementById('ai-note').textContent = notes[mode];
+  resetGame();
+}
+
+// ─── 予想 ─────────────────────────────────────
+function setPred(p) {
+  prediction = p;
+  document.getElementById('pred-first').classList.toggle('sel', p === 'first');
+  document.getElementById('pred-second').classList.toggle('sel', p === 'second');
+}
+
+// ─── メモ ─────────────────────────────────────
+function saveNotes() {
+  try {
+    localStorage.setItem('wythoff-notes', document.getElementById('notes').value);
+    const note = document.getElementById('save-note');
+    note.textContent = '✓ 保存済み';
+    note.style.opacity = '1';
+    setTimeout(() => note.style.opacity = '0', 2000);
+  } catch(e) {}
+}
+(function loadNotes() {
+  try {
+    const saved = localStorage.getItem('wythoff-notes');
+    if (saved) document.getElementById('notes').value = saved;
+  } catch(e) {}
+})();
+
+// ─── 花火 ─────────────────────────────────────
+function spawnSparkles() {
+  const emojis = ['✨','⭐','🌟','💫'];
+  for (let i = 0; i < 8; i++) {
+    setTimeout(() => {
+      const el = document.createElement('div');
+      el.className = 'sparkle';
+      el.textContent = emojis[Math.floor(Math.random()*emojis.length)];
+      el.style.left = (20 + Math.random()*60) + 'vw';
+      el.style.top  = (20 + Math.random()*40) + 'vh';
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 1100);
+    }, i * 100);
+  }
+}
+
+// ─── 初期化 ───────────────────────────────────
+window.addEventListener('load', () => { render(); });
+</script>
+</body>
+</html>
