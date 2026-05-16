@@ -11,23 +11,21 @@
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
 <style>
 :root {
-  --bg:      #f4f5f8;
+  --bg: #f4f5f8;
   --surface: #ffffff;
-  --card:    #f8f9fb;
-  --border:  #d0d4de;
-  --accent:  #1a2a4a;   /* MITA ネイビー */
-  --accent2: #2e4a7a;   /* ネイビー明るめ */
-  --red:     #b03a2e;
-  --gold:    #b8960a;   /* MITAゴールド */
-  --text:    #0f1823;
-  --muted:   #5a6478;
+  --card: #f8f9fb;
+  --border: #d0d4de;
+  --accent: #1a2a4a;
+  --accent2: #2e4a7a;
+  --red: #b03a2e;
+  --gold: #b8960a;
+  --text: #0f1823;
+  --muted: #5a6478;
   --correct: #1a5c3a;
-  --wrong:   #b03a2e;
-  --radius:  12px;
+  --wrong: #b03a2e;
+  --radius: 12px;
 }
-
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-
 body {
   background: var(--bg);
   color: var(--text);
@@ -47,11 +45,7 @@ body {
   padding: 60px 28px 48px;
   gap: 0;
 }
-
-.logo-wrap {
-  text-align: center;
-  margin-bottom: 48px;
-}
+.logo-wrap { text-align: center; margin-bottom: 48px; }
 .logo-en {
   font-family: 'Lora', serif;
   font-style: italic;
@@ -67,17 +61,8 @@ body {
   color: var(--text);
   line-height: 1.2;
 }
-.logo-ja span {
-  font-weight: 700;
-  color: var(--gold);
-}
-.logo-line {
-  width: 48px;
-  height: 2px;
-  background: var(--gold);
-  margin: 18px auto 0;
-}
-
+.logo-ja span { font-weight: 700; color: var(--gold); }
+.logo-line { width: 48px; height: 2px; background: var(--gold); margin: 18px auto 0; }
 .section-head {
   font-size: 0.68rem;
   letter-spacing: 0.22em;
@@ -86,7 +71,6 @@ body {
   margin-bottom: 14px;
   text-align: center;
 }
-
 .level-list {
   width: 100%;
   max-width: 480px;
@@ -95,7 +79,6 @@ body {
   gap: 10px;
   margin-bottom: 36px;
 }
-
 .level-btn {
   display: flex;
   align-items: center;
@@ -109,12 +92,8 @@ body {
   text-align: left;
   width: 100%;
 }
-.level-btn.selected {
-  border-color: var(--accent);
-  background: #f0f4ec;
-}
+.level-btn.selected { border-color: var(--accent); background: #f0f4ec; }
 .level-btn:active { opacity: 0.75; }
-
 .level-num {
   width: 36px; height: 36px;
   border-radius: 50%;
@@ -127,22 +106,9 @@ body {
   flex-shrink: 0;
   transition: all 0.18s;
 }
-.level-btn.selected .level-num {
-  background: var(--accent);
-  color: #fff;
-}
-.level-name {
-  font-size: 0.95rem;
-  font-weight: 500;
-  color: var(--text);
-}
-.level-desc {
-  font-size: 0.75rem;
-  color: var(--muted);
-  margin-top: 2px;
-  font-weight: 300;
-}
-
+.level-btn.selected .level-num { background: var(--accent); color: #fff; }
+.level-name { font-size: 0.95rem; font-weight: 500; color: var(--text); }
+.level-desc { font-size: 0.75rem; color: var(--muted); margin-top: 2px; font-weight: 300; }
 .start-btn {
   width: 100%;
   max-width: 480px;
@@ -161,8 +127,7 @@ body {
 .start-btn:active { background: #1e3a0e; }
 
 /* ========== ゲーム画面 ========== */
-#game-screen { display: none; flex-direction: column; min-height: 100vh; }
-
+#game-screen { display: none; flex-direction: column; min-height: 100vh; position: relative; }
 .hud {
   display: flex;
   align-items: center;
@@ -179,29 +144,14 @@ body {
   color: var(--text);
   line-height: 1;
 }
-.hud-val.danger  { color: var(--red); }
-.hud-correct     { color: var(--correct); }
-.hud-wrong       { color: var(--wrong); }
-.hud-label {
-  font-size: 0.6rem;
-  letter-spacing: 0.2em;
-  color: var(--muted);
-  text-transform: uppercase;
-  margin-top: 3px;
-}
-.hud-divider {
-  width: 1px; height: 32px;
-  background: var(--border);
-}
-
+.hud-val.danger { color: var(--red); }
+.hud-correct { color: var(--correct); }
+.hud-wrong { color: var(--wrong); }
+.hud-label { font-size: 0.6rem; letter-spacing: 0.2em; color: var(--muted); text-transform: uppercase; margin-top: 3px; }
+.hud-divider { width: 1px; height: 32px; background: var(--border); }
 .timer-bar-wrap { height: 4px; background: var(--border); }
-.timer-bar {
-  height: 100%;
-  background: var(--accent2);
-  transition: width 0.95s linear, background 0.3s;
-}
+.timer-bar { height: 100%; background: var(--accent2); transition: width 0.95s linear, background 0.3s; }
 .timer-bar.danger { background: var(--red); }
-
 .game-body {
   flex: 1;
   overflow-y: auto;
@@ -221,18 +171,8 @@ body {
   text-align: center;
   margin-bottom: 10px;
 }
-.question-hint {
-  font-size: 0.65rem;
-  letter-spacing: 0.22em;
-  color: var(--muted);
-  text-transform: uppercase;
-  margin-bottom: 14px;
-}
-.question-text {
-  font-size: clamp(1.6rem, 6vw, 2.2rem);
-  color: var(--text);
-  line-height: 1.4;
-}
+.question-hint { font-size: 0.65rem; letter-spacing: 0.22em; color: var(--muted); text-transform: uppercase; margin-bottom: 14px; }
+.question-text { font-size: clamp(1.6rem, 6vw, 2.2rem); color: var(--text); line-height: 1.4; }
 .question-text .katex { font-size: 1em; color: var(--text); }
 
 /* フィードバック */
@@ -249,14 +189,10 @@ body {
 }
 .feedback.show { opacity: 1; }
 .feedback.correct { color: var(--correct); }
-.feedback.wrong   { color: var(--wrong); }
+.feedback.wrong { color: var(--wrong); }
 
 /* Lv1 選択肢 */
-.choices {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
+.choices { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .choice-btn {
   background: var(--surface);
   border: 1.5px solid var(--border);
@@ -275,11 +211,7 @@ body {
 .choice-btn .katex { color: var(--text); font-size: 1em; }
 
 /* Lv2 */
-.lv2-preview-row {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 14px;
-}
+.lv2-preview-row { display: flex; gap: 8px; margin-bottom: 14px; }
 .lv2-slot {
   flex: 1;
   background: var(--surface);
@@ -295,20 +227,8 @@ body {
 }
 .lv2-slot.filled { color: var(--accent); border-color: var(--accent); }
 .lv2-slot .katex { font-size: 1em; color: inherit; }
-
-.opt-section-label {
-  font-size: 0.65rem;
-  letter-spacing: 0.18em;
-  color: var(--muted);
-  text-transform: uppercase;
-  margin-bottom: 6px;
-}
-.option-grid {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 6px;
-  margin-bottom: 6px;
-}
+.opt-section-label { font-size: 0.65rem; letter-spacing: 0.18em; color: var(--muted); text-transform: uppercase; margin-bottom: 6px; }
+.option-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 6px; }
 .option-btn {
   background: var(--surface);
   border: 1.5px solid var(--border);
@@ -341,15 +261,8 @@ body {
 }
 .lv3-preview .katex { font-size: 1em; color: var(--text); }
 .lv3-preview .ph { color: var(--muted); font-style: italic; }
-
 .num-row { margin-bottom: 8px; }
-.num-row-label {
-  font-size: 0.65rem;
-  letter-spacing: 0.15em;
-  color: var(--muted);
-  text-transform: uppercase;
-  margin-bottom: 4px;
-}
+.num-row-label { font-size: 0.65rem; letter-spacing: 0.15em; color: var(--muted); text-transform: uppercase; margin-bottom: 4px; }
 .num-row-btns { display: flex; flex-wrap: wrap; gap: 4px; }
 .num-btn {
   flex: 0 0 calc(10% - 4px);
@@ -368,7 +281,6 @@ body {
 }
 .num-btn.sel { background: #f0f4ec; border-color: var(--accent); color: var(--accent); font-weight: 600; }
 .num-btn:active { opacity: 0.7; }
-
 .submit-btn {
   width: 100%;
   padding: 15px;
@@ -388,26 +300,9 @@ body {
 .submit-btn:not(:disabled):active { background: #1e3a0e; }
 
 /* ========== ゲームオーバー ========== */
-#gameover-screen {
-  display: none;
-  flex-direction: column;
-  min-height: 100vh;
-  overflow-y: auto;
-}
-
-.go-header {
-  padding: 48px 28px 32px;
-  text-align: center;
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
-}
-.go-title {
-  font-size: clamp(1.4rem, 5vw, 2rem);
-  font-weight: 300;
-  letter-spacing: 0.1em;
-  color: var(--text);
-  margin-bottom: 24px;
-}
+#gameover-screen { display: none; flex-direction: column; min-height: 100vh; overflow-y: auto; }
+.go-header { padding: 48px 28px 32px; text-align: center; background: var(--surface); border-bottom: 1px solid var(--border); }
+.go-title { font-size: clamp(1.4rem, 5vw, 2rem); font-weight: 300; letter-spacing: 0.1em; color: var(--text); margin-bottom: 24px; }
 .go-score-wrap {
   display: inline-flex;
   flex-direction: column;
@@ -417,28 +312,11 @@ body {
   border-radius: 16px;
   padding: 16px 40px;
 }
-.go-score-label {
-  font-size: 0.65rem;
-  letter-spacing: 0.22em;
-  color: var(--muted);
-  text-transform: uppercase;
-  margin-bottom: 6px;
-}
-.go-score {
-  font-family: 'Lora', serif;
-  font-size: clamp(3rem, 12vw, 5rem);
-  font-weight: 600;
-  color: var(--gold);
-  line-height: 1;
-}
+.go-score-label { font-size: 0.65rem; letter-spacing: 0.22em; color: var(--muted); text-transform: uppercase; margin-bottom: 6px; }
+.go-score { font-family: 'Lora', serif; font-size: clamp(3rem, 12vw, 5rem); font-weight: 600; color: var(--gold); line-height: 1; }
 
 /* 間違いセクション */
-.mistakes-section {
-  padding: 28px 24px;
-  max-width: 560px;
-  margin: 0 auto;
-  width: 100%;
-}
+.mistakes-section { padding: 28px 24px; max-width: 560px; margin: 0 auto; width: 100%; }
 .mistakes-toggle {
   width: 100%;
   display: flex;
@@ -450,335 +328,125 @@ body {
   cursor: pointer;
   gap: 10px;
 }
-#mistakes-toggle-label {
-  font-size: 0.68rem;
-  letter-spacing: 0.22em;
-  color: var(--muted);
-  text-transform: uppercase;
-}
-#mistakes-toggle-icon {
-  font-size: 0.75rem;
-  color: var(--muted);
-  transition: transform 0.25s;
-  flex-shrink: 0;
-}
-.mistakes-toggle::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: var(--border);
-  order: 1;
-}
+#mistakes-toggle-label { font-size: 0.68rem; letter-spacing: 0.22em; color: var(--muted); text-transform: uppercase; }
+#mistakes-toggle-icon { font-size: 0.75rem; color: var(--muted); transition: transform 0.25s; flex-shrink: 0; }
+.mistakes-toggle::after { content: ''; flex: 1; height: 1px; background: var(--border); order: 1; }
 #mistakes-toggle-label { order: 0; }
-#mistakes-toggle-icon  { order: 2; }
-
-#mistakes-list {
-  overflow: hidden;
-  max-height: 2000px;
-  transition: max-height 0.3s ease, opacity 0.25s;
-  opacity: 1;
-}
-#mistakes-list.mistakes-closed {
-  max-height: 0;
-  opacity: 0;
-}
-.no-mistakes {
-  text-align: center;
-  color: var(--correct);
-  font-size: 0.9rem;
-  padding: 24px;
-  background: #f0f7f4;
-  border-radius: var(--radius);
-  border: 1px solid #c3e6d8;
-}
-.mistake-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-left: 3px solid var(--gold);
-  border-radius: var(--radius);
-  padding: 14px 16px;
-  margin-bottom: 10px;
-}
-.mistake-q {
-  font-size: 0.65rem;
-  letter-spacing: 0.15em;
-  color: var(--muted);
-  text-transform: uppercase;
-  margin-bottom: 6px;
-}
-.mistake-expr {
-  font-size: 1.05rem;
-  margin-bottom: 8px;
-  color: var(--text);
-}
+#mistakes-toggle-icon { order: 2; }
+#mistakes-list { overflow: hidden; max-height: 2000px; transition: max-height 0.3s ease, opacity 0.25s; opacity: 1; }
+#mistakes-list.mistakes-closed { max-height: 0; opacity: 0; }
+.no-mistakes { text-align: center; color: var(--correct); font-size: 0.9rem; padding: 24px; background: #f0f7f4; border-radius: var(--radius); border: 1px solid #c3e6d8; }
+.mistake-card { background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--gold); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 10px; }
+.mistake-q { font-size: 0.65rem; letter-spacing: 0.15em; color: var(--muted); text-transform: uppercase; margin-bottom: 6px; }
+.mistake-expr { font-size: 1.05rem; margin-bottom: 8px; color: var(--text); }
 .mistake-expr .katex { font-size: 1em; color: var(--text); }
-.mistake-ans-label {
-  font-size: 0.65rem;
-  letter-spacing: 0.12em;
-  color: var(--correct);
-  text-transform: uppercase;
-  margin-bottom: 4px;
-}
-.mistake-ans {
-  font-size: 1rem;
-  color: var(--correct);
-}
+.mistake-ans-label { font-size: 0.65rem; letter-spacing: 0.12em; color: var(--correct); text-transform: uppercase; margin-bottom: 4px; }
+.mistake-ans { font-size: 1rem; color: var(--correct); }
 .mistake-ans .katex { font-size: 1em; color: var(--correct); }
 
-.go-btns {
-  padding: 8px 24px 48px;
-  max-width: 560px;
-  margin: 0 auto;
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
+.go-btns { padding: 8px 24px 48px; max-width: 560px; margin: 0 auto; width: 100%; display: flex; flex-direction: column; gap: 10px; }
 .go-btn-retry {
-  padding: 15px;
-  background: var(--accent);
-  color: #fff;
-  border: none;
-  border-radius: var(--radius);
-  font-family: 'Noto Sans JP', sans-serif;
-  font-size: 0.95rem;
-  font-weight: 500;
-  letter-spacing: 0.1em;
-  cursor: pointer;
-  transition: background 0.15s;
+  padding: 15px; background: var(--accent); color: #fff; border: none;
+  border-radius: var(--radius); font-family: 'Noto Sans JP', sans-serif;
+  font-size: 0.95rem; font-weight: 500; letter-spacing: 0.1em; cursor: pointer; transition: background 0.15s;
 }
 .go-btn-retry:active { background: #1e3a0e; }
 .go-btn-back {
-  padding: 14px;
-  background: transparent;
-  color: var(--muted);
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius);
-  font-family: 'Noto Sans JP', sans-serif;
-  font-size: 0.9rem;
-  font-weight: 400;
-  cursor: pointer;
-  transition: all 0.15s;
+  padding: 14px; background: transparent; color: var(--muted);
+  border: 1.5px solid var(--border); border-radius: var(--radius);
+  font-family: 'Noto Sans JP', sans-serif; font-size: 0.9rem; font-weight: 400; cursor: pointer; transition: all 0.15s;
 }
 .go-btn-back:active { background: var(--border); }
 
 /* フラッシュ */
-#flash {
-  position: fixed; inset: 0;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.12s;
-  z-index: 999;
-}
+#flash { position: fixed; inset: 0; pointer-events: none; opacity: 0; transition: opacity 0.12s; z-index: 999; }
 #flash.show { opacity: 1; }
-
-/* section gap */
 .gap { margin-top: 12px; }
 
 /* ===== 一時停止ボタン ===== */
 .pause-btn {
-  background: none;
-  border: 1.5px solid var(--border);
-  border-radius: 8px;
-  padding: 5px 10px;
-  font-family: 'Noto Sans JP', sans-serif;
-  font-size: 0.72rem;
-  font-weight: 500;
-  letter-spacing: 0.08em;
-  cursor: pointer;
-  color: var(--muted);
-  transition: all 0.15s;
-  white-space: nowrap;
+  background: none; border: 1.5px solid var(--border); border-radius: 8px;
+  padding: 5px 10px; font-family: 'Noto Sans JP', sans-serif; font-size: 0.72rem;
+  font-weight: 500; letter-spacing: 0.08em; cursor: pointer; color: var(--muted); transition: all 0.15s; white-space: nowrap;
 }
 .pause-btn:active { background: var(--border); }
-.pause-btn.pausing {
-  background: var(--accent);
-  color: #fff;
-  border-color: var(--accent);
-}
+.pause-btn.pausing { background: var(--accent); color: #fff; border-color: var(--accent); }
 
 /* ===== 一時停止オーバーレイ ===== */
 #pause-overlay {
-  display: none;
-  position: absolute;
-  inset: 0;
-  background: rgba(245,243,238,0.92);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  z-index: 100;
-  align-items: center;
-  justify-content: center;
+  display: none; position: absolute; inset: 0;
+  background: rgba(245,243,238,0.92); backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px); z-index: 100;
+  align-items: center; justify-content: center;
 }
 #pause-overlay.active { display: flex; }
-
-#game-screen { position: relative; }
-
 .pause-modal {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 20px;
-  padding: 36px 32px;
-  width: 88%;
-  max-width: 360px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 20px;
+  padding: 36px 32px; width: 88%; max-width: 360px;
+  display: flex; flex-direction: column; gap: 12px;
   box-shadow: 0 8px 32px rgba(0,0,0,0.08);
 }
-.pause-title {
-  font-size: 1.1rem;
-  font-weight: 500;
-  letter-spacing: 0.1em;
-  color: var(--muted);
-  text-align: center;
-  margin-bottom: 4px;
-}
+.pause-title { font-size: 1.1rem; font-weight: 500; letter-spacing: 0.1em; color: var(--muted); text-align: center; margin-bottom: 4px; }
 .pause-modal-btn {
-  width: 100%;
-  padding: 15px;
-  border: none;
-  border-radius: var(--radius);
-  font-family: 'Noto Sans JP', sans-serif;
-  font-size: 0.95rem;
-  font-weight: 500;
-  cursor: pointer;
-  letter-spacing: 0.05em;
-  transition: all 0.15s;
-  background: var(--bg);
-  color: var(--text);
-  border: 1.5px solid var(--border);
+  width: 100%; padding: 15px; border: none; border-radius: var(--radius);
+  font-family: 'Noto Sans JP', sans-serif; font-size: 0.95rem; font-weight: 500;
+  cursor: pointer; letter-spacing: 0.05em; transition: all 0.15s;
+  background: var(--bg); color: var(--text); border: 1.5px solid var(--border);
 }
 .pause-modal-btn:active { opacity: 0.7; }
-.pause-modal-btn.restart {
-  background: var(--accent);
-  color: #fff;
-  border-color: var(--accent);
-}
-.pause-modal-btn.back {
-  color: var(--muted);
-}
+.pause-modal-btn.restart { background: var(--accent); color: #fff; border-color: var(--accent); }
+.pause-modal-btn.back { color: var(--muted); }
 
-/* ===== 正解・不正解サマリー ===== */
-.go-stats {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  margin-top: 20px;
-}
+/* ===== サマリー ===== */
+.go-stats { display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 20px; }
 .go-stat { text-align: center; }
-.go-stat-val {
-  font-family: 'Lora', serif;
-  font-size: 2.2rem;
-  font-weight: 600;
-  line-height: 1;
-}
+.go-stat-val { font-family: 'Lora', serif; font-size: 2.2rem; font-weight: 600; line-height: 1; }
 .go-stat-val.correct { color: var(--correct); }
-.go-stat-val.wrong   { color: var(--wrong); }
-.go-stat-val.total   { color: var(--muted); }
-.go-stat-label {
-  font-size: 0.65rem;
-  letter-spacing: 0.18em;
-  color: var(--muted);
-  text-transform: uppercase;
-  margin-top: 4px;
-}
-.go-stat-sep {
-  font-size: 1.4rem;
-  color: var(--border);
-  font-weight: 300;
-  margin-top: -10px;
-}
+.go-stat-val.wrong { color: var(--wrong); }
+.go-stat-val.total { color: var(--muted); }
+.go-stat-label { font-size: 0.65rem; letter-spacing: 0.18em; color: var(--muted); text-transform: uppercase; margin-top: 4px; }
+.go-stat-sep { font-size: 1.4rem; color: var(--border); font-weight: 300; margin-top: -10px; }
 
-/* ===== 名前入力・ログ送信 ===== */
-.name-section {
-  padding: 0 24px 0;
-  max-width: 560px;
-  margin: 0 auto;
-  width: 100%;
-}
-.send-row {
-  display: flex;
-  gap: 8px;
-  align-items: stretch;
-  margin-bottom: 10px;
-}
+/* ===== 送信フォーム ===== */
+.name-section { padding: 0 24px 0; max-width: 560px; margin: 0 auto; width: 100%; }
+.name-label { font-size: 0.65rem; letter-spacing: 0.2em; color: var(--muted); text-transform: uppercase; margin-bottom: 8px; }
+.send-form { display: flex; flex-direction: column; gap: 8px; }
+.send-row { display: flex; gap: 8px; align-items: stretch; }
 .send-select {
-  flex: 0 0 90px;
-  padding: 12px 8px;
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius);
-  font-family: 'Noto Sans JP', sans-serif;
-  font-size: 0.9rem;
-  background: var(--surface);
-  color: var(--text);
-  outline: none;
-  cursor: pointer;
+  flex: 0 0 80px; padding: 12px 6px;
+  border: 1.5px solid var(--border); border-radius: var(--radius);
+  font-family: 'Noto Sans JP', sans-serif; font-size: 0.85rem;
+  background: var(--surface); color: var(--text); outline: none; cursor: pointer;
 }
 .send-select:focus { border-color: var(--accent); }
-.login-status {
-  font-size: 0.8rem;
-  margin-bottom: 10px;
-  min-height: 22px;
-}
-.login-checking { color: var(--muted); }
-.login-ok       { color: var(--correct); font-weight: 500; }
-.login-err      { color: var(--wrong); }
-.send-email-row {
-  font-size: 0.75rem;
-  color: var(--muted);
-  margin-bottom: 8px;
-  word-break: break-all;
-}
-.send-form { display: flex; flex-direction: column; gap: 0; }
 .name-input {
-  flex: 1;
-  padding: 12px 14px;
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius);
-  font-family: 'Noto Sans JP', sans-serif;
-  font-size: 0.95rem;
-  background: var(--surface);
-  color: var(--text);
-  outline: none;
-  transition: border-color 0.15s;
+  flex: 1; padding: 12px 14px;
+  border: 1.5px solid var(--border); border-radius: var(--radius);
+  font-family: 'Noto Sans JP', sans-serif; font-size: 0.95rem;
+  background: var(--surface); color: var(--text); outline: none; transition: border-color 0.15s;
 }
 .name-input:focus { border-color: var(--accent); }
+.number-input {
+  width: 72px; flex: none; padding: 12px 8px; text-align: center;
+  border: 1.5px solid var(--border); border-radius: var(--radius);
+  font-family: 'Lora', serif; font-size: 1rem;
+  background: var(--surface); color: var(--text); outline: none; transition: border-color 0.15s;
+}
+.number-input:focus { border-color: var(--accent); }
 .send-btn {
-  padding: 12px 20px;
-  background: var(--gold);
-  color: #fff;
-  border: none;
-  border-radius: var(--radius);
-  font-family: 'Noto Sans JP', sans-serif;
-  font-size: 0.9rem;
-  font-weight: 500;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: background 0.15s;
+  width: 100%; padding: 13px 20px; background: var(--gold); color: #fff; border: none;
+  border-radius: var(--radius); font-family: 'Noto Sans JP', sans-serif;
+  font-size: 0.95rem; font-weight: 500; cursor: pointer; transition: background 0.15s; letter-spacing: 0.05em;
 }
 .send-btn:disabled { background: var(--border); color: var(--muted); cursor: not-allowed; }
 .send-btn:not(:disabled):active { background: #8a7008; }
-.send-status {
-  font-size: 0.8rem;
-  text-align: center;
-  min-height: 22px;
-  color: var(--muted);
-  letter-spacing: 0.05em;
-}
-.send-status.ok   { color: var(--correct); }
-.send-status.err  { color: var(--wrong); }
-.name-label {
-  font-size: 0.65rem;
-  letter-spacing: 0.2em;
-  color: var(--muted);
-  text-transform: uppercase;
-  margin-bottom: 6px;
-}
+.send-status { font-size: 0.8rem; text-align: center; min-height: 22px; color: var(--muted); letter-spacing: 0.05em; margin-top: 2px; }
+.send-status.ok { color: var(--correct); }
+.send-status.err { color: var(--wrong); }
+.field-hint { font-size: 0.7rem; color: var(--muted); margin-top: -4px; }
 </style>
 </head>
 <body>
-
 <div id="flash"></div>
 
 <!-- ========== スタート画面 ========== -->
@@ -788,7 +456,6 @@ body {
     <div class="logo-ja">因数分解<span>トライアル</span></div>
     <div class="logo-line"></div>
   </div>
-
   <div class="section-head">レベルを選択</div>
   <div class="level-list">
     <button class="level-btn selected" onclick="selectLevel('lv1',this)">
@@ -813,7 +480,6 @@ body {
       </div>
     </button>
   </div>
-
   <button class="start-btn" onclick="startGame()">スタート</button>
 </div>
 
@@ -847,6 +513,7 @@ body {
   <div class="timer-bar-wrap">
     <div class="timer-bar" id="timer-bar" style="width:100%"></div>
   </div>
+
   <!-- 一時停止オーバーレイ -->
   <div id="pause-overlay">
     <div class="pause-modal">
@@ -892,6 +559,7 @@ body {
       </div>
     </div>
   </div>
+
   <div class="mistakes-section">
     <button class="mistakes-toggle" id="mistakes-toggle" onclick="toggleMistakes()">
       <span id="mistakes-toggle-label">間違えた問題</span>
@@ -899,23 +567,34 @@ body {
     </button>
     <div id="mistakes-list" class="mistakes-open"></div>
   </div>
+
+  <!-- ===== 記録送信フォーム ===== -->
   <div class="name-section">
     <div class="name-label">記録を送信する</div>
-    <div class="login-status" id="login-status" style="display:none"></div>
-    <div class="send-form" id="send-form" style="display:flex; flex-direction:column; gap:0">
-      <div class="send-email-row" id="send-email-row" style="display:none"></div>
+    <div class="send-form" id="send-form">
+      <!-- 行1: 出席番号 ＋ クラス ＋ 名前 -->
       <div class="send-row">
+        <input class="number-input" id="student-number" type="number"
+          placeholder="番号" min="1" max="50"
+          oninput="checkSendReady()" title="出席番号">
         <select class="send-select" id="student-class" onchange="checkSendReady()">
-          <option value="">クラスを選択</option>
+          <option value="">クラス</option>
         </select>
         <input class="name-input" id="student-name" type="text"
           placeholder="名前（フルネーム）" maxlength="20"
           oninput="checkSendReady()">
       </div>
-      <button class="send-btn" id="send-btn" onclick="sendLog()" disabled>送信</button>
+      <!-- 行2: メールアドレス -->
+      <input class="name-input" id="student-email" type="email"
+        placeholder="学校メールアドレス（例: s12345@mita-is.ed.jp）"
+        maxlength="60"
+        oninput="checkSendReady()">
+      <p class="field-hint">※ 4項目すべて入力すると送信できます</p>
+      <button class="send-btn" id="send-btn" onclick="sendLog()" disabled>送信する</button>
     </div>
     <div class="send-status" id="send-status"></div>
   </div>
+
   <div class="go-btns">
     <button class="go-btn-retry" onclick="startGame()">もう一度</button>
     <button class="go-btn-back" onclick="backToStart()">レベル選択へ戻る</button>
@@ -924,42 +603,42 @@ body {
 
 <script>
 // ============================================================
-//  設定: GASのデプロイURLをここに貼る
+// 設定
 // ============================================================
-const GAS_URL    = 'https://script.google.com/macros/s/AKfycbxoCvB5mCy4cAJPjt2DYkaTNuF-hGnSpnSXO_-Gxg7hEDAhyEO2XYqYO3wzAjd5WLSKdg/exec';  // ← デプロイ後のURLを貼る
-
-// クラス一覧（必要に応じて変更）
+const GAS_URL    = 'https://script.google.com/macros/s/AKfycbyg--tf55nzMBOoRYtdOFSRjk0GAa7Bm-LMa6ZC-n8qpW9qpFOAmmdTbVWaaG8pCqeeIQ/exec';
 const CLASS_LIST = ['2A','2B','2C','2D'];
 
 // ============================================================
-//  状態
+// 状態
 // ============================================================
 let level = 'lv1';
 let score = 0, combo = 0, maxCombo = 0, timeLeft = 30;
-let totalQ = 0, correctQ = 0, wrongQ = 0;  // 問題数カウンタ
+let totalQ = 0, correctQ = 0, wrongQ = 0;
 let timerID = null;
 let currentQ = null;
 let lv2sel = ['', ''];
 let lv3vals = { k:'', a:'', b:'', c:'', d:'' };
-let mistakes = [];   // { text, answer } の配列
+let mistakes = [];
 let handling = false;
 let paused = false;
-let lastChoice = null;   // 最後に選んだ選択肢
-let sameCount  = 0;      // 同じ選択肢を連続で押した回数
+let lastChoice = null;
+let sameCount = 0;
 
 // ============================================================
-//  画面制御
+// 画面制御
 // ============================================================
 function show(id) {
   ['start-screen','game-screen','gameover-screen'].forEach(s => {
     document.getElementById(s).style.display = (s === id) ? 'flex' : 'none';
   });
 }
+
 function selectLevel(lv, btn) {
   level = lv;
   document.querySelectorAll('.level-btn').forEach(b => b.classList.remove('selected'));
   btn.classList.add('selected');
 }
+
 function backToStart() { clearTimer(); paused = false; show('start-screen'); }
 
 function togglePause() {
@@ -975,7 +654,6 @@ function togglePause() {
     overlay.classList.remove('active');
     btn.textContent = '一時停止';
     btn.classList.remove('pausing');
-    // タイマー再開
     timerID = setInterval(() => {
       timeLeft--;
       updateHUD();
@@ -1001,16 +679,37 @@ function confirmBack() {
 }
 
 // ============================================================
-//  ゲーム開始・終了
+// ゲーム開始
 // ============================================================
 function startGame() {
-  handling = false; lastChoice = null; sameCount = 0;
   score = 0; combo = 0; maxCombo = 0; timeLeft = 30;
   totalQ = 0; correctQ = 0; wrongQ = 0;
   mistakes = [];
-  updateHUD();
+  handling = false;
+  currentQ = null;
+  lastChoice = null; sameCount = 0;
+
+  // クラス一覧を動的生成
+  const sel = document.getElementById('student-class');
+  sel.innerHTML = '<option value="">クラス</option>';
+  CLASS_LIST.forEach(c => {
+    const o = document.createElement('option');
+    o.value = o.textContent = c;
+    sel.appendChild(o);
+  });
+
+  // 送信フォームをリセット
+  document.getElementById('student-number').value = '';
+  document.getElementById('student-name').value   = '';
+  document.getElementById('student-email').value  = '';
+  document.getElementById('send-status').textContent = '';
+  document.getElementById('send-status').className   = 'send-status';
+  document.getElementById('send-btn').disabled = true;
+
   show('game-screen');
+  updateHUD();
   nextQuestion();
+
   clearTimer();
   timerID = setInterval(() => {
     timeLeft--;
@@ -1019,826 +718,524 @@ function startGame() {
   }, 1000);
 }
 
-function clearTimer() {
-  if (timerID) { clearInterval(timerID); timerID = null; }
-}
+function clearTimer() { if (timerID) { clearInterval(timerID); timerID = null; } }
 
-function gameOver() {
-  document.getElementById('go-score').textContent   = score;
-  document.getElementById('go-correct').textContent = correctQ;
-  document.getElementById('go-wrong').textContent   = wrongQ;
-  document.getElementById('go-total').textContent   = totalQ;
-  renderMistakes();
-  // 送信フォームリセット
-  document.getElementById('student-name').value = '';
-  document.getElementById('send-btn').disabled = true;
-  document.getElementById('send-status').textContent = '';
-  document.getElementById('send-status').className = 'send-status';
-  document.getElementById('send-form').style.display = 'flex';
-  document.getElementById('login-status').innerHTML = '';
-
-  // クラスプルダウン生成
-  const sel = document.getElementById('student-class');
-  sel.innerHTML = '<option value="">クラスを選択</option>';
-  CLASS_LIST.forEach(c => {
-    const opt = document.createElement('option');
-    opt.value = c; opt.textContent = c;
-    sel.appendChild(opt);
-  });
-
-  // Googleアカウント確認（GETリクエスト）
-  checkGoogleLogin();
-  show('gameover-screen');
-}
-
-function toggleMistakes() {
-  const list = document.getElementById('mistakes-list');
-  const icon = document.getElementById('mistakes-toggle-icon');
-  const isOpen = !list.classList.contains('mistakes-closed');
-  if (isOpen) {
-    list.classList.add('mistakes-closed');
-    icon.style.transform = 'rotate(-90deg)';
-  } else {
-    list.classList.remove('mistakes-closed');
-    icon.style.transform = 'rotate(0deg)';
-  }
-}
-
-function renderMistakes() {
-  const el = document.getElementById('mistakes-list');
-  // トグルラベルにミス数を表示
-  const label = document.getElementById('mistakes-toggle-label');
-  if (label) label.textContent = `間違えた問題（${mistakes.filter((m,i,a)=>a.findIndex(x=>x.text===m.text)===i).length}件）`;
-  // デフォルトで開いた状態
-  document.getElementById('mistakes-list').classList.remove('mistakes-closed');
-  document.getElementById('mistakes-toggle-icon').style.transform = 'rotate(0deg)';
-
-  if (mistakes.length === 0) {
-    el.innerHTML = '<div class="no-mistakes">ミスなし！パーフェクト 🎉</div>';
-    return;
-  }
-  // 重複除去（同じ問題を複数回間違えても1回だけ表示）
-  const seen = new Set();
-  const unique = mistakes.filter(m => {
-    if (seen.has(m.text)) return false;
-    seen.add(m.text);
-    return true;
-  });
-  el.innerHTML = unique.map((m, i) => {
-    const qEl = document.createElement('span');
-    const aEl = document.createElement('span');
-    try { katex.render(m.text,   qEl, { throwOnError: false }); } catch(e) { qEl.textContent = m.text; }
-    try { katex.render(m.answer, aEl, { throwOnError: false }); } catch(e) { aEl.textContent = m.answer; }
-    return `<div class="mistake-card">
-      <div class="mistake-q">問題 ${i+1}</div>
-      <div class="mistake-expr">${qEl.outerHTML}</div>
-      <div class="mistake-ans-label">正解</div>
-      <div class="mistake-ans">${aEl.outerHTML}</div>
-    </div>`;
-  }).join('');
-}
-
-// ============================================================
-//  ログ送信
-// ============================================================
-// フォームをそのまま表示（GASがサーバー側でメール取得）
-function checkGoogleLogin() {
-  const statusEl = document.getElementById('login-status');
-  statusEl.innerHTML = '<span class="login-ok">● 学校アカウントでログイン済みの場合、送信できます</span>';
-  document.getElementById('send-email-row').textContent = '';
-  document.getElementById('send-form').style.display = 'flex';
-}
-
-// GASへのデータ送信（URLパラメータ + Image beacon方式）
-function sendViaBeacon(url, data) {
-  return new Promise((resolve) => {
-    // 方法1: sendBeacon（最も確実）
-    if (navigator.sendBeacon) {
-      const fd = new FormData();
-      fd.append('data', JSON.stringify(data));
-      const ok = navigator.sendBeacon(url, fd);
-      if (ok) { resolve('beacon'); return; }
-    }
-    // 方法2: Image タグ（GETリクエスト、CORSなし）
-    const params = encodeURIComponent(JSON.stringify(data));
-    const img = new Image();
-    img.onload = img.onerror = () => resolve('image');
-    img.src = `${url}?data=${params}&t=${Date.now()}`;
-    setTimeout(() => resolve('timeout'), 5000);
-  });
-}
-
-function checkSendReady() {
-  const name  = document.getElementById('student-name').value.trim();
-  const cls   = document.getElementById('student-class').value;
-  document.getElementById('send-btn').disabled = !(name && cls);
-}
-
-async function sendLog() {
-  const name  = document.getElementById('student-name').value.trim();
-  const cls   = document.getElementById('student-class').value;
-  if (!name || !cls) return;
-
-  const btn    = document.getElementById('send-btn');
-  const status = document.getElementById('send-status');
-  btn.disabled = true;
-  status.textContent = '送信中...';
-  status.className = 'send-status';
-
-  const levelLabel = { lv1:'Lv1 4択', lv2:'Lv2 4択(たすき掛け)', lv3:'Lv3 係数入力' }[level] || level;
-
-  const seen = new Set();
-  const uniqueMistakes = mistakes.filter(m => {
-    if (seen.has(m.text)) return false;
-    seen.add(m.text); return true;
-  }).map(m => ({ question: m.text, answer: m.answer }));
-
-  const payload = {
-    name,
-    className: cls,
-    level:     levelLabel,
-    score,
-    maxCombo,
-    total:     totalQ,
-    correct:   correctQ,
-    wrong:     wrongQ,
-    mistakes:  uniqueMistakes,
-  };
-
-  try {
-    if (!GAS_URL || GAS_URL === 'YOUR_GAS_URL_HERE') {
-      throw new Error('GAS_URL が設定されていません');
-    }
-    // GASへ送信
-    await sendViaBeacon(GAS_URL, payload);
-    status.textContent = '✓ 記録を送信しました';
-    status.className = 'send-status ok';
-  } catch(err) {
-    status.textContent = '送信失敗: ' + err.message;
-    status.className = 'send-status err';
-    btn.disabled = false;
-  }
-}
-
-// ============================================================
-//  HUD・フィードバック
-// ============================================================
 function updateHUD() {
-  const t = document.getElementById('hud-time');
-  t.textContent = timeLeft;
-  t.className = 'hud-val' + (timeLeft <= 10 ? ' danger' : '');
+  const pct = Math.max(0, timeLeft / 30 * 100);
   const bar = document.getElementById('timer-bar');
-  bar.style.width = (timeLeft / 30 * 100) + '%';
-  bar.className = 'timer-bar' + (timeLeft <= 10 ? ' danger' : '');
+  bar.style.width = pct + '%';
+  const danger = timeLeft <= 10;
+  bar.classList.toggle('danger', danger);
+
+  const tv = document.getElementById('hud-time');
+  tv.textContent = Math.max(0, timeLeft);
+  tv.classList.toggle('danger', danger);
+
   document.getElementById('hud-correct').textContent = correctQ;
   document.getElementById('hud-wrong').textContent   = wrongQ;
   document.getElementById('hud-combo').textContent   = '×' + combo;
 }
 
-function showFeedback(correct) {
-  const fb = document.getElementById('feedback');
-  fb.textContent = correct ? '正解' : '不正解';
-  fb.className = 'feedback show ' + (correct ? 'correct' : 'wrong');
-  const fl = document.getElementById('flash');
-  fl.style.background = correct ? 'rgba(45,106,79,0.08)' : 'rgba(192,57,43,0.08)';
-  fl.classList.add('show');
-  setTimeout(() => { fb.className = 'feedback'; fl.classList.remove('show'); }, 650);
-}
-
-function handle(correct) {
-  if (handling || paused) return;
-  handling = true;
-  showFeedback(correct);
-  totalQ++;
-  if (correct) { score++; combo++; correctQ++; timeLeft = Math.min(timeLeft + 1, 99); if (combo > maxCombo) maxCombo = combo; }
-  else {
-    combo = 0; wrongQ++; timeLeft = Math.max(timeLeft - 2, 0);  // 不正解で-2秒
-    mistakes.push({ text: currentQ.text, answer: currentQ.cf[0] });
-  }
-  updateHUD();
-  setTimeout(() => { handling = false; nextQuestion(); }, 700);
-}
-
 // ============================================================
-//  KaTeX描画
+// 問題生成
 // ============================================================
-function kRender(latex, el) {
-  try { katex.render(latex, el, { throwOnError: false, displayMode: false }); }
-  catch(e) { el.textContent = latex; }
-}
-function kString(latex) {
-  try { return katex.renderToString(latex, { throwOnError: false }); }
-  catch(e) { return latex; }
-}
-function setQuestion(latex) {
-  kRender(latex, document.getElementById('question-text'));
-}
-
-// ============================================================
-//  数学ヘルパー
-// ============================================================
-function gcd(a, b) { a=Math.abs(a); b=Math.abs(b); while(b){[a,b]=[b,a%b];} return a; }
 function randInt(a, b) { return Math.floor(Math.random() * (b - a + 1)) + a; }
-
-// 符号付き整数 → LaTeX符号文字列 (+3, -3)
-function sgn(n) { return n >= 0 ? `+${n}` : `${n}`; }
-
-// x の係数 → LaTeX項文字列
-//   xTerm(3)  → "+3x"
-//   xTerm(1)  → "+x"
-//   xTerm(-1) → "-x"
-//   xTerm(0)  → ""
-function xTerm(c) {
-  if (c === 0)  return '';
-  if (c === 1)  return '+x';
-  if (c === -1) return '-x';
-  return c > 0 ? `+${c}x` : `${c}x`;
-}
-
-// 定数 → LaTeX項文字列
-function cTerm(n) {
-  if (n === 0) return '';
-  return n > 0 ? `+${n}` : `${n}`;
-}
-
-// 多項式 Ax^2 + Bx + C を LaTeX文字列に
-function polyLatex(A, B, C) {
-  let s = '';
-  // x^{2} 項
-  if (A === 1)       s += 'x^{2}';
-  else if (A === -1) s += '-x^{2}';
-  else if (A !== 0)  s += `${A}x^{2}`;
-  // x 項
-  s += xTerm(B);
-  // 定数項
-  s += cTerm(C);
-  return s || '0';
-}
-
-// 1次式 ax + b → LaTeX（先頭項として）
-function linLatex(a, b) {
-  let s = '';
-  if (a === 1)       s += 'x';
-  else if (a === -1) s += '-x';
-  else               s += `${a}x`;
-  s += cTerm(b);
-  return s;
-}
-
-// 因数リスト → LaTeX積文字列 例: ["(x+2)","(x-3)"] → "(x+2)(x-3)"
-function factorsToLatex(factors) {
-  return factors.join('');
-}
-
-// ============================================================
-//  共通因数の括り出し（全問題共通前処理）
-//
-//  入力: 展開済み多項式の係数リスト [A, B, C, ...] （0除く整数）
-//  出力: { k, reduced: [a, b, c, ...] }
-//   k > 0, reduced の GCD = 1
-// ============================================================
-function extractGCD(coeffs) {
-  const nonzero = coeffs.filter(c => c !== 0);
-  if (nonzero.length === 0) return { k: 1, reduced: coeffs };
-  let g = Math.abs(nonzero[0]);
-  for (let i = 1; i < nonzero.length; i++) g = gcd(g, Math.abs(nonzero[i]));
-  // 先頭の係数が正になるよう符号調整
-  const sign = nonzero[0] < 0 ? -1 : 1;
-  g = g * sign;
-  return { k: g, reduced: coeffs.map(c => c / g) };
-}
-
-// ============================================================
-//  問題生成
-// ============================================================
-
-// --- (x+p)(x+q) 型 ---
-function genSumProduct() {
-  let p, q;
-  // p,q が因数の定数部分 → -10〜10、0除外、重複除外
-  do { p = randInt(-10, 10); q = randInt(-10, 10); } while (p===0 || q===0 || p===q);
-  const B=p+q, C=p*q;
-  const text = polyLatex(1, B, C);
-  const cf = [`(x${sgn(p)})(x${sgn(q)})`];
-  return { text, cf, expA:1, expB:B, expC:C, type:'sum', p, q };
-}
-
-// --- k(x+p)(x+q) 型（共通因数あり） ---
-function genKSumProduct() {
-  let k, p, q;
-  do {
-    k = randInt(2, 5);
-    p = randInt(-10, 10);
-    q = randInt(-10, 10);
-  } while (p===0 || q===0 || p===q);
-  const A=k, B=k*(p+q), C=k*p*q;
-  const text = polyLatex(A, B, C);
-  const cf = [`${k}(x${sgn(p)})(x${sgn(q)})`];
-  return { text, cf, expA:A, expB:B, expC:C, type:'ksum', k, p, q };
-}
-
-// --- たすき掛け (ax+b)(cx+d) 型 (a,c≠1 かつ GCD=1保証) ---
-function genTasuki() {
-  let a, b, c, d;
-  let tries = 0;
-  do {
-    // a,c は2か3（少なくとも一方が2以上）
-    a = randInt(1, 3);
-    c = randInt(1, 3);
-    b = randInt(-10, 10);
-    d = randInt(-10, 10);
-    tries++;
-  } while (
-    b === 0 || d === 0 ||
-    (a === 1 && c === 1) ||  // 両方1はLv1と同じなので除外
-    tries > 300
-  );
-  const eA = a*c, eB = a*d + b*c, eC = b*d;
-  const text = polyLatex(eA, eB, eC);
-  const f1 = `(${linLatex(a,b)})(${linLatex(c,d)})`;
-  const cf = [f1];
-  return { text, cf, expA:eA, expB:eB, expC:eC, type:'tasuki', ta:a, tb:b, tc:c, td:d };
-}
-
-// --- 共通因数 k(ax+b) 型 ---
-function genCommonFactor() {
-  let k, a, b;
-  let tries = 0;
-  do {
-    k = randInt(2, 6);
-    a = randInt(1, 5);     // aは正
-    b = randInt(-10, 10);  // 因数の定数 → -10〜10
-    tries++;
-  } while (b===0 || gcd(a, Math.abs(b)) !== 1 || tries > 300);
-  // 展開: kax + kb
-  const ka=k*a, kb=k*b;
-  const text = polyLatex(0, ka, kb);   // Ax^2=0なのでBx+C形式
-  const cf = [`${k}(${linLatex(a,b)})`];
-  return { text, cf, displayAns: cf[0], expA:0, expB:ka, expC:kb };
-}
-
-// --- 差の平方 (ax)^2 - b^2 型 ---
-function genDiffSquares() {
-  // b が因数の定数部分(±b) → 1〜10
-  const a = randInt(1, 4), b = randInt(1, 10);
-  // 展開: a^2 x^2 - b^2
-  const A=a*a, C=-(b*b);
-  const { k, reduced:[rA,,rC] } = extractGCD([A, 0, C]);
-  // rA と -rC が完全平方かチェック（kで割っても平方になるよう生成しているので通常OK）
-  const text = k===1
-    ? polyLatex(rA, 0, rC)
-    : `${k}(${polyLatex(rA, 0, rC)})`;
-  const sqA = Math.sqrt(rA), sqC = Math.sqrt(-rC);
-  const fac1 = `(${sqA===1?'':sqA}x+${sqC})(${sqA===1?'':sqA}x-${sqC})`;
-  const fac2 = `(${sqA===1?'':sqA}x-${sqC})(${sqA===1?'':sqA}x+${sqC})`;
-  const cf = k===1 ? [fac1] : [`${k}${fac1}`];
-  return { text, cf, displayAns: cf[0], expA:A, expB:0, expC:C };
-}
-
-// --- 完全平方 (x+a)^2 型 ---
-function genPerfectSquare() {
-  // a が因数の定数部分 → 1〜10
-  const a = randInt(1, 10);
-  const plus = Math.random() < 0.5;
-  const sg = plus ? a : -a;
-  // 展開: x^2 + 2ax + a^2
-  const A=1, B=2*sg, C=sg*sg;
-  const { k, reduced:[rA,rB,rC] } = extractGCD([A,B,C]);
-  const text = k===1 ? polyLatex(rA,rB,rC) : `${k}(${polyLatex(rA,rB,rC)})`;
-  const inner = `(x${sgn(sg)})^{2}`;
-  const cf = k===1 ? [inner] : [`${k}${inner}`];
-  return { text, cf, displayAns: cf[0], expA:A, expB:B, expC:C };
-}
-
-// --- Lv3専用: k(ax+b)(cx+d) 型 ---
-function genLv3() {
-  let k, a, b, c, d;
-  do {
-    k = randInt(1, 4);
-    a = randInt(1, 3);  // x係数は正
-    b = randInt(-10, 10);
-    c = randInt(1, 3);
-    d = randInt(-10, 10);
-  } while (b===0 || d===0);
-  const eA=k*a*c, eB=k*(a*d+b*c), eC=k*b*d;
-  const text = k===1 ? polyLatex(a*c, a*d+b*c, b*d)
-                     : `${k}(${polyLatex(a*c, a*d+b*c, b*d)})`;
-  const f1 = `(${linLatex(a,b)})(${linLatex(c,d)})`;
-  const cf = k===1 ? [f1] : [`${k}${f1}`];
-  return { text, cf, displayAns: cf[0], expA:eA, expB:eB, expC:eC, lv3k:k, lv3a:a, lv3b:b, lv3c:c, lv3d:d };
-}
-
-// 積 (A)(B) の交換形 (B)(A) を返す
-// 積 k(A)(B) → k(B)(A) に交換（kが無い場合も対応）
-function swapped(expr) {
-  // 先頭の数字prefix（例: "2"）を抽出
-  const prefixMatch = expr.match(/^(\d+)/);
-  const prefix = prefixMatch ? prefixMatch[1] : '';
-  const body = prefix ? expr.slice(prefix.length) : expr;
-
-  const parts = [];
-  let depth = 0, start = 0;
-  for (let i = 0; i < body.length; i++) {
-    if (body[i] === '(') { if (depth===0) start=i; depth++; }
-    else if (body[i] === ')') {
-      depth--;
-      if (depth===0) {
-        let end = i+1;
-        if (body.slice(i+1, i+4) === '^{2') end = i+5;
-        parts.push(body.slice(start, end));
-        i = end-1;
-      }
-    }
-  }
-  if (parts.length === 2) return prefix + parts[1] + parts[0];
-  return expr;
-}
-
-// 選択肢を正規化: (x+a)(x+a) → (x+a)^{2} に統一し、交換形も同一視
-function canonicalize(expr) {
-  const prefixMatch = expr.match(/^(\d+)/);
-  const prefix = prefixMatch ? prefixMatch[1] : '';
-  const body = prefix ? expr.slice(prefix.length) : expr;
-  const parts = [];
-  let depth = 0, start = 0;
-  for (let i = 0; i < body.length; i++) {
-    if (body[i] === '(') { if (depth===0) start=i; depth++; }
-    else if (body[i] === ')') {
-      depth--;
-      if (depth===0) {
-        let end = i+1;
-        if (body.slice(i+1, i+4) === '^{2') end = i+5;
-        parts.push(body.slice(start, end));
-        i = end-1;
-      }
-    }
-  }
-  if (parts.length === 2) {
-    // (x+a)(x+a) → (x+a)^{2} に統一
-    const p0 = parts[0].replace(/\^\{2\}$/, '');
-    const p1 = parts[1].replace(/\^\{2\}$/, '');
-    if (p0 === p1) return prefix + p0 + '^{2}';
-    // 交換形をソートして正規化
-    const sorted = [...parts].sort();
-    return prefix + sorted[0] + sorted[1];
-  }
-  // (x+a)^{2} はそのまま
-  return expr;
-}
-
-function normalKey(expr) {
-  return canonicalize(expr);
-}
-
-// 選択肢を表示用に正規化（(x+a)(x+a) → (x+a)^{2}）
-function displayChoice(expr) {
-  return canonicalize(expr);
-}
-
-// ============================================================
-//  ダミー選択肢生成
-//  方針: 積（定数項C）は同じにして符号違い・別の因数ペアを優先的に作る
-//  → 「積に注目したらすぐ正解」を防ぐ
-// ============================================================
-
-// 整数nの約数ペア列挙 (p*q = n, p<=q, p,q≠0, |p|,|q|<=10)
-function factorPairs(n) {
-  const pairs = [];
-  for (let p = -10; p <= 10; p++) {
-    if (p === 0) continue;
-    if (n % p !== 0) continue;
-    const q = n / p;
-    if (Math.abs(q) > 10 || q === 0) continue;
-    pairs.push([p, q]);
-  }
-  return pairs;
-}
-
-function makeChoices(correct, q) {
-  // normalKey で交換形を同一視して重複を完全に防ぐ
-  const seen = new Set();
-  const addSeen = (s) => seen.add(normalKey(s));
-  const hasSeen = (s) => seen.has(normalKey(s));
-  for (const c of correct) addSeen(c);
-
-  const arr = [...correct];
-  const type = q ? q.type : 'sum';
-  const prefix = (type === 'ksum' && q) ? `${q.k}` : '';
-
-  // --- たすき掛け専用: 紛らわしいダミーを優先生成 ---
-  if (type === 'tasuki' && q) {
-    const { ta:a, tb:b, tc:c, td:d } = q;
-    const target1 = a*d + b*c;  // 正解の1次係数（たすきの和）
-
-    // 優先A: 符号違い（片方または両方）
-    const signFlips = [
-      [a, -b, c,  d],   // bだけ逆
-      [a,  b, c, -d],   // dだけ逆
-      [a, -b, c, -d],   // 両方逆（積は同じ、1次が違う）
-    ];
-    for (const [fa,fb,fc,fd] of signFlips) {
-      if (arr.length >= 4) break;
-      if (fb===0||fd===0||Math.abs(fb)>10||Math.abs(fd)>10) continue;
-      const w = `(${linLatex(fa,fb)})(${linLatex(fc,fd)})`;
-      if (!hasSeen(w)) { addSeen(w); arr.push(canonicalize(w)); }
-    }
-
-    // 優先B: 1次係数(ad+bc)が同じになる別の(b,d)ペア
-    for (let fb=-10; fb<=10 && arr.length<4; fb++) {
-      if (fb===0||fb===b) continue;
-      // a*fd + fb*c = target1 → fd = (target1 - fb*c) / a
-      if ((target1 - fb*c) % a !== 0) continue;
-      const fd = (target1 - fb*c) / a;
-      if (fd===0||Math.abs(fd)>10||fd===d) continue;
-      const w = `(${linLatex(a,fb)})(${linLatex(c,fd)})`;
-      if (!hasSeen(w)) { addSeen(w); arr.push(canonicalize(w)); }
-    }
-
-    // 優先C: a,cを入れ替えた形（引っ掛け）
-    if (arr.length < 4 && a !== c) {
-      for (let fb=-10; fb<=10 && arr.length<4; fb++) {
-        if (fb===0) continue;
-        for (let fd=-10; fd<=10; fd++) {
-          if (arr.length >= 4) break;
-          if (fd===0) continue;
-          const w = `(${linLatex(c,fb)})(${linLatex(a,fd)})`;
-          if (!hasSeen(w)) { addSeen(w); arr.push(canonicalize(w)); break; }
-        }
-      }
-    }
-  }
-
-  // --- 優先①: 積Cが同じで別の因数ペア（符号違い含む） ---
-  if (q && q.expC !== 0 && type !== 'ksum' && type !== 'tasuki') {
-    const C = q.expC;
-    const pairs = factorPairs(C);
-    // シャッフルして多様性を出す
-    pairs.sort(() => Math.random() - 0.5);
-    for (const [p2, q2] of pairs) {
-      if (arr.length >= 4) break;
-      const w  = `(x${sgn(p2)})(x${sgn(q2)})`;
-      const ws = swapped(w);
-      if (!hasSeen(w)) {
-        addSeen(w);
-        arr.push(canonicalize(w));
-      }
-    }
-  }
-
-  // --- 優先②: 符号だけ逆のパターン ---
-  // 正解が (x+p)(x+q) なら (x-p)(x+q), (x+p)(x-q), (-p)(-q)符号逆 など
-  if (q && q.p !== undefined && arr.length < 4) {
-    const signFlips = [
-      [q.p, -q.q],
-      [-q.p, q.q],
-      [-q.p, -q.q],
-    ];
-    for (const [fp, fq] of signFlips) {
-      if (arr.length >= 4) break;
-      if (fp===0||fq===0||Math.abs(fp)>10||Math.abs(fq)>10) continue;
-      const w  = `${prefix}(x${sgn(fp)})(x${sgn(fq)})`;
-      const ws = swapped(w);
-      if (!hasSeen(w)) {
-        addSeen(w);
-        arr.push(canonicalize(w));
-      }
-    }
-  }
-
-  // --- 優先③: 和Bが同じで積が違うペア ---
-  if (q && q.expB !== undefined && type !== 'ksum' && arr.length < 4) {
-    const B = q.expA === 1 ? q.expB : Math.round(q.expB / q.expA);
-    for (let p2 = -10; p2 <= 10 && arr.length < 4; p2++) {
-      if (p2 === 0) continue;
-      const q2 = B - p2;
-      if (q2 === 0 || Math.abs(q2) > 10 || p2 === q2) continue;
-      const w  = `(x${sgn(p2)})(x${sgn(q2)})`;
-      const ws = swapped(w);
-      if (!hasSeen(w)) {
-        addSeen(w);
-        arr.push(canonicalize(w));
-      }
-    }
-  }
-
-  // --- フォールバック: ランダム生成 ---
-  let tries = 0;
-  while (arr.length < 4 && tries < 800) {
-    tries++;
-    let w;
-    if (type === 'ksum' && q) {
-      const dp = randInt(-10,10), dq = randInt(-10,10);
-      if (dp===0||dq===0||dp===dq) continue;
-      w = `${q.k}(x${sgn(dp)})(x${sgn(dq)})`;
-    } else if (type === 'tasuki') {
-      // たすき掛け型のダミー: 1次係数(ad+bc)が近い値になるb,dを生成
-      const da = q ? q.ta : randInt(1,3);
-      const dc = q ? q.tc : randInt(1,3);
-      const db = randInt(-10,10), dd = randInt(-10,10);
-      if (db===0||dd===0) continue;
-      w = `(${linLatex(da,db)})(${linLatex(dc,dd)})`;
-    } else {
-      const dp = randInt(-10,10), dq = randInt(-10,10);
-      if (dp===0||dq===0||dp===dq) continue;
-      w = `(x${sgn(dp)})(x${sgn(dq)})`;
-    }
-    if (!hasSeen(w)) {
-      addSeen(w);
-      arr.push(canonicalize(w));
-    }
-  }
-
-  return arr.sort(() => Math.random() - 0.5);
-}
+function shuffle(arr) { for (let i = arr.length - 1; i > 0; i--) { const j = randInt(0, i); [arr[i], arr[j]] = [arr[j], arr[i]]; } return arr; }
 
 function generateQuestion() {
-  if (level === 'lv3') return genLv3();
+  const type = (level === 'lv2') ? (Math.random() < 0.5 ? 'basic' : 'tasuki') : 'basic';
+  if (type === 'tasuki') return genTasuki();
+  return genBasic();
+}
 
-  // Lv2: Lv1の全タイプ + たすき掛け10%
-  // (x+p)(x+q)18%, k(x+p)(x+q)18%, k(ax+b)18%, 差の平方18%, 完全平方18%, たすき掛け10%
-  if (level === 'lv2') {
-    const r = Math.random();
-    if (r < 0.18) return genSumProduct();
-    if (r < 0.36) return genKSumProduct();
-    if (r < 0.54) return genCommonFactor();
-    if (r < 0.72) return genDiffSquares();
-    if (r < 0.90) return genPerfectSquare();
-    return genTasuki();
+function genBasic() {
+  const t = randInt(0, 3);
+  if (t === 0) {
+    // (x+a)(x+b)
+    let a = randInt(-9, 9), b = randInt(-9, 9);
+    while (a === 0) a = randInt(-9, 9);
+    while (b === 0) b = randInt(-9, 9);
+    const B = a + b, C = a * b;
+    const Bs = B >= 0 ? (B === 0 ? '' : `+${B}`) : `${B}`;
+    const Cs = C >= 0 ? `+${C}` : `${C}`;
+    const tex = `x^{2}${Bs}x${Cs}`;
+    const ans = buildFactorTex(1, a, 1, b);
+    return { text: tex, answerTex: ans, type: 'basic', a:1, b:a, c:1, d:b };
+  } else if (t === 1) {
+    // x^2 - a^2
+    const a = randInt(2, 9);
+    const tex = `x^{2}-${a*a}`;
+    const ans = `(x+${a})(x-${a})`;
+    return { text: tex, answerTex: ans, type: 'diff', a:1, b:a, c:1, d:-a };
+  } else if (t === 2) {
+    // (x+a)^2
+    let a = randInt(-9, 9);
+    while (a === 0) a = randInt(-9, 9);
+    const B = 2*a, C = a*a;
+    const Bs = B >= 0 ? `+${B}` : `${B}`;
+    const tex = `x^{2}${Bs}x+${C}`;
+    const ans = a > 0 ? `(x+${a})^{2}` : `(x${a})^{2}`;
+    return { text: tex, answerTex: ans, type: 'sq', a:1, b:a, c:1, d:a };
+  } else {
+    // k(x+a)(x+b)
+    const k = randInt(2, 5);
+    let a = randInt(-6, 6), b = randInt(-6, 6);
+    while (a === 0) a = randInt(-6, 6);
+    while (b === 0) b = randInt(-6, 6);
+    const B = a + b, C = a * b;
+    const Bs = B >= 0 ? (B === 0 ? '' : `+${B}`) : `${B}`;
+    const Cs = C >= 0 ? `+${C}` : `${C}`;
+    const tex = `${k}x^{2}${Bs !== '' ? k*parseInt(Bs.replace('+','')) >= 0 ? `+${k*(a+b)}` : `${k*(a+b)}` : ''}x${k*C >= 0 ? `+${k*C}` : `${k*C}`}`;
+    const inner = buildFactorTex(1, a, 1, b);
+    const ans = `${k}${inner}`;
+    return { text: tex, answerTex: ans, type: 'k', k, a:1, b:a, c:1, d:b };
   }
+}
 
-  // Lv1: 全タイプ出題
-  // (x+p)(x+q)45%, k(x+p)(x+q)10%, k(ax+b)5%, 差の平方20%, 完全平方20%
-  const r = Math.random();
-  if (r < 0.45) return genSumProduct();
-  if (r < 0.55) return genKSumProduct();
-  if (r < 0.60) return genCommonFactor();
-  if (r < 0.80) return genDiffSquares();
-  return genPerfectSquare();
+function genTasuki() {
+  let p = randInt(1, 4), q = randInt(1, 4);
+  let a = randInt(-6, 6), b = randInt(-6, 6);
+  while (a === 0) a = randInt(-6, 6);
+  while (b === 0) b = randInt(-6, 6);
+  const A = p * q, B = p*b + q*a, C = a*b;
+  const Bs = B >= 0 ? (B === 0 ? '' : `+${B}`) : `${B}`;
+  const Cs = C >= 0 ? `+${C}` : `${C}`;
+  const tex = `${A}x^{2}${Bs}x${Cs}`;
+  const ans = buildFactorTex(p, a, q, b);
+  return { text: tex, answerTex: ans, type: 'tasuki', a:p, b:a, c:q, d:b };
+}
+
+function buildFactorTex(p, a, q, b) {
+  const f1 = `(${p === 1 ? '' : p}x${a >= 0 ? '+'+a : a})`;
+  const f2 = `(${q === 1 ? '' : q}x${b >= 0 ? '+'+b : b})`;
+  return f1 + f2;
 }
 
 // ============================================================
-//  次の問題
+// 問題表示
 // ============================================================
 function nextQuestion() {
-  lastChoice = null; sameCount = 0;
-  lv2sel = ['',''];
-  lv3vals = {k:'',a:'',b:'',c:'',d:''};
   currentQ = generateQuestion();
-  currentQ.choices = makeChoices(currentQ.cf, currentQ);
-  setQuestion(currentQ.text);
-  renderAnswerArea();
+  handling = false;
+  lastChoice = null; sameCount = 0;
+  renderQuestion();
 }
 
-// ============================================================
-//  回答エリア描画
-// ============================================================
-function renderAnswerArea() {
+function renderQuestion() {
+  const qt = document.getElementById('question-text');
+  katex.render(currentQ.text, qt, { throwOnError: false, displayMode: false });
+  document.getElementById('feedback').className = 'feedback';
+  document.getElementById('feedback').textContent = ' ';
+
+  if (level === 'lv1') renderLv1();
+  else if (level === 'lv2') renderLv2();
+  else renderLv3();
+}
+
+// ---------- Lv1 ----------
+function renderLv1() {
+  const correct = currentQ.answerTex;
+  const wrongs = generateWrongAnswers(currentQ, 3);
+  const opts = shuffle([correct, ...wrongs]);
+
   const area = document.getElementById('answer-area');
-  if (level === 'lv1') {
-    area.innerHTML = `<div class="choices">
-      ${currentQ.choices.map((c,i) =>
-        `<button class="choice-btn" onclick="checkLv1(${i})">${kString(canonicalize(c))}</button>`
-      ).join('')}
-    </div>`;
-  } else if (level === 'lv2') {
-    // Lv2はLv1と同じ4択表示（選択肢は既にmakeChoicesで生成済み）
-    area.innerHTML = `<div class="choices">
-      ${currentQ.choices.map((c,i) =>
-        `<button class="choice-btn" onclick="checkLv2(${i})">${kString(canonicalize(c))}</button>`
-      ).join('')}
-    </div>`;
-  } else {
-    renderLv3(area);
+  area.innerHTML = '';
+  const grid = document.createElement('div');
+  grid.className = 'choices';
+  opts.forEach(tex => {
+    const btn = document.createElement('button');
+    btn.className = 'choice-btn';
+    katex.render(tex, btn, { throwOnError: false });
+    btn.onclick = () => handleLv1(tex === correct, btn, tex);
+    grid.appendChild(btn);
+  });
+  area.appendChild(grid);
+}
+
+function generateWrongAnswers(q, n) {
+  const wrongs = new Set();
+  const tries = 60;
+  for (let i = 0; i < tries && wrongs.size < n; i++) {
+    const cand = genBasic();
+    if (cand.answerTex !== q.answerTex) wrongs.add(cand.answerTex);
   }
+  while (wrongs.size < n) wrongs.add(`(x+${randInt(1,9)})(x+${randInt(1,9)})`);
+  return [...wrongs].slice(0, n);
 }
 
-// --- Lv2 ---
-const LV2_OPTS = (() => {
-  const a = [];
-  // -10〜+10（0除く）
-  for (let n=-10; n<=10; n++) if (n!==0) a.push(`(x${sgn(n)})`);
-  return a;
-})();
+function handleLv1(isCorrect, btn, tex) {
+  if (handling) return;
 
-function renderLv2(area) {
-  // 20個を5個ずつ4行に分割
-  const rows = [
-    LV2_OPTS.slice(0,5),   // -10〜-6
-    LV2_OPTS.slice(5,10),  // -5〜-1
-    LV2_OPTS.slice(10,15), // +1〜+5
-    LV2_OPTS.slice(15,20), // +6〜+10
-  ];
-  const slot = (i) => `<div class="lv2-slot ${lv2sel[i]?'filled':''}" id="lv2slot${i}">
-    ${lv2sel[i] ? kString(lv2sel[i]) : '?'}
-  </div>`;
-  const optBtn = (o, idx) =>
-    `<button class="option-btn ${lv2sel[idx]===o?'sel':''}" onclick="lv2pick(${idx},'${o}',this)">${kString(o)}</button>`;
-  const optRows = (idx) => rows.map(row =>
-    `<div class="option-grid">${row.map(o=>optBtn(o,idx)).join('')}</div>`
-  ).join('');
-
-  area.innerHTML = `
-    <div class="lv2-preview-row">${slot(0)}${slot(1)}</div>
-    <div class="opt-section-label">1つ目</div>
-    ${optRows(0)}
-    <div class="opt-section-label gap">2つ目</div>
-    ${optRows(1)}
-    <button class="submit-btn" id="lv2-submit" onclick="checkLv2()"
-      ${lv2sel[0]&&lv2sel[1]?'':'disabled'}>決定</button>`;
-}
-
-function lv2pick(idx, val, btn) {
-  lv2sel[idx] = val;
-  renderLv2(document.getElementById('answer-area'));
-}
-
-function checkLv2(idx) {
-  const chosen = currentQ.choices[idx];
-  // 同じ選択肢を連続5回押したら強制終了
-  if (lastChoice === idx) {
+  if (tex === lastChoice) {
     sameCount++;
-    if (sameCount >= 5) { clearTimer(); gameOver(); return; }
+    if (sameCount >= 2) {
+      // 2回同じを押したら不正解扱い（連打対策）
+    }
   } else {
-    lastChoice = idx; sameCount = 1;
+    lastChoice = tex;
+    sameCount = 1;
   }
-  const chosenKey = normalKey(chosen);
-  handle(currentQ.cf.some(c => normalKey(c) === chosenKey));
-}
 
-// --- Lv3 ---
-const PAD_NUMS = [-10,-9,-8,-7,-6,-5,-4,-3,-2,-1,1,2,3,4,5,6,7,8,9,10];
-const K_PAD_NUMS = [1,2,3,4,5];
-const AC_PAD_NUMS = [1,2,3];
+  handling = true;
+  totalQ++;
 
-function renderLv3(area) {
-  const v = lv3vals;
-
-  // プレビュー文字列生成
-  const kD  = v.k ? kString(v.k)  : '<span class="ph">k</span>';
-  const aD  = v.a ? kString(v.a)  : '<span class="ph">a</span>';
-  const cD  = v.c ? kString(v.c)  : '<span class="ph">c</span>';
-  const bSign = v.b==='' ? '<span class="ph">+b</span>'
-    : (parseInt(v.b)>=0 ? kString(`+${v.b}`) : kString(v.b));
-  const dSign = v.d==='' ? '<span class="ph">+d</span>'
-    : (parseInt(v.d)>=0 ? kString(`+${v.d}`) : kString(v.d));
-  const kPre = v.k==='1' ? '' : kD;  // k=1なら非表示
-
-  // 数字ボタン行ヘルパー
-  const numRow = (key, label, nums) => `
-    <div class="num-row">
-      <div class="num-row-label">${label}</div>
-      <div class="num-row-btns">
-        ${nums.map(n=>`<button class="num-btn ${v[key]===String(n)?'sel':''}"
-          onclick="lv3pick('${key}',${n})">${n}</button>`).join('')}
-      </div>
-    </div>`;
-
-  const allFilled = v.k && v.a && v.b && v.c && v.d;
-
-  area.innerHTML = `
-    <div class="lv3-preview">${kPre}(${aD}x${bSign})(${cD}x${dSign})</div>
-    ${numRow('k','k — 共通因数', K_PAD_NUMS)}
-    ${numRow('a','a — 左のx係数', AC_PAD_NUMS)}
-    ${numRow('b','b — 左の定数', PAD_NUMS)}
-    ${numRow('c','c — 右のx係数', AC_PAD_NUMS)}
-    ${numRow('d','d — 右の定数', PAD_NUMS)}
-    <button class="submit-btn" onclick="checkLv3()"
-      ${allFilled?'':'disabled'}>決定</button>`;
-}
-
-function lv3pick(key, val) {
-  lv3vals[key] = String(val);
-  renderLv3(document.getElementById('answer-area'));
-}
-
-function checkLv3() {
-  const kv=parseInt(lv3vals.k), av=parseInt(lv3vals.a), bv=parseInt(lv3vals.b);
-  const cv=parseInt(lv3vals.c), dv=parseInt(lv3vals.d);
-  if (isNaN(kv)||isNaN(av)||isNaN(bv)||isNaN(cv)||isNaN(dv)) return;
-  const ok = kv*av*cv === currentQ.expA
-          && kv*(av*dv+bv*cv) === currentQ.expB
-          && kv*bv*dv === currentQ.expC;
-  handle(ok);
-}
-
-// --- Lv1 ---
-function checkLv1(idx) {
-  const chosen = currentQ.choices[idx];
-  // 同じ選択肢を連続5回押したら強制終了
-  if (lastChoice === idx) {
-    sameCount++;
-    if (sameCount >= 5) { clearTimer(); gameOver(); return; }
+  if (isCorrect) {
+    combo++;
+    maxCombo = Math.max(maxCombo, combo);
+    correctQ++;
+    score += 10 + (combo - 1) * 2;
+    timeLeft = Math.min(30, timeLeft + 3);
+    showFeedback(true, `+${10 + (combo-1)*2}点`);
+    flash('#e8f5e9');
   } else {
-    lastChoice = idx; sameCount = 1;
+    wrongQ++;
+    combo = 0;
+    score = Math.max(0, score - 3);
+    timeLeft = Math.max(1, timeLeft - 3);
+    showFeedback(false, `正解: `);
+    showCorrectInFeedback(currentQ.answerTex);
+    if (mistakes.length < 20) mistakes.push({ question: currentQ.text, answer: currentQ.answerTex });
+    flash('#fdecea');
   }
-  const chosenKey = normalKey(chosen);
-  handle(currentQ.cf.some(c => normalKey(c) === chosenKey));
+
+  updateHUD();
+  setTimeout(() => {
+    if (timeLeft > 0) nextQuestion();
+  }, 600);
+}
+
+function showCorrectInFeedback(tex) {
+  const fb = document.getElementById('feedback');
+  try {
+    const span = document.createElement('span');
+    katex.render(tex, span, { throwOnError: false });
+    fb.appendChild(span);
+  } catch(e) { fb.textContent += tex; }
+}
+
+// ---------- Lv2 ----------
+function renderLv2() {
+  lv2sel = ['', ''];
+  const area = document.getElementById('answer-area');
+  area.innerHTML = '';
+
+  if (currentQ.type !== 'tasuki') {
+    renderLv1();
+    return;
+  }
+
+  // たすき掛け型
+  const { a: p, b: aa, c: q, d: bb } = currentQ;
+  const correctF1 = buildFactor(p, aa);
+  const correctF2 = buildFactor(q, bb);
+
+  // スロット表示
+  const preview = document.createElement('div');
+  preview.className = 'lv2-preview-row';
+  preview.innerHTML = `
+    <div class="lv2-slot" id="slot0">（　　　）</div>
+    <div class="lv2-slot" id="slot1">（　　　）</div>`;
+  area.appendChild(preview);
+
+  // 選択肢生成
+  const opts1 = shuffle([correctF1, ...genWrongFactors(p, aa, 3)]);
+  const opts2 = shuffle([correctF2, ...genWrongFactors(q, bb, 3)]);
+
+  renderOptGrid(area, '第1因数', opts1, 0, correctF1, correctF2);
+  area.appendChild(document.createElement('div')).style.height = '8px';
+  renderOptGrid(area, '第2因数', opts2, 1, correctF1, correctF2);
+
+  const submitBtn = document.createElement('button');
+  submitBtn.className = 'submit-btn';
+  submitBtn.textContent = '決定';
+  submitBtn.disabled = true;
+  submitBtn.id = 'lv2-submit';
+  submitBtn.onclick = () => handleLv2Submit(correctF1, correctF2);
+  area.appendChild(submitBtn);
+}
+
+function buildFactor(p, a) {
+  return `(${p === 1 ? '' : p}x${a >= 0 ? '+'+a : a})`;
+}
+
+function genWrongFactors(p, a, n) {
+  const wrongs = new Set();
+  for (let i = 0; i < 40 && wrongs.size < n; i++) {
+    const wp = randInt(1, 4), wa = randInt(-6, 6);
+    const f = buildFactor(wp, wa);
+    if (f !== buildFactor(p, a)) wrongs.add(f);
+  }
+  return [...wrongs].slice(0, n);
+}
+
+function renderOptGrid(container, label, opts, slotIdx, cf1, cf2) {
+  const lbl = document.createElement('div');
+  lbl.className = 'opt-section-label';
+  lbl.textContent = label;
+  container.appendChild(lbl);
+
+  const grid = document.createElement('div');
+  grid.className = 'option-grid';
+  opts.forEach(tex => {
+    const btn = document.createElement('button');
+    btn.className = 'option-btn';
+    katex.render(tex, btn, { throwOnError: false });
+    btn.dataset.val = tex;
+    btn.onclick = () => {
+      grid.querySelectorAll('.option-btn').forEach(b => b.classList.remove('sel'));
+      btn.classList.add('sel');
+      lv2sel[slotIdx] = tex;
+      const slot = document.getElementById('slot' + slotIdx);
+      slot.innerHTML = '';
+      katex.render(tex, slot, { throwOnError: false });
+      slot.classList.add('filled');
+      document.getElementById('lv2-submit').disabled = !(lv2sel[0] && lv2sel[1]);
+    };
+    grid.appendChild(btn);
+  });
+  container.appendChild(grid);
+}
+
+function handleLv2Submit(cf1, cf2) {
+  if (handling) return;
+  handling = true;
+  totalQ++;
+  const ok = (lv2sel[0] === cf1 && lv2sel[1] === cf2) ||
+             (lv2sel[0] === cf2 && lv2sel[1] === cf1);
+  if (ok) {
+    combo++; maxCombo = Math.max(maxCombo, combo); correctQ++;
+    score += 10 + (combo - 1) * 2;
+    timeLeft = Math.min(30, timeLeft + 3);
+    showFeedback(true, `+${10 + (combo-1)*2}点`);
+    flash('#e8f5e9');
+  } else {
+    wrongQ++; combo = 0; score = Math.max(0, score - 3);
+    timeLeft = Math.max(1, timeLeft - 3);
+    showFeedback(false, '不正解');
+    if (mistakes.length < 20) mistakes.push({ question: currentQ.text, answer: currentQ.answerTex });
+    flash('#fdecea');
+  }
+  updateHUD();
+  setTimeout(() => { if (timeLeft > 0) nextQuestion(); }, 700);
+}
+
+// ---------- Lv3 ----------
+function renderLv3() {
+  lv3vals = { k:'', a:'', b:'', c:'', d:'' };
+  const area = document.getElementById('answer-area');
+  area.innerHTML = '';
+
+  const preview = document.createElement('div');
+  preview.className = 'lv3-preview';
+  preview.id = 'lv3-prev';
+  preview.innerHTML = '<span class="ph">( □x + □ )( □x + □ )</span>';
+  area.appendChild(preview);
+
+  const nums = ['-9','-8','-7','-6','-5','-4','-3','-2','-1','0','1','2','3','4','5','6','7','8','9'];
+  const posNums = ['1','2','3','4','5','6','7','8','9'];
+
+  buildNumRow(area, 'k（共通因数）', ['1','2','3','4','5'], 'k');
+  buildNumRow(area, 'a（左の x 係数）', posNums, 'a');
+  buildNumRow(area, 'b（左の定数）', nums, 'b');
+  buildNumRow(area, 'c（右の x 係数）', posNums, 'c');
+  buildNumRow(area, 'd（右の定数）', nums, 'd');
+
+  const btn = document.createElement('button');
+  btn.className = 'submit-btn';
+  btn.id = 'lv3-submit';
+  btn.textContent = '決定';
+  btn.disabled = true;
+  btn.onclick = handleLv3Submit;
+  area.appendChild(btn);
+}
+
+function buildNumRow(container, label, nums, key) {
+  const wrap = document.createElement('div');
+  wrap.className = 'num-row';
+  const lbl = document.createElement('div');
+  lbl.className = 'num-row-label';
+  lbl.textContent = label;
+  wrap.appendChild(lbl);
+  const row = document.createElement('div');
+  row.className = 'num-row-btns';
+  nums.forEach(n => {
+    const btn = document.createElement('button');
+    btn.className = 'num-btn';
+    btn.textContent = n;
+    btn.onclick = () => {
+      row.querySelectorAll('.num-btn').forEach(b => b.classList.remove('sel'));
+      btn.classList.add('sel');
+      lv3vals[key] = n;
+      updateLv3Preview();
+      const allSet = ['k','a','b','c','d'].every(k => lv3vals[k] !== '');
+      document.getElementById('lv3-submit').disabled = !allSet;
+    };
+    row.appendChild(btn);
+  });
+  wrap.appendChild(row);
+  container.appendChild(wrap);
+}
+
+function updateLv3Preview() {
+  const { k, a, b, c, d } = lv3vals;
+  const prev = document.getElementById('lv3-prev');
+  if (!prev) return;
+  const ks = k !== '' && k !== '1' ? k : '';
+  const as = a !== '' && a !== '1' ? a : '';
+  const cs = c !== '' && c !== '1' ? c : '';
+  const bs = b !== '' ? (parseInt(b) >= 0 ? `+${b}` : b) : '□';
+  const ds = d !== '' ? (parseInt(d) >= 0 ? `+${d}` : d) : '□';
+  const tex = `${ks}(${as || (a !== '' ? '' : '□')}x${bs})(${cs || (c !== '' ? '' : '□')}x${ds})`;
+  prev.innerHTML = '';
+  try { katex.render(tex, prev, { throwOnError: false }); }
+  catch(e) { prev.textContent = tex; }
+}
+
+function handleLv3Submit() {
+  if (handling) return;
+  handling = true;
+  totalQ++;
+  const { k, a, b, c, d } = lv3vals;
+  const ki = parseInt(k) || 1, ai = parseInt(a), bi = parseInt(b), ci = parseInt(c), di = parseInt(d);
+  const { a: pa, b: pb, c: pc, d: pd, k: pk } = currentQ;
+  const pk2 = pk || 1;
+
+  const ok =
+    (ki === pk2 && ai === pa && bi === pb && ci === pc && di === pd) ||
+    (ki === pk2 && ai === pc && bi === pd && ci === pa && di === pb);
+
+  if (ok) {
+    combo++; maxCombo = Math.max(maxCombo, combo); correctQ++;
+    score += 15 + (combo - 1) * 2;
+    timeLeft = Math.min(30, timeLeft + 4);
+    showFeedback(true, `+${15 + (combo-1)*2}点`);
+    flash('#e8f5e9');
+  } else {
+    wrongQ++; combo = 0; score = Math.max(0, score - 3);
+    timeLeft = Math.max(1, timeLeft - 3);
+    showFeedback(false, '不正解');
+    if (mistakes.length < 20) mistakes.push({ question: currentQ.text, answer: currentQ.answerTex });
+    flash('#fdecea');
+  }
+  updateHUD();
+  setTimeout(() => { if (timeLeft > 0) nextQuestion(); }, 800);
 }
 
 // ============================================================
-//  初期表示
+// フィードバック
 // ============================================================
-show('start-screen');
+function showFeedback(isCorrect, msg) {
+  const fb = document.getElementById('feedback');
+  fb.textContent = msg;
+  fb.className = 'feedback show ' + (isCorrect ? 'correct' : 'wrong');
+}
+
+function flash(color) {
+  const el = document.getElementById('flash');
+  el.style.background = color;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 120);
+}
+
+// ============================================================
+// ゲームオーバー  ★ 修正：未回答を不正解扱い
+// ============================================================
+function gameOver() {
+  clearTimer();
+
+  // タイムアップ時に回答中（handling=false）の問題は不正解カウント
+  if (currentQ && !handling) {
+    wrongQ++;
+    totalQ++;
+    if (mistakes.length < 20) {
+      mistakes.push({ question: currentQ.text, answer: currentQ.answerTex });
+    }
+  }
+
+  document.getElementById('go-score').textContent   = score;
+  document.getElementById('go-correct').textContent = correctQ;
+  document.getElementById('go-wrong').textContent   = wrongQ;
+  document.getElementById('go-total').textContent   = totalQ;
+
+  renderMistakes();
+  show('gameover-screen');
+}
+
+function renderMistakes() {
+  const list = document.getElementById('mistakes-list');
+  list.innerHTML = '';
+  if (mistakes.length === 0) {
+    list.innerHTML = '<div class="no-mistakes">間違いなし！満点です 🎉</div>';
+    return;
+  }
+  mistakes.forEach((m, i) => {
+    const card = document.createElement('div');
+    card.className = 'mistake-card';
+    const qDiv = document.createElement('div'); qDiv.className = 'mistake-q'; qDiv.textContent = `問題 ${i+1}`;
+    const exDiv = document.createElement('div'); exDiv.className = 'mistake-expr';
+    katex.render(m.question, exDiv, { throwOnError: false });
+    const albl = document.createElement('div'); albl.className = 'mistake-ans-label'; albl.textContent = '正解';
+    const aDiv = document.createElement('div'); aDiv.className = 'mistake-ans';
+    katex.render(m.answer, aDiv, { throwOnError: false });
+    card.append(qDiv, exDiv, albl, aDiv);
+    list.appendChild(card);
+  });
+}
+
+function toggleMistakes() {
+  const list = document.getElementById('mistakes-list');
+  const icon = document.getElementById('mistakes-toggle-icon');
+  const closed = list.classList.toggle('mistakes-closed');
+  icon.textContent = closed ? '▶' : '▼';
+}
+
+// ============================================================
+// 送信フォーム  ★ 修正：出席番号・メール追加
+// ============================================================
+function checkSendReady() {
+  const num   = document.getElementById('student-number').value.trim();
+  const cls   = document.getElementById('student-class').value;
+  const name  = document.getElementById('student-name').value.trim();
+  const email = document.getElementById('student-email').value.trim();
+  document.getElementById('send-btn').disabled = !(num && cls && name && email);
+}
+
+async function sendLog() {
+  const btn    = document.getElementById('send-btn');
+  const status = document.getElementById('send-status');
+  btn.disabled = true;
+  status.textContent = '送信中...';
+  status.className   = 'send-status';
+
+  const payload = {
+    email:     document.getElementById('student-email').value.trim(),
+    number:    document.getElementById('student-number').value.trim(),
+    className: document.getElementById('student-class').value,
+    name:      document.getElementById('student-name').value.trim(),
+    level:     level === 'lv1' ? 'Lv1 4択' : level === 'lv2' ? 'Lv2 4択+たすき掛け' : 'Lv3 係数入力',
+    score,
+    maxCombo,
+    total:   totalQ,
+    correct: correctQ,
+    wrong:   wrongQ,
+    mistakes: mistakes.map(m => ({ question: m.question, answer: m.answer })),
+  };
+
+  try {
+    const res = await fetch(GAS_URL, {
+      method: 'POST',
+      mode:   'no-cors',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body:   'data=' + encodeURIComponent(JSON.stringify(payload)),
+    });
+    status.textContent = '✓ 送信しました！';
+    status.className   = 'send-status ok';
+  } catch(err) {
+    status.textContent = '送信失敗。もう一度お試しください。';
+    status.className   = 'send-status err';
+    btn.disabled = false;
+  }
+}
 </script>
 </body>
 </html>
