@@ -757,6 +757,9 @@ function renderSendArea(){
       <select class="send-select" id="student-class" onchange="onFormChange()">
         <option value="">クラス</option>${opts}
       </select>
+      <input class="num-input" id="student-number" type="number"
+        placeholder="番号" min="1" max="50" style="width:72px;flex:0 0 72px;padding:12px 8px;border:1.5px solid var(--border);border-radius:var(--radius);font-size:0.95rem;background:var(--surface);outline:none;"
+        oninput="onFormChange()">
       <input class="name-input" id="student-name" type="text"
         placeholder="名前（フルネーム）" maxlength="20"
         value="${savedName.replace(/"/g,'&quot;')}"
@@ -768,8 +771,9 @@ function renderSendArea(){
 function onFormChange(){
   const n=document.getElementById('student-name').value.trim();
   const c=document.getElementById('student-class').value;
+  const num=document.getElementById('student-number').value.trim();
   const b=document.getElementById('send-btn');
-  if(b) b.disabled=!(n&&c);
+  if(b) b.disabled=!(n&&c&&num);
 }
 
 // ============================================================
@@ -781,9 +785,10 @@ function onFormChange(){
 //  3. 生徒がフォームを送信 → GASがスプレッドシートに記録
 // ============================================================
 function sendLog(){
-  const name=document.getElementById('student-name').value.trim();
-  const cls =document.getElementById('student-class').value;
-  if(!name||!cls) return;
+  const name  =document.getElementById('student-name').value.trim();
+  const cls   =document.getElementById('student-class').value;
+  const number=document.getElementById('student-number').value.trim();
+  if(!name||!cls||!number) return;
   localStorage.setItem(LS_NAME,name);
   localStorage.setItem(LS_CLS,cls);
 
@@ -804,6 +809,7 @@ function sendLog(){
   const params=new URLSearchParams({
     name:     name,
     className:cls,
+    number:   number,
     level:    lvLabel,
     score:    String(score),
     maxCombo: String(maxCombo),
