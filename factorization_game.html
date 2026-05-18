@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -662,6 +663,7 @@ let lv3vals={k:'',a:'',b:'',c:'',d:''};
 let mistakes=[];
 let handling=false,paused=false;
 let lastChoice=null,sameCount=0;
+let pauseCount=0;
 
 // ============================================================
 //  画面制御
@@ -681,17 +683,32 @@ function backToStart(){clearTimer();paused=false;show('start-screen');}
 // ============================================================
 //  一時停止
 // ============================================================
-function togglePause() {
-  paused=!paused;
-  const ov=document.getElementById('pause-overlay');
-  const btn=document.getElementById('pause-btn');
-  if(paused){
+function togglePause(){
+  if(!paused){
+    // これからポーズする
+    pauseCount++;
     clearTimer();
-    ov.classList.add('active');
+    paused=true;
+    document.getElementById('pause-overlay').classList.add('active');
+    const btn=document.getElementById('pause-btn');
     btn.textContent='再開'; btn.classList.add('pausing');
+    // 残り回数をモーダルに表示
+    const remaining=3-pauseCount;
+    const title=document.querySelector('.pause-title');
+    if(title) title.textContent=remaining>0
+      ? `一時停止（残り${remaining}回）`
+      : `一時停止（この後終了）`;
   } else {
-    ov.classList.remove('active');
+    // 再開する
+    paused=false;
+    document.getElementById('pause-overlay').classList.remove('active');
+    const btn=document.getElementById('pause-btn');
     btn.textContent='一時停止'; btn.classList.remove('pausing');
+    if(pauseCount>=3){
+      // 3回停止した → 再開せずにゲームオーバー
+      gameOver();
+      return;
+    }
     timerID=setInterval(tick,1000);
   }
 }
@@ -715,7 +732,7 @@ function tick(){timeLeft--;updateHUD();if(timeLeft<=0){clearTimer();gameOver();}
 function startGame(){
   handling=false;lastChoice=null;sameCount=0;
   score=0;combo=0;maxCombo=0;timeLeft=30;
-  totalQ=0;correctQ=0;wrongQ=0;mistakes=[];
+  totalQ=0;correctQ=0;wrongQ=0;mistakes=[];pauseCount=0;
   updateHUD();
   show('game-screen');
   nextQuestion();
@@ -780,14 +797,26 @@ function onFormChange(){
 }
 
 // ============================================================
-//  GAS 送信 — GASページを新タブで開く（CORS問題を完全回避）
-//
-//  仕組み:
-//  1. スコアなどをURLパラメータに付けてGASのURLを新タブで開く
-//  2. GASがHTMLフォームを表示（クラス・名前入力）
-//  3. 生徒がフォームを送信 → GASがスプレッドシートに記録
+//  GAS 送信 — iframeフォームPOSTでCORS問題を回避
 // ============================================================
-function sendLog(){
+function sendViaForm(url,data){
+  return new Promise(resolve=>{
+    ['__gas_iframe','__gas_form'].forEach(id=>{const e=document.getElementById(id);if(e)e.remove();});
+    const iframe=document.createElement('iframe');
+    iframe.id='__gas_iframe';iframe.name='__gas_iframe';iframe.style.display='none';
+    document.body.appendChild(iframe);
+    const form=document.createElement('form');
+    form.id='__gas_form';form.method='POST';form.action=url;form.target='__gas_iframe';form.style.display='none';
+    const inp=document.createElement('input');
+    inp.type='hidden';inp.name='data';inp.value=JSON.stringify(data);
+    form.appendChild(inp);document.body.appendChild(form);
+    iframe.onload=()=>resolve();
+    setTimeout(resolve,4000);
+    form.submit();
+  });
+}
+
+async function sendLog(){
   const name  =document.getElementById('student-name').value.trim();
   const cls   =document.getElementById('student-class').value;
   const number=document.getElementById('student-number').value.trim();
@@ -802,30 +831,26 @@ function sendLog(){
     return;
   }
 
+  const btn=document.getElementById('send-btn');
+  const st =document.getElementById('send-status');
+  btn.disabled=true; st.textContent='送信中…'; st.className='send-status';
+
   const lvLabel={lv1:'Lv1 基礎',lv2:'Lv2 標準',lv3:'Lv3 発展'}[level]||level;
   const seen=new Set();
-  const mistakesText=mistakes
-    .filter(m=>{if(seen.has(m.text))return false;seen.add(m.text);return true;})
-    .map(m=>m.text+' → '+m.answer).join(' / ')||'なし';
+  const um=mistakes.filter(m=>{if(seen.has(m.text))return false;seen.add(m.text);return true;})
+    .map(m=>({question:m.text,answer:m.answer}));
 
-  // スコア情報をURLパラメータに付けてGASページを開く
-  const params=new URLSearchParams({
-    name:     name,
-    className:cls,
-    number:   number,
-    level:    lvLabel,
-    score:    String(score),
-    maxCombo: String(maxCombo),
-    total:    String(totalQ),
-    correct:  String(correctQ),
-    wrong:    String(wrongQ),
-    mistakes: mistakesText,
-  });
-  window.open(url+'?'+params.toString(), '_blank');
-
-  const st=document.getElementById('send-status');
-  st.textContent='✓ 記録ページが開きました。確認して送信ボタンを押してください。';
-  st.className='send-status ok';
+  try{
+    await sendViaForm(url,{
+      name,className:cls,number,level:lvLabel,
+      score,maxCombo,total:totalQ,correct:correctQ,wrong:wrongQ,
+      mistakes:um
+    });
+    st.textContent='✓ 記録を送信しました'; st.className='send-status ok';
+  }catch(err){
+    st.textContent='送信失敗: '+err.message; st.className='send-status err';
+    btn.disabled=false;
+  }
 }
 
 // ============================================================
@@ -879,7 +904,14 @@ function cTerm(n){if(n===0)return '';return n>0?`+${n}`:`${n}`;}
 function polyLatex(A,B,C){
   let s='';
   if(A===1)s+='x^{2}'; else if(A===-1)s+='-x^{2}'; else if(A!==0)s+=`${A}x^{2}`;
-  s+=xTerm(B); s+=cTerm(C);
+  if(s===''){
+    // A=0: first term must not start with +
+    const xt=xTerm(B).replace(/^\+/,'');
+    if(xt){s=xt; s+=cTerm(C);}
+    else   {s=cTerm(C).replace(/^\+/,'');}
+  } else {
+    s+=xTerm(B); s+=cTerm(C);
+  }
   return s||'0';
 }
 function linLatex(a,b){
@@ -930,6 +962,14 @@ function genPerfectSquare(){
   const B=2*sg,C=sg*sg;
   return{text:polyLatex(1,B,C),cf:[`(x${sgn(sg)})^{2}`],expA:1,expB:B,expC:C};
 }
+// -x² 型: -(x+p)(x+q)
+function genNegSumProduct(){
+  let p,q;
+  do{p=randInt(-5,5);q=randInt(-5,5);}while(p===0||q===0||p===q);
+  const B=-(p+q), C=-(p*q);
+  return{text:polyLatex(-1,B,C), cf:[`-(x${sgn(p)})(x${sgn(q)})`],
+         expA:-1, expB:B, expC:C, type:'negsum', p, q};
+}
 function genTasuki(){
   let a,b,c,d,tries=0;
   do{a=randInt(1,3);c=randInt(1,3);b=randInt(-8,8);d=randInt(-8,8);tries++;}
@@ -941,22 +981,25 @@ function genTasuki(){
 function generateQuestion(){
   const r=Math.random();
   if(level==='lv1'){
-    if(r<0.55) return genBasicSumProduct();
-    if(r<0.78) return genBasicDiffSquares();
+    if(r<0.40) return genBasicSumProduct();
+    if(r<0.56) return genNegSumProduct();
+    if(r<0.76) return genBasicDiffSquares();
     return genBasicPerfectSquare();
   }
   if(level==='lv2'){
     if(r<0.20) return genBasicSumProduct();
-    if(r<0.40) return genKSumProduct();
-    if(r<0.55) return genCommonFactor();
-    if(r<0.75) return genDiffSquares();
+    if(r<0.34) return genNegSumProduct();
+    if(r<0.50) return genKSumProduct();
+    if(r<0.63) return genCommonFactor();
+    if(r<0.80) return genDiffSquares();
     return genPerfectSquare();
   }
   if(r<0.15) return genBasicSumProduct();
-  if(r<0.30) return genKSumProduct();
-  if(r<0.43) return genCommonFactor();
-  if(r<0.56) return genDiffSquares();
-  if(r<0.70) return genPerfectSquare();
+  if(r<0.25) return genNegSumProduct();
+  if(r<0.38) return genKSumProduct();
+  if(r<0.50) return genCommonFactor();
+  if(r<0.62) return genDiffSquares();
+  if(r<0.74) return genPerfectSquare();
   return genTasuki();
 }
 
@@ -979,7 +1022,7 @@ function parseParts(body){
   return parts;
 }
 function canonicalize(expr){
-  const pm=expr.match(/^(\d+)/);const prefix=pm?pm[1]:'';const body=prefix?expr.slice(prefix.length):expr;
+  const pm=expr.match(/^(-|\d+)/);const prefix=pm?pm[1]:'';const body=prefix?expr.slice(prefix.length):expr;
   const parts=parseParts(body);
   if(parts.length===2){
     const p0=parts[0].replace(/\^\{2\}$/,''),p1=parts[1].replace(/\^\{2\}$/,'');
@@ -1023,6 +1066,21 @@ function makeChoices(correct,q){
     }
   }
 
+  // -x² 型ダミー
+  if(type==='negsum'&&q){
+    for(const[fp,fq]of[[q.p,-q.q],[-q.p,q.q],[-q.p,-q.q]]){
+      if(arr.length>=4)break;
+      if(!fp||!fq||Math.abs(fp)>8||Math.abs(fq)>8)continue;
+      const w=`-(x${sgn(fp)})(x${sgn(fq)})`;
+      if(!hasS(w)){addS(w);arr.push(canonicalize(w));}
+    }
+    // 符号なし版を引っかけとして追加
+    if(arr.length<4){
+      const w=`(x${sgn(q.p)})(x${sgn(q.q)})`;
+      if(!hasS(w)){addS(w);arr.push(canonicalize(w));}
+    }
+  }
+
   if(q&&q.expC!==0&&type!=='ksum'&&type!=='tasuki'){
     factorPairs(q.expC).sort(()=>Math.random()-0.5).forEach(([p2,q2])=>{
       if(arr.length>=4)return;
@@ -1059,6 +1117,10 @@ function makeChoices(correct,q){
       const dp=randInt(-8,8),dq=randInt(-8,8);
       if(!dp||!dq||dp===dq)continue;
       w=`${q.k}(x${sgn(dp)})(x${sgn(dq)})`;
+    }else if(type==='negsum'){
+      const dp=randInt(-5,5),dq=randInt(-5,5);
+      if(!dp||!dq||dp===dq)continue;
+      w=`-(x${sgn(dp)})(x${sgn(dq)})`;
     }else if(type==='tasuki'){
       const da=q?q.ta:randInt(1,3),dc=q?q.tc:randInt(1,3);
       const db=randInt(-8,8),dd=randInt(-8,8);
