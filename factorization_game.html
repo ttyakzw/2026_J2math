@@ -1,243 +1,1134 @@
-// ============================================================
-//  因数分解トライアル - 成績ログ v5
-//  Google Apps Script に貼り付けて使用
-//
-//  デプロイ設定:
-//    種類: ウェブアプリ
-//    次のユーザーとして実行: 自分
-//    アクセスできるユーザー: 全員
-// ============================================================
-
-const LOG_SHEET   = 'ログ';
-const LOG_HEADERS = [
-  'タイムスタンプ', 'メール', 'クラス', '名前',
-  'レベル', 'スコア', '最大コンボ', '問題数', '正解数', '不正解数', '正答率(%)',
-  '間違えた問題'
-];
-const CLASS_LIST = ['2A','2B','2C','2D','2E','2F'];  // ← クラスを変更
-
-// ============================================================
-//  GETリクエスト：フォームページを表示 or データ受信して記録
-// ============================================================
-function doGet(e) {
-  // ?action=submit のときはデータを記録してサンクスページを返す
-  if (e.parameter.action === 'submit') {
-    try {
-      const email = Session.getActiveUser().getEmail() || '(不明)';
-      const data  = {
-        className: e.parameter.className || '-',
-        name:      e.parameter.name      || '-',
-        level:     e.parameter.level     || '-',
-        score:     e.parameter.score     || 0,
-        maxCombo:  e.parameter.maxCombo  || 0,
-        total:     e.parameter.total     || 0,
-        correct:   e.parameter.correct   || 0,
-        wrong:     e.parameter.wrong     || 0,
-        mistakes:  e.parameter.mistakes  || 'なし',
-      };
-      writeLog(email, data);
-      return HtmlService.createHtmlOutput(thanksPage(email, data.name));
-    } catch(err) {
-      return HtmlService.createHtmlOutput('<p>エラー: ' + err.message + '</p>');
-    }
-  }
-
-  // 通常アクセス：入力フォームページを返す
-  const email = Session.getActiveUser().getEmail() || '';
-  return HtmlService.createHtmlOutput(formPage(email, e.parameter));
-}
-
-// ============================================================
-//  フォームHTML
-// ============================================================
-function formPage(email, params) {
-  const classOptions = CLASS_LIST
-    .map(c => `<option value="${c}">${c}</option>`)
-    .join('');
-
-  // ゲームからのパラメータがあれば自動入力
-  const score    = params.score    || '';
-  const maxCombo = params.maxCombo || '';
-  const total    = params.total    || '';
-  const correct  = params.correct  || '';
-  const wrong    = params.wrong    || '';
-  const level    = params.level    || '';
-  const mistakes = params.mistakes || '';
-
-  const scriptUrl = ScriptApp.getService().getUrl();
-
-  return `<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>因数分解トライアル - 記録送信</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>因数分解トライアル</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
 <style>
-  body { font-family: 'Helvetica Neue', sans-serif; background: #f4f5f8;
-         display: flex; justify-content: center; padding: 40px 20px; }
-  .card { background: #fff; border-radius: 16px; padding: 32px 28px;
-          width: 100%; max-width: 440px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
-  h1 { font-size: 1.2rem; font-weight: 600; color: #1a2a4a; margin-bottom: 6px; }
-  .sub { font-size: 0.8rem; color: #888; margin-bottom: 24px; }
-  .email-row { font-size: 0.8rem; color: #444; background: #f0f4ec;
-               border-radius: 8px; padding: 10px 14px; margin-bottom: 20px;
-               word-break: break-all; }
-  label { display: block; font-size: 0.78rem; color: #666;
-          letter-spacing: 0.1em; margin-bottom: 4px; margin-top: 14px; }
-  select, input[type=text] {
-    width: 100%; padding: 12px 14px; border: 1.5px solid #d0d4de;
-    border-radius: 10px; font-size: 0.95rem; background: #fff;
-    box-sizing: border-box; }
-  select:focus, input:focus { outline: none; border-color: #1a2a4a; }
-  .score-box { background: #f8f9fb; border-radius: 12px; padding: 16px;
-               margin: 20px 0; display: grid; grid-template-columns: 1fr 1fr;
-               gap: 10px; }
-  .score-item { text-align: center; }
-  .score-val { font-size: 1.6rem; font-weight: 700; color: #1a2a4a; }
-  .score-label { font-size: 0.65rem; color: #888; letter-spacing: 0.15em;
-                 text-transform: uppercase; margin-top: 2px; }
-  .btn { width: 100%; padding: 15px; background: #1a2a4a; color: #fff;
-         border: none; border-radius: 12px; font-size: 1rem; font-weight: 600;
-         cursor: pointer; margin-top: 20px; letter-spacing: 0.05em; }
-  .btn:active { background: #0f1a2e; }
+:root {
+  --bg:      #f4f5f8;
+  --surface: #ffffff;
+  --border:  #d0d4de;
+  --accent:  #1a2a4a;
+  --accent2: #2e4a7a;
+  --red:     #b03a2e;
+  --gold:    #b8960a;
+  --text:    #0f1823;
+  --muted:   #5a6478;
+  --correct: #1a5c3a;
+  --wrong:   #b03a2e;
+  --radius:  12px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Noto Sans JP', sans-serif;
+  font-weight: 400;
+  min-height: 100vh;
+  touch-action: manipulation;
+}
+
+/* ===== スタート画面 ===== */
+#start-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+  padding: 52px 28px 40px;
+}
+.logo-wrap { text-align: center; margin-bottom: 40px; }
+.logo-en {
+  font-family: 'Lora', serif;
+  font-style: italic;
+  font-size: clamp(0.7rem, 2vw, 0.85rem);
+  letter-spacing: 0.25em;
+  color: var(--muted);
+  margin-bottom: 10px;
+}
+.logo-ja {
+  font-size: clamp(1.9rem, 7vw, 2.8rem);
+  font-weight: 300;
+  letter-spacing: 0.08em;
+  line-height: 1.2;
+}
+.logo-ja span { font-weight: 700; color: var(--gold); }
+.logo-line { width: 48px; height: 2px; background: var(--gold); margin: 16px auto 0; }
+
+.section-head {
+  font-size: 0.68rem;
+  letter-spacing: 0.22em;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-bottom: 14px;
+  text-align: center;
+}
+.level-list { width: 100%; max-width: 480px; display: flex; flex-direction: column; gap: 10px; margin-bottom: 28px; }
+.level-btn {
+  display: flex; align-items: center; gap: 16px;
+  padding: 16px 20px;
+  background: var(--surface); border: 1.5px solid var(--border);
+  border-radius: var(--radius); cursor: pointer; text-align: left; width: 100%;
+  transition: all 0.18s;
+}
+.level-btn.selected { border-color: var(--accent); background: #f0f4f0; }
+.level-btn:active { opacity: 0.75; }
+.level-num {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Lora', serif; font-size: 0.9rem; font-weight: 600; color: var(--muted);
+  flex-shrink: 0; transition: all 0.18s;
+}
+.level-btn.selected .level-num { background: var(--accent); color: #fff; }
+.level-name  { font-size: 0.95rem; font-weight: 500; }
+.level-desc  { font-size: 0.75rem; color: var(--muted); margin-top: 2px; font-weight: 300; }
+.level-badge {
+  margin-left: auto;
+  font-size: 0.62rem;
+  letter-spacing: 0.12em;
+  padding: 3px 8px;
+  border-radius: 20px;
+  border: 1px solid;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.badge-easy   { color: #1a5c3a; border-color: #c3e6d8; background: #f0f7f4; }
+.badge-std    { color: #2e4a7a; border-color: #c3d4f0; background: #f0f4fc; }
+.badge-adv    { color: #7a3a00; border-color: #f0d0a0; background: #fdf5ea; }
+
+.start-btn {
+  width: 100%; max-width: 480px;
+  padding: 17px;
+  background: var(--accent); color: #fff; border: none;
+  border-radius: var(--radius);
+  font-family: 'Noto Sans JP', sans-serif;
+  font-size: 1rem; font-weight: 500; letter-spacing: 0.1em;
+  cursor: pointer; transition: background 0.18s;
+  margin-bottom: 14px;
+}
+.start-btn:active { background: #0e1a30; }
+
+.teacher-banner {
+  width: 100%; max-width: 480px;
+  padding: 11px 16px;
+  background: var(--surface); border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  display: flex; align-items: center; gap: 12px;
+  cursor: pointer; transition: all 0.15s;
+}
+.teacher-banner:active { background: #f5f5f5; }
+.teacher-banner-text  { flex: 1; }
+.teacher-banner-title { font-size: 0.85rem; font-weight: 500; }
+.teacher-banner-sub   { font-size: 0.72rem; color: var(--muted); margin-top: 1px; }
+.teacher-banner-arrow { color: var(--muted); }
+
+.gas-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 0.68rem; padding: 2px 8px; border-radius: 20px;
+}
+.gas-badge.set   { background: #e8f5ee; color: var(--correct); }
+.gas-badge.unset { background: #fdf3e6; color: #8a5500; }
+.gas-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+/* ===== 設定モーダル ===== */
+.modal-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.45); z-index: 200;
+  align-items: flex-end; justify-content: center;
+}
+.modal-overlay.active { display: flex; }
+.modal-sheet {
+  background: var(--surface); border-radius: 20px 20px 0 0;
+  padding: 20px 24px 48px;
+  width: 100%; max-width: 560px; max-height: 88vh;
+  overflow-y: auto; -webkit-overflow-scrolling: touch;
+}
+.modal-handle { width: 40px; height: 4px; background: var(--border); border-radius: 2px; margin: 0 auto 18px; }
+.modal-title  { font-size: 1rem; font-weight: 700; margin-bottom: 14px; }
+.setup-step   { background: var(--bg); border-radius: 10px; padding: 14px 16px; margin-bottom: 10px; }
+.setup-step-num  { font-size: 0.62rem; letter-spacing: 0.2em; color: var(--muted); text-transform: uppercase; margin-bottom: 6px; }
+.setup-step-text { font-size: 0.85rem; line-height: 1.7; }
+.setup-step-text code { background: #e8eaf0; border-radius: 4px; padding: 2px 5px; font-size: 0.82rem; color: var(--accent); }
+.setup-row   { display: flex; gap: 8px; margin-top: 10px; }
+.setup-input {
+  flex: 1; padding: 10px 12px;
+  border: 1.5px solid var(--border); border-radius: 8px;
+  font-size: 0.82rem; font-family: monospace;
+  background: var(--surface); outline: none;
+  transition: border-color 0.15s;
+}
+.setup-input:focus { border-color: var(--accent); }
+.setup-save-btn {
+  padding: 10px 18px; background: var(--accent); color: #fff;
+  border: none; border-radius: 8px; font-size: 0.85rem; font-weight: 500; cursor: pointer;
+  white-space: nowrap;
+}
+.setup-save-btn:active { opacity: 0.75; }
+.setup-status { font-size: 0.75rem; margin-top: 6px; min-height: 18px; }
+.setup-status.ok  { color: var(--correct); }
+.setup-status.err { color: var(--wrong); }
+.modal-close-btn {
+  width: 100%; margin-top: 12px; padding: 14px;
+  background: var(--bg); color: var(--muted);
+  border: 1.5px solid var(--border); border-radius: var(--radius);
+  font-size: 0.9rem; cursor: pointer;
+}
+.modal-close-btn:active { background: var(--border); }
+
+/* ===== ゲーム画面 ===== */
+#game-screen { display: none; flex-direction: column; min-height: 100vh; position: relative; }
+.hud {
+  display: flex; align-items: center;
+  padding: 14px 20px;
+  background: var(--surface); border-bottom: 1px solid var(--border);
+}
+.hud-item { flex: 1; text-align: center; }
+.hud-val { font-family: 'Lora', serif; font-size: 1.55rem; font-weight: 600; line-height: 1; }
+.hud-val.danger { color: var(--red); }
+.hud-correct    { color: var(--correct); }
+.hud-wrong      { color: var(--wrong); }
+.hud-label { font-size: 0.6rem; letter-spacing: 0.2em; color: var(--muted); text-transform: uppercase; margin-top: 3px; }
+.hud-divider { width: 1px; height: 32px; background: var(--border); }
+.timer-bar-wrap { height: 4px; background: var(--border); }
+.timer-bar { height: 100%; background: var(--accent2); transition: width 0.95s linear, background 0.3s; }
+.timer-bar.danger { background: var(--red); }
+
+.game-body {
+  flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch;
+  padding: 20px 20px 48px;
+  max-width: 560px; margin: 0 auto; width: 100%;
+}
+.question-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 28px 16px 24px;
+  text-align: center; margin-bottom: 10px;
+}
+.question-hint { font-size: 0.65rem; letter-spacing: 0.22em; color: var(--muted); text-transform: uppercase; margin-bottom: 14px; }
+.question-text { font-size: clamp(1.6rem, 6vw, 2.2rem); line-height: 1.4; }
+.question-text .katex { font-size: 1em; color: var(--text); }
+
+.feedback {
+  text-align: center; font-size: 0.95rem; font-weight: 500;
+  height: 30px; line-height: 30px; letter-spacing: 0.05em;
+  opacity: 0; transition: opacity 0.1s; margin-bottom: 4px;
+}
+.feedback.show { opacity: 1; }
+.feedback.correct { color: var(--correct); }
+.feedback.wrong   { color: var(--wrong); }
+
+.choices { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.choice-btn {
+  background: var(--surface); border: 1.5px solid var(--border);
+  border-radius: var(--radius); padding: 18px 8px;
+  font-size: clamp(0.95rem, 3vw, 1.1rem); cursor: pointer;
+  transition: all 0.15s; text-align: center; line-height: 1.5;
+  min-height: 64px; display: flex; align-items: center; justify-content: center;
+}
+.choice-btn:active { background: #f0f4ec; border-color: var(--accent); }
+.choice-btn .katex { color: var(--text); font-size: 1em; }
+
+/* Lv3 */
+.lv3-preview {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 14px 12px;
+  text-align: center; font-size: clamp(1rem, 3.5vw, 1.25rem);
+  margin-bottom: 12px; min-height: 50px;
+  display: flex; align-items: center; justify-content: center;
+}
+.lv3-preview .katex { font-size: 1em; color: var(--text); }
+.lv3-preview .ph { color: var(--muted); font-style: italic; }
+.num-row { margin-bottom: 8px; }
+.num-row-label { font-size: 0.65rem; letter-spacing: 0.15em; color: var(--muted); text-transform: uppercase; margin-bottom: 4px; }
+.num-row-btns  { display: flex; flex-wrap: wrap; gap: 4px; }
+.num-btn {
+  flex: 0 0 calc(10% - 4px); min-width: 36px;
+  background: var(--surface); border: 1.5px solid var(--border);
+  border-radius: 8px; padding: 8px 2px;
+  font-family: 'Lora', serif; font-size: 0.82rem;
+  cursor: pointer; text-align: center; min-height: 36px;
+  transition: all 0.15s;
+}
+.num-btn.sel { background: #f0f4ec; border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.num-btn:active { opacity: 0.7; }
+
+.submit-btn {
+  width: 100%; padding: 15px;
+  background: var(--accent); color: #fff; border: none;
+  border-radius: var(--radius);
+  font-family: 'Noto Sans JP', sans-serif;
+  font-size: 0.95rem; font-weight: 500; letter-spacing: 0.1em;
+  cursor: pointer; margin-top: 6px; transition: background 0.15s;
+}
+.submit-btn:disabled { background: var(--border); color: var(--muted); cursor: not-allowed; }
+.submit-btn:not(:disabled):active { background: #0e1a30; }
+
+/* ===== 一時停止 ===== */
+.pause-btn {
+  background: none; border: 1.5px solid var(--border); border-radius: 8px;
+  padding: 5px 10px;
+  font-family: 'Noto Sans JP', sans-serif; font-size: 0.72rem; font-weight: 500;
+  letter-spacing: 0.08em; cursor: pointer; color: var(--muted);
+  transition: all 0.15s; white-space: nowrap;
+}
+.pause-btn:active { background: var(--border); }
+.pause-btn.pausing { background: var(--accent); color: #fff; border-color: var(--accent); }
+#pause-overlay {
+  display: none; position: absolute; inset: 0;
+  background: rgba(245,243,238,0.92);
+  backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+  z-index: 100; align-items: center; justify-content: center;
+}
+#pause-overlay.active { display: flex; }
+.pause-modal {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 20px;
+  padding: 36px 32px; width: 88%; max-width: 360px;
+  display: flex; flex-direction: column; gap: 12px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.08);
+}
+.pause-title { font-size: 1.1rem; font-weight: 500; letter-spacing: 0.1em; color: var(--muted); text-align: center; margin-bottom: 4px; }
+.pause-modal-btn {
+  width: 100%; padding: 15px; border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  font-family: 'Noto Sans JP', sans-serif; font-size: 0.95rem; font-weight: 500;
+  cursor: pointer; letter-spacing: 0.05em; transition: all 0.15s;
+  background: var(--bg); color: var(--text);
+}
+.pause-modal-btn:active { opacity: 0.7; }
+.pause-modal-btn.restart { background: var(--accent); color: #fff; border-color: var(--accent); }
+.pause-modal-btn.back    { color: var(--muted); }
+
+/* ===== ゲームオーバー ===== */
+#gameover-screen { display: none; flex-direction: column; min-height: 100vh; overflow-y: auto; }
+.go-header {
+  padding: 48px 28px 32px; text-align: center;
+  background: var(--surface); border-bottom: 1px solid var(--border);
+}
+.go-title { font-size: clamp(1.4rem, 5vw, 2rem); font-weight: 300; letter-spacing: 0.1em; margin-bottom: 24px; }
+.go-score-wrap {
+  display: inline-flex; flex-direction: column; align-items: center;
+  background: var(--bg); border: 1px solid var(--border); border-radius: 16px; padding: 16px 40px;
+}
+.go-score-label { font-size: 0.65rem; letter-spacing: 0.22em; color: var(--muted); text-transform: uppercase; margin-bottom: 6px; }
+.go-score { font-family: 'Lora', serif; font-size: clamp(3rem, 12vw, 5rem); font-weight: 600; color: var(--gold); line-height: 1; }
+.go-stats { display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 20px; }
+.go-stat { text-align: center; }
+.go-stat-val { font-family: 'Lora', serif; font-size: 2.2rem; font-weight: 600; line-height: 1; }
+.go-stat-val.correct { color: var(--correct); }
+.go-stat-val.wrong   { color: var(--wrong); }
+.go-stat-val.total   { color: var(--muted); }
+.go-stat-label { font-size: 0.65rem; letter-spacing: 0.18em; color: var(--muted); text-transform: uppercase; margin-top: 4px; }
+.go-stat-sep   { font-size: 1.4rem; color: var(--border); font-weight: 300; margin-top: -10px; }
+
+/* 送信フォーム */
+.name-section { padding: 20px 24px 0; max-width: 560px; margin: 0 auto; width: 100%; }
+.name-label   { font-size: 0.65rem; letter-spacing: 0.2em; color: var(--muted); text-transform: uppercase; margin-bottom: 10px; }
+.send-row     { display: flex; gap: 8px; margin-bottom: 8px; }
+.send-select  {
+  flex: 0 0 88px; padding: 12px 8px;
+  border: 1.5px solid var(--border); border-radius: var(--radius);
+  font-family: 'Noto Sans JP', sans-serif; font-size: 0.9rem;
+  background: var(--surface); outline: none; cursor: pointer;
+}
+.send-select:focus { border-color: var(--accent); }
+.name-input {
+  flex: 1; padding: 12px 14px;
+  border: 1.5px solid var(--border); border-radius: var(--radius);
+  font-family: 'Noto Sans JP', sans-serif; font-size: 0.95rem;
+  background: var(--surface); outline: none;
+  transition: border-color 0.15s;
+}
+.name-input:focus { border-color: var(--accent); }
+.send-btn {
+  width: 100%; padding: 13px;
+  background: var(--gold); color: #fff; border: none;
+  border-radius: var(--radius);
+  font-family: 'Noto Sans JP', sans-serif; font-size: 0.95rem; font-weight: 500;
+  cursor: pointer; letter-spacing: 0.05em; transition: background 0.15s;
+}
+.send-btn:disabled { background: var(--border); color: var(--muted); cursor: not-allowed; }
+.send-btn:not(:disabled):active { background: #8a7008; }
+.send-status {
+  font-size: 0.82rem; text-align: center; min-height: 24px;
+  color: var(--muted); letter-spacing: 0.05em; margin-top: 6px; padding: 4px 0;
+}
+.send-status.ok  { color: var(--correct); }
+.send-status.err { color: var(--wrong); }
+.gas-warning {
+  background: #fdf3e6; border: 1px solid #f0c070; border-radius: var(--radius);
+  padding: 12px 16px; font-size: 0.82rem; color: #7a5500; line-height: 1.6;
+}
+.gas-warning-btn {
+  margin-top: 8px; padding: 8px 16px; background: #f0c070; color: #5a3d00;
+  border: none; border-radius: 6px; font-size: 0.8rem; font-weight: 500; cursor: pointer;
+}
+
+/* 間違い */
+.mistakes-section { padding: 20px 24px; max-width: 560px; margin: 0 auto; width: 100%; }
+.mistakes-toggle {
+  width: 100%; display: flex; align-items: center;
+  background: none; border: none; padding: 4px 0 14px; cursor: pointer; gap: 10px;
+}
+.mistakes-toggle::after { content:''; flex:1; height:1px; background:var(--border); order:1; }
+#mistakes-toggle-label { font-size: 0.68rem; letter-spacing: 0.22em; color: var(--muted); text-transform: uppercase; order:0; }
+#mistakes-toggle-icon  { font-size: 0.75rem; color: var(--muted); transition: transform 0.25s; flex-shrink:0; order:2; }
+#mistakes-list { overflow: hidden; max-height: 2000px; transition: max-height 0.3s ease, opacity 0.25s; opacity: 1; }
+#mistakes-list.closed { max-height: 0; opacity: 0; }
+.no-mistakes { text-align:center; color:var(--correct); font-size:0.9rem; padding:24px; background:#f0f7f4; border-radius:var(--radius); border:1px solid #c3e6d8; }
+.mistake-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-left: 3px solid var(--gold); border-radius: var(--radius);
+  padding: 14px 16px; margin-bottom: 10px;
+}
+.mistake-q       { font-size: 0.65rem; letter-spacing: 0.15em; color: var(--muted); text-transform: uppercase; margin-bottom: 6px; }
+.mistake-expr    { font-size: 1.05rem; margin-bottom: 8px; }
+.mistake-expr .katex { font-size: 1em; color: var(--text); }
+.mistake-ans-label { font-size: 0.65rem; letter-spacing: 0.12em; color: var(--correct); text-transform: uppercase; margin-bottom: 4px; }
+.mistake-ans .katex  { font-size: 1em; color: var(--correct); }
+
+.go-btns { padding: 8px 24px 48px; max-width: 560px; margin: 0 auto; width: 100%; display: flex; flex-direction: column; gap: 10px; }
+.go-btn-retry {
+  padding: 15px; background: var(--accent); color: #fff; border: none;
+  border-radius: var(--radius); font-family: 'Noto Sans JP', sans-serif;
+  font-size: 0.95rem; font-weight: 500; letter-spacing: 0.1em; cursor: pointer; transition: background 0.15s;
+}
+.go-btn-retry:active { background: #0e1a30; }
+.go-btn-back {
+  padding: 14px; background: transparent; color: var(--muted);
+  border: 1.5px solid var(--border); border-radius: var(--radius);
+  font-family: 'Noto Sans JP', sans-serif; font-size: 0.9rem; cursor: pointer; transition: all 0.15s;
+}
+.go-btn-back:active { background: var(--border); }
+
+#flash { position: fixed; inset: 0; pointer-events: none; opacity: 0; transition: opacity 0.12s; z-index: 999; }
+#flash.show { opacity: 1; }
+.gap { margin-top: 12px; }
 </style>
 </head>
 <body>
-<div class="card">
-  <h1>📊 記録を送信する</h1>
-  <p class="sub">因数分解トライアル</p>
-  ${email ? `<div class="email-row">✅ ${email}</div>` : '<div class="email-row" style="color:#b03a2e">⚠ Googleアカウント未ログイン</div>'}
+<div id="flash"></div>
 
-  <div class="score-box">
-    <div class="score-item">
-      <div class="score-val">${score || '-'}</div>
-      <div class="score-label">Score</div>
+<!-- ===== 設定モーダル ===== -->
+<div class="modal-overlay" id="teacher-modal" onclick="closeModal(event)">
+  <div class="modal-sheet" onclick="event.stopPropagation()">
+    <div class="modal-handle"></div>
+    <div class="modal-title">⚙️ 教員設定</div>
+
+    <div class="setup-step">
+      <div class="setup-step-num">Step 1 — GAS をデプロイ</div>
+      <div class="setup-step-text">
+        同封の <code>因数分解トライアル_GAS.gs</code> を新規スプレッドシートの
+        Apps Script に貼り付け、ウェブアプリとしてデプロイします。<br>
+        実行: <strong>自分</strong> / アクセス: <strong>全員</strong>
+      </div>
     </div>
-    <div class="score-item">
-      <div class="score-val">${maxCombo || '-'}</div>
-      <div class="score-label">Max Combo</div>
+
+    <div class="setup-step">
+      <div class="setup-step-num">Step 2 — デプロイ URL を保存</div>
+      <div class="setup-step-text">GAS のデプロイ後に発行された URL を入力してください。</div>
+      <div class="setup-row">
+        <input class="setup-input" id="setup-url" type="url" placeholder="https://script.google.com/macros/s/...">
+        <button class="setup-save-btn" onclick="saveGasUrl()">保存</button>
+      </div>
+      <div class="setup-status" id="url-status"></div>
     </div>
-    <div class="score-item">
-      <div class="score-val" style="color:#1a5c3a">${correct || '-'}</div>
-      <div class="score-label">正解</div>
+
+    <div class="setup-step">
+      <div class="setup-step-num">Step 3 — クラス一覧（カンマ区切り）</div>
+      <div class="setup-row">
+        <input class="setup-input" id="setup-classes" type="text" placeholder="2A,2B,2C,2D,2E,2F">
+        <button class="setup-save-btn" onclick="saveClasses()">保存</button>
+      </div>
+      <div class="setup-status" id="class-status"></div>
     </div>
-    <div class="score-item">
-      <div class="score-val" style="color:#b03a2e">${wrong || '-'}</div>
-      <div class="score-label">不正解</div>
+
+    <button class="modal-close-btn" onclick="document.getElementById('teacher-modal').classList.remove('active'); renderGasBadge()">閉じる</button>
+  </div>
+</div>
+
+<!-- ===== スタート画面 ===== -->
+<div id="start-screen">
+  <div class="logo-wrap">
+    <div class="logo-en">Factorization Trial</div>
+    <div class="logo-ja">因数分解<span>トライアル</span></div>
+    <div class="logo-line"></div>
+  </div>
+
+  <div class="section-head">レベルを選択</div>
+  <div class="level-list">
+    <button class="level-btn selected" onclick="selectLevel('lv1',this)">
+      <div class="level-num">1</div>
+      <div>
+        <div class="level-name">基礎 — 4択</div>
+        <div class="level-desc">x²+bx+c 型・(x±a)²・x²-a² の因数分解</div>
+      </div>
+      <span class="level-badge badge-easy">中学基礎</span>
+    </button>
+    <button class="level-btn" onclick="selectLevel('lv2',this)">
+      <div class="level-num">2</div>
+      <div>
+        <div class="level-name">標準 — 4択</div>
+        <div class="level-desc">共通因数・k(x+p)(x+q)・差の平方を含む</div>
+      </div>
+      <span class="level-badge badge-std">標準</span>
+    </button>
+    <button class="level-btn" onclick="selectLevel('lv3',this)">
+      <div class="level-num">3</div>
+      <div>
+        <div class="level-name">発展 — 4択</div>
+        <div class="level-desc">Lv2 ＋ たすき掛け (ax+b)(cx+d) 型</div>
+      </div>
+      <span class="level-badge badge-adv">発展</span>
+    </button>
+  </div>
+
+  <button class="start-btn" onclick="startGame()">スタート</button>
+  <button class="teacher-banner" onclick="openModal()">
+    <span style="font-size:1.1rem">⚙️</span>
+    <div class="teacher-banner-text">
+      <div class="teacher-banner-title">教員設定</div>
+      <div id="gas-badge-wrap"></div>
+    </div>
+    <span class="teacher-banner-arrow">›</span>
+  </button>
+</div>
+
+<!-- ===== ゲーム画面 ===== -->
+<div id="game-screen">
+  <div class="hud">
+    <div class="hud-item">
+      <div class="hud-val" id="hud-time">30</div>
+      <div class="hud-label">Time</div>
+    </div>
+    <div class="hud-divider"></div>
+    <div class="hud-item">
+      <div class="hud-val hud-correct" id="hud-correct">0</div>
+      <div class="hud-label">正解</div>
+    </div>
+    <div class="hud-divider"></div>
+    <div class="hud-item">
+      <div class="hud-val hud-wrong" id="hud-wrong">0</div>
+      <div class="hud-label">不正解</div>
+    </div>
+    <div class="hud-divider"></div>
+    <div class="hud-item">
+      <div class="hud-val" id="hud-combo">×0</div>
+      <div class="hud-label">Combo</div>
+    </div>
+    <div class="hud-divider"></div>
+    <div class="hud-item">
+      <button class="pause-btn" id="pause-btn" onclick="togglePause()">一時停止</button>
+    </div>
+  </div>
+  <div class="timer-bar-wrap">
+    <div class="timer-bar" id="timer-bar" style="width:100%"></div>
+  </div>
+
+  <div id="pause-overlay">
+    <div class="pause-modal">
+      <div class="pause-title">一時停止</div>
+      <button class="pause-modal-btn" onclick="togglePause()">▶ 再開</button>
+      <button class="pause-modal-btn restart" onclick="confirmRestart()">↺ 再スタート</button>
+      <button class="pause-modal-btn back" onclick="confirmBack()">← レベル選択へ</button>
     </div>
   </div>
 
-  <form method="GET" action="${scriptUrl}">
-    <input type="hidden" name="action"   value="submit">
-    <input type="hidden" name="level"    value="${level}">
-    <input type="hidden" name="score"    value="${score}">
-    <input type="hidden" name="maxCombo" value="${maxCombo}">
-    <input type="hidden" name="total"    value="${total}">
-    <input type="hidden" name="correct"  value="${correct}">
-    <input type="hidden" name="wrong"    value="${wrong}">
-    <input type="hidden" name="mistakes" value="${mistakes}">
-
-    <label>クラス</label>
-    <select name="className" required>
-      <option value="">選択してください</option>
-      ${classOptions}
-    </select>
-
-    <label>名前（フルネーム）</label>
-    <input type="text" name="name" placeholder="例：三田 太郎" required maxlength="20">
-
-    <button type="submit" class="btn">送信する</button>
-  </form>
+  <div class="game-body">
+    <div class="question-card">
+      <div class="question-hint">因数分解せよ</div>
+      <div class="question-text" id="question-text"></div>
+    </div>
+    <div class="feedback" id="feedback"> </div>
+    <div id="answer-area"></div>
+  </div>
 </div>
-</body>
-</html>`;
-}
 
-// ============================================================
-//  送信完了ページ
-// ============================================================
-function thanksPage(email, name) {
-  return `<!DOCTYPE html>
-<html lang="ja">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>送信完了</title>
-<style>
-  body { font-family: 'Helvetica Neue', sans-serif; background: #f4f5f8;
-         display: flex; justify-content: center; align-items: center;
-         min-height: 100vh; padding: 20px; }
-  .card { background: #fff; border-radius: 16px; padding: 40px 28px;
-          text-align: center; max-width: 360px; width: 100%;
-          box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
-  .icon { font-size: 3rem; margin-bottom: 16px; }
-  h1 { font-size: 1.3rem; color: #1a2a4a; margin-bottom: 8px; }
-  p { font-size: 0.9rem; color: #666; }
-</style>
-</head>
-<body>
-<div class="card">
-  <div class="icon">✅</div>
-  <h1>送信完了！</h1>
-  <p>${name} さんの記録を保存しました。<br>このページを閉じてください。</p>
+<!-- ===== ゲームオーバー ===== -->
+<div id="gameover-screen">
+  <div class="go-header">
+    <div class="go-title">試合終了</div>
+    <div class="go-score-wrap">
+      <div class="go-score-label">Final Score</div>
+      <div class="go-score" id="go-score">0</div>
+    </div>
+    <div class="go-stats">
+      <div class="go-stat">
+        <div class="go-stat-val correct" id="go-correct">0</div>
+        <div class="go-stat-label">正解</div>
+      </div>
+      <div class="go-stat-sep">/</div>
+      <div class="go-stat">
+        <div class="go-stat-val total" id="go-total">0</div>
+        <div class="go-stat-label">問題数</div>
+      </div>
+      <div class="go-stat-sep"> </div>
+      <div class="go-stat">
+        <div class="go-stat-val wrong" id="go-wrong">0</div>
+        <div class="go-stat-label">不正解</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="name-section">
+    <div class="name-label">記録を送信する</div>
+    <div id="send-area"></div>
+    <div class="send-status" id="send-status"></div>
+  </div>
+
+  <div class="mistakes-section">
+    <button class="mistakes-toggle" onclick="toggleMistakes()">
+      <span id="mistakes-toggle-label">間違えた問題</span>
+      <span id="mistakes-toggle-icon">▼</span>
+    </button>
+    <div id="mistakes-list"></div>
+  </div>
+
+  <div class="go-btns">
+    <button class="go-btn-retry" onclick="startGame()">もう一度</button>
+    <button class="go-btn-back"  onclick="backToStart()">レベル選択へ戻る</button>
+  </div>
 </div>
-</body>
-</html>`;
+
+<script>
+// ============================================================
+//  設定
+// ============================================================
+const DEFAULT_GAS_URL    = 'YOUR_GAS_URL_HERE';
+const DEFAULT_CLASS_LIST = ['2A','2B','2C','2D','2E','2F'];
+
+const LS_GAS   = 'factrial_gas_url';
+const LS_CLASS = 'factrial_classes';
+const LS_NAME  = 'factrial_name';
+const LS_CLS   = 'factrial_cls';
+
+function getGasUrl()    { return localStorage.getItem(LS_GAS) || DEFAULT_GAS_URL; }
+function getClassList() {
+  const v=localStorage.getItem(LS_CLASS);
+  return v ? v.split(',').map(s=>s.trim()).filter(Boolean) : DEFAULT_CLASS_LIST;
 }
 
 // ============================================================
-//  スプレッドシートへの書き込み
+//  設定モーダル
 // ============================================================
-function writeLog(email, data) {
-  const ss    = SpreadsheetApp.getActiveSpreadsheet();
-  let   sheet = ss.getSheetByName(LOG_SHEET);
-
-  if (!sheet) {
-    sheet = ss.insertSheet(LOG_SHEET);
-    const hRange = sheet.getRange(1, 1, 1, LOG_HEADERS.length);
-    hRange.setValues([LOG_HEADERS]);
-    hRange.setFontWeight('bold')
-          .setBackground('#1a2a4a')
-          .setFontColor('#ffffff');
-    sheet.setFrozenRows(1);
-    sheet.setColumnWidth(1, 160);
-    sheet.setColumnWidth(2, 220);
-    sheet.setColumnWidth(3,  60);
-    sheet.setColumnWidth(4, 100);
-    sheet.setColumnWidth(5, 120);
-    sheet.setColumnWidths(6, 6, 65);
-    sheet.setColumnWidth(12, 320);
-  }
-
-  const correct  = Number(data.correct)  || 0;
-  const total    = Number(data.total)    || 0;
-  const rate     = total > 0 ? Math.round(correct / total * 100) : 0;
-
-  sheet.appendRow([
-    new Date(),
-    email,
-    data.className,
-    data.name,
-    data.level,
-    Number(data.score)    || 0,
-    Number(data.maxCombo) || 0,
-    total,
-    correct,
-    Number(data.wrong)    || 0,
-    rate,
-    data.mistakes,
-  ]);
-
-  Logger.log('writeLog done: ' + data.name);
+function openModal() {
+  document.getElementById('setup-url').value     = getGasUrl()===DEFAULT_GAS_URL?'':getGasUrl();
+  document.getElementById('setup-classes').value = getClassList().join(',');
+  document.getElementById('url-status').textContent   = '';
+  document.getElementById('class-status').textContent = '';
+  document.getElementById('teacher-modal').classList.add('active');
+}
+function closeModal(e) {
+  if(e && e.target!==document.getElementById('teacher-modal')) return;
+  document.getElementById('teacher-modal').classList.remove('active');
+  renderGasBadge();
+}
+function saveGasUrl() {
+  const v=document.getElementById('setup-url').value.trim();
+  const s=document.getElementById('url-status');
+  if(!v||!v.startsWith('https://')){s.textContent='有効なURLを入力してください';s.className='setup-status err';return;}
+  localStorage.setItem(LS_GAS,v);
+  s.textContent='保存しました ✓'; s.className='setup-status ok';
+}
+function saveClasses() {
+  const v=document.getElementById('setup-classes').value.trim();
+  const s=document.getElementById('class-status');
+  if(!v){s.textContent='クラスを入力してください';s.className='setup-status err';return;}
+  localStorage.setItem(LS_CLASS,v);
+  s.textContent='保存しました ✓'; s.className='setup-status ok';
+}
+function renderGasBadge() {
+  const url=getGasUrl();
+  const set=url&&url!==DEFAULT_GAS_URL;
+  document.getElementById('gas-badge-wrap').innerHTML=
+    `<span class="gas-badge ${set?'set':'unset'}"><span class="gas-dot"></span>${set?'GAS連携済み':'GAS未設定'}</span>`;
 }
 
 // ============================================================
-//  手動テスト
+//  状態
 // ============================================================
-function testWriteLog() {
-  writeLog('test@mita-is.ed.jp', {
-    className: '2A', name: 'テスト太郎', level: 'Lv1 4択',
-    score: 10, maxCombo: 5, total: 12, correct: 10, wrong: 2,
-    mistakes: 'x^2+3x+2 → (x+1)(x+2)',
+let level='lv1';
+let score=0,combo=0,maxCombo=0,timeLeft=30;
+let totalQ=0,correctQ=0,wrongQ=0;
+let timerID=null,currentQ=null;
+let lv3vals={k:'',a:'',b:'',c:'',d:''};
+let mistakes=[];
+let handling=false,paused=false;
+let lastChoice=null,sameCount=0;
+
+// ============================================================
+//  画面制御
+// ============================================================
+function show(id) {
+  ['start-screen','game-screen','gameover-screen'].forEach(s=>{
+    document.getElementById(s).style.display=s===id?'flex':'none';
   });
 }
+function selectLevel(lv,btn) {
+  level=lv;
+  document.querySelectorAll('.level-btn').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+}
+function backToStart(){clearTimer();paused=false;show('start-screen');}
+
+// ============================================================
+//  一時停止
+// ============================================================
+function togglePause() {
+  paused=!paused;
+  const ov=document.getElementById('pause-overlay');
+  const btn=document.getElementById('pause-btn');
+  if(paused){
+    clearTimer();
+    ov.classList.add('active');
+    btn.textContent='再開'; btn.classList.add('pausing');
+  } else {
+    ov.classList.remove('active');
+    btn.textContent='一時停止'; btn.classList.remove('pausing');
+    timerID=setInterval(tick,1000);
+  }
+}
+function confirmRestart(){
+  document.getElementById('pause-overlay').classList.remove('active');
+  const btn=document.getElementById('pause-btn');
+  btn.textContent='一時停止'; btn.classList.remove('pausing');
+  paused=false; startGame();
+}
+function confirmBack(){
+  document.getElementById('pause-overlay').classList.remove('active');
+  const btn=document.getElementById('pause-btn');
+  btn.textContent='一時停止'; btn.classList.remove('pausing');
+  paused=false; backToStart();
+}
+
+// ============================================================
+//  ゲーム
+// ============================================================
+function tick(){timeLeft--;updateHUD();if(timeLeft<=0){clearTimer();gameOver();}}
+function startGame(){
+  handling=false;lastChoice=null;sameCount=0;
+  score=0;combo=0;maxCombo=0;timeLeft=30;
+  totalQ=0;correctQ=0;wrongQ=0;mistakes=[];
+  updateHUD();
+  show('game-screen');
+  nextQuestion();
+  clearTimer();
+  timerID=setInterval(tick,1000);
+}
+function clearTimer(){if(timerID){clearInterval(timerID);timerID=null;}}
+
+function gameOver(){
+  document.getElementById('go-score').textContent   = score;
+  document.getElementById('go-correct').textContent = correctQ;
+  document.getElementById('go-wrong').textContent   = wrongQ;
+  document.getElementById('go-total').textContent   = totalQ;
+  renderMistakes();
+  renderSendArea();
+  show('gameover-screen');
+}
+
+// ============================================================
+//  送信フォーム描画
+// ============================================================
+function renderSendArea(){
+  const area=document.getElementById('send-area');
+  const st=document.getElementById('send-status');
+  st.textContent=''; st.className='send-status';
+
+  const url=getGasUrl();
+  if(!url||url===DEFAULT_GAS_URL){
+    area.innerHTML=`<div class="gas-warning">
+      GASが設定されていないため成績を送信できません。<br>
+      <button class="gas-warning-btn" onclick="openModal()">⚙ 教員設定を開く</button>
+    </div>`;
+    return;
+  }
+  const classList=getClassList();
+  const savedName=localStorage.getItem(LS_NAME)||'';
+  const savedCls =localStorage.getItem(LS_CLS)||'';
+  const opts=classList.map(c=>`<option value="${c}"${c===savedCls?' selected':''}>${c}</option>`).join('');
+
+  area.innerHTML=`
+    <div class="send-row">
+      <select class="send-select" id="student-class" onchange="onFormChange()">
+        <option value="">クラス</option>${opts}
+      </select>
+      <input class="name-input" id="student-name" type="text"
+        placeholder="名前（フルネーム）" maxlength="20"
+        value="${savedName.replace(/"/g,'&quot;')}"
+        oninput="onFormChange()">
+    </div>
+    <button class="send-btn" id="send-btn" onclick="sendLog()"
+      ${savedName&&savedCls?'':'disabled'}>成績を送信する</button>`;
+}
+function onFormChange(){
+  const n=document.getElementById('student-name').value.trim();
+  const c=document.getElementById('student-class').value;
+  const b=document.getElementById('send-btn');
+  if(b) b.disabled=!(n&&c);
+}
+
+// ============================================================
+//  GAS 送信 — GASページを新タブで開く（CORS問題を完全回避）
+//
+//  仕組み:
+//  1. スコアなどをURLパラメータに付けてGASのURLを新タブで開く
+//  2. GASがHTMLフォームを表示（クラス・名前入力）
+//  3. 生徒がフォームを送信 → GASがスプレッドシートに記録
+// ============================================================
+function sendLog(){
+  const name=document.getElementById('student-name').value.trim();
+  const cls =document.getElementById('student-class').value;
+  if(!name||!cls) return;
+  localStorage.setItem(LS_NAME,name);
+  localStorage.setItem(LS_CLS,cls);
+
+  const url=getGasUrl();
+  if(!url||url===DEFAULT_GAS_URL){
+    const st=document.getElementById('send-status');
+    st.textContent='GAS URLが未設定です'; st.className='send-status err';
+    return;
+  }
+
+  const lvLabel={lv1:'Lv1 基礎',lv2:'Lv2 標準',lv3:'Lv3 発展'}[level]||level;
+  const seen=new Set();
+  const mistakesText=mistakes
+    .filter(m=>{if(seen.has(m.text))return false;seen.add(m.text);return true;})
+    .map(m=>m.text+' → '+m.answer).join(' / ')||'なし';
+
+  // スコア情報をURLパラメータに付けてGASページを開く
+  const params=new URLSearchParams({
+    name:     name,
+    className:cls,
+    level:    lvLabel,
+    score:    String(score),
+    maxCombo: String(maxCombo),
+    total:    String(totalQ),
+    correct:  String(correctQ),
+    wrong:    String(wrongQ),
+    mistakes: mistakesText,
+  });
+  window.open(url+'?'+params.toString(), '_blank');
+
+  const st=document.getElementById('send-status');
+  st.textContent='✓ 記録ページが開きました。確認して送信ボタンを押してください。';
+  st.className='send-status ok';
+}
+
+// ============================================================
+//  HUD
+// ============================================================
+function updateHUD(){
+  const t=document.getElementById('hud-time');
+  t.textContent=timeLeft; t.className='hud-val'+(timeLeft<=10?' danger':'');
+  const bar=document.getElementById('timer-bar');
+  bar.style.width=(timeLeft/30*100)+'%';
+  bar.className='timer-bar'+(timeLeft<=10?' danger':'');
+  document.getElementById('hud-correct').textContent=correctQ;
+  document.getElementById('hud-wrong').textContent=wrongQ;
+  document.getElementById('hud-combo').textContent='×'+combo;
+}
+function showFeedback(ok){
+  const fb=document.getElementById('feedback');
+  fb.textContent=ok?'正解':'不正解';
+  fb.className='feedback show '+(ok?'correct':'wrong');
+  const fl=document.getElementById('flash');
+  fl.style.background=ok?'rgba(45,106,79,0.08)':'rgba(192,57,43,0.08)';
+  fl.classList.add('show');
+  setTimeout(()=>{fb.className='feedback';fl.classList.remove('show');},650);
+}
+function handle(ok){
+  if(handling||paused) return;
+  handling=true;
+  showFeedback(ok);
+  totalQ++;
+  if(ok){score++;combo++;correctQ++;timeLeft=Math.min(timeLeft+1,99);if(combo>maxCombo)maxCombo=combo;}
+  else  {combo=0;wrongQ++;timeLeft=Math.max(timeLeft-2,0);mistakes.push({text:currentQ.text,answer:currentQ.cf[0]});}
+  updateHUD();
+  setTimeout(()=>{handling=false;nextQuestion();},700);
+}
+
+// ============================================================
+//  KaTeX
+// ============================================================
+function kRender(latex,el){try{katex.render(latex,el,{throwOnError:false});}catch(e){el.textContent=latex;}}
+function kString(latex)   {try{return katex.renderToString(latex,{throwOnError:false});}catch(e){return latex;}}
+function setQuestion(l)   {kRender(l,document.getElementById('question-text'));}
+
+// ============================================================
+//  数学ヘルパー
+// ============================================================
+function gcd(a,b){a=Math.abs(a);b=Math.abs(b);while(b){[a,b]=[b,a%b];}return a;}
+function randInt(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
+function sgn(n){return n>=0?`+${n}`:`${n}`;}
+function xTerm(c){if(c===0)return '';if(c===1)return '+x';if(c===-1)return '-x';return c>0?`+${c}x`:`${c}x`;}
+function cTerm(n){if(n===0)return '';return n>0?`+${n}`:`${n}`;}
+function polyLatex(A,B,C){
+  let s='';
+  if(A===1)s+='x^{2}'; else if(A===-1)s+='-x^{2}'; else if(A!==0)s+=`${A}x^{2}`;
+  s+=xTerm(B); s+=cTerm(C);
+  return s||'0';
+}
+function linLatex(a,b){
+  let s='';
+  if(a===1)s+='x'; else if(a===-1)s+='-x'; else s+=`${a}x`;
+  s+=cTerm(b); return s;
+}
+
+// ============================================================
+//  問題生成
+// ============================================================
+function genBasicSumProduct(){
+  let p,q;
+  do{p=randInt(-6,6);q=randInt(-6,6);}while(p===0||q===0||p===q);
+  const B=p+q,C=p*q;
+  return{text:polyLatex(1,B,C),cf:[`(x${sgn(p)})(x${sgn(q)})`],expA:1,expB:B,expC:C,type:'sum',p,q};
+}
+function genBasicPerfectSquare(){
+  const a=randInt(1,5);
+  const sg=Math.random()<0.5?a:-a;
+  const B=2*sg,C=sg*sg;
+  return{text:polyLatex(1,B,C),cf:[`(x${sgn(sg)})^{2}`],expA:1,expB:B,expC:C,type:'psq',ps:sg};
+}
+function genBasicDiffSquares(){
+  const a=randInt(2,8);
+  return{text:polyLatex(1,0,-a*a),cf:[`(x+${a})(x-${a})`],expA:1,expB:0,expC:-a*a,type:'dsq',ds:a};
+}
+function genKSumProduct(){
+  let k,p,q;
+  do{k=randInt(2,5);p=randInt(-8,8);q=randInt(-8,8);}while(p===0||q===0||p===q);
+  const A=k,B=k*(p+q),C=k*p*q;
+  return{text:polyLatex(A,B,C),cf:[`${k}(x${sgn(p)})(x${sgn(q)})`],expA:A,expB:B,expC:C,type:'ksum',k,p,q};
+}
+function genCommonFactor(){
+  let k,a,b,tries=0;
+  do{k=randInt(2,6);a=randInt(1,5);b=randInt(-8,8);tries++;}while(b===0||gcd(a,Math.abs(b))!==1||tries>300);
+  return{text:polyLatex(0,k*a,k*b),cf:[`${k}(${linLatex(a,b)})`],expA:0,expB:k*a,expC:k*b};
+}
+function genDiffSquares(){
+  const a=randInt(1,4),b=randInt(1,10);
+  const A=a*a,C=-(b*b);
+  const fac=`(${a===1?'':a}x+${b})(${a===1?'':a}x-${b})`;
+  return{text:polyLatex(A,0,C),cf:[fac],expA:A,expB:0,expC:C};
+}
+function genPerfectSquare(){
+  const a=randInt(1,8);
+  const sg=Math.random()<0.5?a:-a;
+  const B=2*sg,C=sg*sg;
+  return{text:polyLatex(1,B,C),cf:[`(x${sgn(sg)})^{2}`],expA:1,expB:B,expC:C};
+}
+function genTasuki(){
+  let a,b,c,d,tries=0;
+  do{a=randInt(1,3);c=randInt(1,3);b=randInt(-8,8);d=randInt(-8,8);tries++;}
+  while(b===0||d===0||(a===1&&c===1)||tries>300);
+  const eA=a*c,eB=a*d+b*c,eC=b*d;
+  return{text:polyLatex(eA,eB,eC),cf:[`(${linLatex(a,b)})(${linLatex(c,d)})`],expA:eA,expB:eB,expC:eC,type:'tasuki',ta:a,tb:b,tc:c,td:d};
+}
+
+function generateQuestion(){
+  const r=Math.random();
+  if(level==='lv1'){
+    if(r<0.55) return genBasicSumProduct();
+    if(r<0.78) return genBasicDiffSquares();
+    return genBasicPerfectSquare();
+  }
+  if(level==='lv2'){
+    if(r<0.20) return genBasicSumProduct();
+    if(r<0.40) return genKSumProduct();
+    if(r<0.55) return genCommonFactor();
+    if(r<0.75) return genDiffSquares();
+    return genPerfectSquare();
+  }
+  if(r<0.15) return genBasicSumProduct();
+  if(r<0.30) return genKSumProduct();
+  if(r<0.43) return genCommonFactor();
+  if(r<0.56) return genDiffSquares();
+  if(r<0.70) return genPerfectSquare();
+  return genTasuki();
+}
+
+// ============================================================
+//  選択肢生成
+// ============================================================
+function parseParts(body){
+  const parts=[];let depth=0,start=0;
+  for(let i=0;i<body.length;i++){
+    if(body[i]==='('){if(depth===0)start=i;depth++;}
+    else if(body[i]===')'){
+      depth--;
+      if(depth===0){
+        let end=i+1;
+        if(body.slice(i+1,i+4)==='^{2')end=i+5;
+        parts.push(body.slice(start,end));i=end-1;
+      }
+    }
+  }
+  return parts;
+}
+function canonicalize(expr){
+  const pm=expr.match(/^(\d+)/);const prefix=pm?pm[1]:'';const body=prefix?expr.slice(prefix.length):expr;
+  const parts=parseParts(body);
+  if(parts.length===2){
+    const p0=parts[0].replace(/\^\{2\}$/,''),p1=parts[1].replace(/\^\{2\}$/,'');
+    if(p0===p1)return prefix+p0+'^{2}';
+    return prefix+[...parts].sort().join('');
+  }
+  return expr;
+}
+function normalKey(e){return canonicalize(e);}
+
+function factorPairs(n){
+  const pairs=[];
+  for(let p=-10;p<=10;p++){if(!p||n%p)continue;const q=n/p;if(Math.abs(q)>10||!q)continue;pairs.push([p,q]);}
+  return pairs;
+}
+
+function makeChoices(correct,q){
+  const seen=new Set();
+  const addS=s=>seen.add(normalKey(s));
+  const hasS=s=>seen.has(normalKey(s));
+  correct.forEach(c=>addS(c));
+  const arr=[...correct];
+  const type=q?q.type:'sum';
+
+  if(type==='tasuki'&&q){
+    const{ta:a,tb:b,tc:c,td:d}=q;
+    const t1=a*d+b*c;
+    for(const[fa,fb,fc,fd]of[[a,-b,c,d],[a,b,c,-d],[a,-b,c,-d]]){
+      if(arr.length>=4)break;
+      if(!fb||!fd||Math.abs(fb)>10||Math.abs(fd)>10)continue;
+      const w=`(${linLatex(fa,fb)})(${linLatex(fc,fd)})`;
+      if(!hasS(w)){addS(w);arr.push(canonicalize(w));}
+    }
+    for(let fb=-10;fb<=10&&arr.length<4;fb++){
+      if(!fb||fb===b)continue;
+      if((t1-fb*c)%a!==0)continue;
+      const fd=(t1-fb*c)/a;
+      if(!fd||Math.abs(fd)>10||fd===d)continue;
+      const w=`(${linLatex(a,fb)})(${linLatex(c,fd)})`;
+      if(!hasS(w)){addS(w);arr.push(canonicalize(w));}
+    }
+  }
+
+  if(q&&q.expC!==0&&type!=='ksum'&&type!=='tasuki'){
+    factorPairs(q.expC).sort(()=>Math.random()-0.5).forEach(([p2,q2])=>{
+      if(arr.length>=4)return;
+      const w=`(x${sgn(p2)})(x${sgn(q2)})`;
+      if(!hasS(w)){addS(w);arr.push(canonicalize(w));}
+    });
+  }
+
+  if(q&&(type==='dsq'||type==='psq')&&arr.length<4){
+    const ds=q.ds||q.ps;
+    if(ds){
+      for(const w of[`(x+${ds})^{2}`,`(x-${ds})^{2}`,`(x+${Math.abs(ds)})(x-${Math.abs(ds)})`]){
+        if(arr.length>=4)break;
+        if(!hasS(w)){addS(w);arr.push(canonicalize(w));}
+      }
+    }
+  }
+
+  if(q&&q.p!==undefined&&arr.length<4){
+    const pref=type==='ksum'&&q?`${q.k}`:'';
+    for(const[fp,fq]of[[q.p,-q.q],[-q.p,q.q],[-q.p,-q.q]]){
+      if(arr.length>=4)break;
+      if(!fp||!fq||Math.abs(fp)>10||Math.abs(fq)>10)continue;
+      const w=`${pref}(x${sgn(fp)})(x${sgn(fq)})`;
+      if(!hasS(w)){addS(w);arr.push(canonicalize(w));}
+    }
+  }
+
+  let tries=0;
+  while(arr.length<4&&tries<800){
+    tries++;
+    let w;
+    if(type==='ksum'&&q){
+      const dp=randInt(-8,8),dq=randInt(-8,8);
+      if(!dp||!dq||dp===dq)continue;
+      w=`${q.k}(x${sgn(dp)})(x${sgn(dq)})`;
+    }else if(type==='tasuki'){
+      const da=q?q.ta:randInt(1,3),dc=q?q.tc:randInt(1,3);
+      const db=randInt(-8,8),dd=randInt(-8,8);
+      if(!db||!dd)continue;
+      w=`(${linLatex(da,db)})(${linLatex(dc,dd)})`;
+    }else{
+      const dp=randInt(-8,8),dq=randInt(-8,8);
+      if(!dp||!dq||dp===dq)continue;
+      w=`(x${sgn(dp)})(x${sgn(dq)})`;
+    }
+    if(!hasS(w)){addS(w);arr.push(canonicalize(w));}
+  }
+  return arr.sort(()=>Math.random()-0.5);
+}
+
+// ============================================================
+//  次の問題
+// ============================================================
+function nextQuestion(){
+  lastChoice=null;sameCount=0;
+  lv3vals={k:'',a:'',b:'',c:'',d:''};
+  currentQ=generateQuestion();
+  currentQ.choices=makeChoices(currentQ.cf,currentQ);
+  setQuestion(currentQ.text);
+  renderAnswerArea();
+}
+
+function renderAnswerArea(){
+  const area=document.getElementById('answer-area');
+  area.innerHTML=`<div class="choices">
+    ${currentQ.choices.map((c,i)=>
+      `<button class="choice-btn" onclick="checkChoice(${i})">${kString(canonicalize(c))}</button>`
+    ).join('')}
+  </div>`;
+}
+
+function checkChoice(idx){
+  if(lastChoice===idx){sameCount++;if(sameCount>=5){clearTimer();gameOver();return;}}
+  else{lastChoice=idx;sameCount=1;}
+  handle(currentQ.cf.some(c=>normalKey(c)===normalKey(currentQ.choices[idx])));
+}
+
+// ============================================================
+//  間違い一覧
+// ============================================================
+function toggleMistakes(){
+  const l=document.getElementById('mistakes-list');
+  const ic=document.getElementById('mistakes-toggle-icon');
+  const open=!l.classList.contains('closed');
+  if(open){l.classList.add('closed');ic.style.transform='rotate(-90deg)';}
+  else    {l.classList.remove('closed');ic.style.transform='rotate(0deg)';}
+}
+function renderMistakes(){
+  const el=document.getElementById('mistakes-list');
+  const seen=new Set();
+  const unique=mistakes.filter(m=>{if(seen.has(m.text))return false;seen.add(m.text);return true;});
+  const label=document.getElementById('mistakes-toggle-label');
+  if(label)label.textContent=`間違えた問題（${unique.length}件）`;
+  el.classList.remove('closed');
+  document.getElementById('mistakes-toggle-icon').style.transform='rotate(0deg)';
+  if(unique.length===0){el.innerHTML='<div class="no-mistakes">ミスなし！パーフェクト 🎉</div>';return;}
+  el.innerHTML=unique.map((m,i)=>{
+    const qe=document.createElement('span'),ae=document.createElement('span');
+    try{katex.render(m.text,  qe,{throwOnError:false});}catch(e){qe.textContent=m.text;}
+    try{katex.render(m.answer,ae,{throwOnError:false});}catch(e){ae.textContent=m.answer;}
+    return`<div class="mistake-card">
+      <div class="mistake-q">問題 ${i+1}</div>
+      <div class="mistake-expr">${qe.outerHTML}</div>
+      <div class="mistake-ans-label">正解</div>
+      <div class="mistake-ans">${ae.outerHTML}</div>
+    </div>`;
+  }).join('');
+}
+
+// ============================================================
+//  初期化
+// ============================================================
+renderGasBadge();
+show('start-screen');
+</script>
+</body>
+</html>
