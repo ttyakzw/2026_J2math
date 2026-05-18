@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -114,20 +113,6 @@ body {
   margin-bottom: 14px;
 }
 .start-btn:active { background: #0e1a30; }
-
-.teacher-banner {
-  width: 100%; max-width: 480px;
-  padding: 11px 16px;
-  background: var(--surface); border: 1.5px solid var(--border);
-  border-radius: var(--radius);
-  display: flex; align-items: center; gap: 12px;
-  cursor: pointer; transition: all 0.15s;
-}
-.teacher-banner:active { background: #f5f5f5; }
-.teacher-banner-text  { flex: 1; }
-.teacher-banner-title { font-size: 0.85rem; font-weight: 500; }
-.teacher-banner-sub   { font-size: 0.72rem; color: var(--muted); margin-top: 1px; }
-.teacher-banner-arrow { color: var(--muted); }
 
 .gas-badge {
   display: inline-flex; align-items: center; gap: 5px;
@@ -448,7 +433,7 @@ body {
       <div class="setup-status" id="class-status"></div>
     </div>
 
-    <button class="modal-close-btn" onclick="document.getElementById('teacher-modal').classList.remove('active'); renderGasBadge()">閉じる</button>
+    <button class="modal-close-btn" onclick="document.getElementById('teacher-modal').classList.remove('active')">閉じる</button>
   </div>
 </div>
 
@@ -611,7 +596,8 @@ function getClassList() {
 //  設定モーダル
 // ============================================================
 function openModal() {
-  document.getElementById('setup-url').value     = getGasUrl()===DEFAULT_GAS_URL?'':getGasUrl();
+  const cur=getGasUrl();
+  document.getElementById('setup-url').value     = cur===DEFAULT_GAS_URL?'':cur;
   document.getElementById('setup-classes').value = getClassList().join(',');
   document.getElementById('url-status').textContent   = '';
   document.getElementById('class-status').textContent = '';
@@ -620,7 +606,6 @@ function openModal() {
 function closeModal(e) {
   if(e && e.target!==document.getElementById('teacher-modal')) return;
   document.getElementById('teacher-modal').classList.remove('active');
-  renderGasBadge();
 }
 function saveGasUrl() {
   const v=document.getElementById('setup-url').value.trim();
@@ -636,20 +621,14 @@ function saveClasses() {
   localStorage.setItem(LS_CLASS,v);
   s.textContent='保存しました ✓'; s.className='setup-status ok';
 }
-function renderGasBadge() {
-  // バッジは非表示のため何もしない
-}
 
 // ロゴを5回タップで教員設定を開く（生徒には非公開）
-let _logoTapCount = 0, _logoTapTimer = null;
+let _logoTapCount=0, _logoTapTimer=null;
 function logoTap() {
   _logoTapCount++;
   clearTimeout(_logoTapTimer);
-  _logoTapTimer = setTimeout(() => { _logoTapCount = 0; }, 2000);
-  if (_logoTapCount >= 5) {
-    _logoTapCount = 0;
-    openModal();
-  }
+  _logoTapTimer=setTimeout(()=>{_logoTapCount=0;},2000);
+  if(_logoTapCount>=5){_logoTapCount=0;openModal();}
 }
 
 // ============================================================
@@ -685,30 +664,23 @@ function backToStart(){clearTimer();paused=false;show('start-screen');}
 // ============================================================
 function togglePause(){
   if(!paused){
-    // これからポーズする
     pauseCount++;
     clearTimer();
     paused=true;
     document.getElementById('pause-overlay').classList.add('active');
     const btn=document.getElementById('pause-btn');
     btn.textContent='再開'; btn.classList.add('pausing');
-    // 残り回数をモーダルに表示
     const remaining=3-pauseCount;
     const title=document.querySelector('.pause-title');
     if(title) title.textContent=remaining>0
       ? `一時停止（残り${remaining}回）`
       : `一時停止（この後終了）`;
   } else {
-    // 再開する
     paused=false;
     document.getElementById('pause-overlay').classList.remove('active');
     const btn=document.getElementById('pause-btn');
     btn.textContent='一時停止'; btn.classList.remove('pausing');
-    if(pauseCount>=3){
-      // 3回停止した → 再開せずにゲームオーバー
-      gameOver();
-      return;
-    }
+    if(pauseCount>=3){ gameOver(); return; }
     timerID=setInterval(tick,1000);
   }
 }
@@ -760,16 +732,11 @@ function renderSendArea(){
   st.textContent=''; st.className='send-status';
 
   const url=getGasUrl();
-  if(!url||url===DEFAULT_GAS_URL){
-    area.innerHTML=`<div class="gas-warning">
-      GASが設定されていないため成績を送信できません。<br>
-      <button class="gas-warning-btn" onclick="openModal()">⚙ 教員設定を開く</button>
-    </div>`;
-    return;
-  }
+  // GASのURLが設定されていなければ警告（DEFAULT_GAS_URLは有効なURLなので常に表示）
   const classList=getClassList();
   const savedName=localStorage.getItem(LS_NAME)||'';
   const savedCls =localStorage.getItem(LS_CLS)||'';
+  const savedNum =localStorage.getItem('factrial_num')||'';
   const opts=classList.map(c=>`<option value="${c}"${c===savedCls?' selected':''}>${c}</option>`).join('');
 
   area.innerHTML=`
@@ -777,8 +744,10 @@ function renderSendArea(){
       <select class="send-select" id="student-class" onchange="onFormChange()">
         <option value="">クラス</option>${opts}
       </select>
-      <input class="num-input" id="student-number" type="number"
-        placeholder="番号" min="1" max="50" style="width:72px;flex:0 0 72px;padding:12px 8px;border:1.5px solid var(--border);border-radius:var(--radius);font-size:0.95rem;background:var(--surface);outline:none;"
+      <input id="student-number" type="number"
+        placeholder="番号" min="1" max="50"
+        style="width:72px;flex:0 0 72px;padding:12px 8px;border:1.5px solid var(--border);border-radius:var(--radius);font-size:0.95rem;background:var(--surface);outline:none;"
+        value="${savedNum}"
         oninput="onFormChange()">
       <input class="name-input" id="student-name" type="text"
         placeholder="名前（フルネーム）" maxlength="20"
@@ -786,71 +755,55 @@ function renderSendArea(){
         oninput="onFormChange()">
     </div>
     <button class="send-btn" id="send-btn" onclick="sendLog()"
-      ${savedName&&savedCls?'':'disabled'}>成績を送信する</button>`;
+      ${savedName&&savedCls&&savedNum?'':'disabled'}>成績を送信する</button>`;
 }
+
 function onFormChange(){
-  const n=document.getElementById('student-name').value.trim();
-  const c=document.getElementById('student-class').value;
+  const n  =document.getElementById('student-name').value.trim();
+  const c  =document.getElementById('student-class').value;
   const num=document.getElementById('student-number').value.trim();
-  const b=document.getElementById('send-btn');
+  const b  =document.getElementById('send-btn');
   if(b) b.disabled=!(n&&c&&num);
 }
 
 // ============================================================
-//  GAS 送信 — iframeフォームPOSTでCORS問題を回避
+//  GAS 送信 — GASページを新タブで開く（CORS問題を完全回避）
+//  GAS側の doGet がフォームを表示・スプレッドシートに記録する
 // ============================================================
-function sendViaForm(url,data){
-  return new Promise(resolve=>{
-    ['__gas_iframe','__gas_form'].forEach(id=>{const e=document.getElementById(id);if(e)e.remove();});
-    const iframe=document.createElement('iframe');
-    iframe.id='__gas_iframe';iframe.name='__gas_iframe';iframe.style.display='none';
-    document.body.appendChild(iframe);
-    const form=document.createElement('form');
-    form.id='__gas_form';form.method='POST';form.action=url;form.target='__gas_iframe';form.style.display='none';
-    const inp=document.createElement('input');
-    inp.type='hidden';inp.name='data';inp.value=JSON.stringify(data);
-    form.appendChild(inp);document.body.appendChild(form);
-    iframe.onload=()=>resolve();
-    setTimeout(resolve,4000);
-    form.submit();
-  });
-}
-
-async function sendLog(){
+function sendLog(){
   const name  =document.getElementById('student-name').value.trim();
   const cls   =document.getElementById('student-class').value;
   const number=document.getElementById('student-number').value.trim();
   if(!name||!cls||!number) return;
   localStorage.setItem(LS_NAME,name);
   localStorage.setItem(LS_CLS,cls);
+  localStorage.setItem('factrial_num',number);
 
   const url=getGasUrl();
-  if(!url||url===DEFAULT_GAS_URL){
+  if(!url){
     const st=document.getElementById('send-status');
     st.textContent='GAS URLが未設定です'; st.className='send-status err';
     return;
   }
 
-  const btn=document.getElementById('send-btn');
-  const st =document.getElementById('send-status');
-  btn.disabled=true; st.textContent='送信中…'; st.className='send-status';
-
   const lvLabel={lv1:'Lv1 基礎',lv2:'Lv2 標準',lv3:'Lv3 発展'}[level]||level;
   const seen=new Set();
-  const um=mistakes.filter(m=>{if(seen.has(m.text))return false;seen.add(m.text);return true;})
-    .map(m=>({question:m.text,answer:m.answer}));
+  const mistakesText=mistakes
+    .filter(m=>{if(seen.has(m.text))return false;seen.add(m.text);return true;})
+    .map(m=>m.text+' → '+m.answer).join(' / ')||'なし';
 
-  try{
-    await sendViaForm(url,{
-      name,className:cls,number,level:lvLabel,
-      score,maxCombo,total:totalQ,correct:correctQ,wrong:wrongQ,
-      mistakes:um
-    });
-    st.textContent='✓ 記録を送信しました'; st.className='send-status ok';
-  }catch(err){
-    st.textContent='送信失敗: '+err.message; st.className='send-status err';
-    btn.disabled=false;
-  }
+  // スコア情報をURLパラメータに付けてGASページを新タブで開く
+  const params=new URLSearchParams({
+    name, className:cls, number, level:lvLabel,
+    score:String(score), maxCombo:String(maxCombo),
+    total:String(totalQ), correct:String(correctQ), wrong:String(wrongQ),
+    mistakes:mistakesText,
+  });
+  window.open(url+'?'+params.toString(), '_blank');
+
+  const st=document.getElementById('send-status');
+  st.textContent='✓ 記録ページが開きました。確認して送信ボタンを押してください。';
+  st.className='send-status ok';
 }
 
 // ============================================================
@@ -905,7 +858,6 @@ function polyLatex(A,B,C){
   let s='';
   if(A===1)s+='x^{2}'; else if(A===-1)s+='-x^{2}'; else if(A!==0)s+=`${A}x^{2}`;
   if(s===''){
-    // A=0: first term must not start with +
     const xt=xTerm(B).replace(/^\+/,'');
     if(xt){s=xt; s+=cTerm(C);}
     else   {s=cTerm(C).replace(/^\+/,'');}
@@ -962,13 +914,12 @@ function genPerfectSquare(){
   const B=2*sg,C=sg*sg;
   return{text:polyLatex(1,B,C),cf:[`(x${sgn(sg)})^{2}`],expA:1,expB:B,expC:C};
 }
-// -x² 型: -(x+p)(x+q)
 function genNegSumProduct(){
   let p,q;
   do{p=randInt(-5,5);q=randInt(-5,5);}while(p===0||q===0||p===q);
-  const B=-(p+q), C=-(p*q);
-  return{text:polyLatex(-1,B,C), cf:[`-(x${sgn(p)})(x${sgn(q)})`],
-         expA:-1, expB:B, expC:C, type:'negsum', p, q};
+  const B=-(p+q),C=-(p*q);
+  return{text:polyLatex(-1,B,C),cf:[`-(x${sgn(p)})(x${sgn(q)})`],
+         expA:-1,expB:B,expC:C,type:'negsum',p,q};
 }
 function genTasuki(){
   let a,b,c,d,tries=0;
@@ -1066,7 +1017,6 @@ function makeChoices(correct,q){
     }
   }
 
-  // -x² 型ダミー
   if(type==='negsum'&&q){
     for(const[fp,fq]of[[q.p,-q.q],[-q.p,q.q],[-q.p,-q.q]]){
       if(arr.length>=4)break;
@@ -1074,7 +1024,6 @@ function makeChoices(correct,q){
       const w=`-(x${sgn(fp)})(x${sgn(fq)})`;
       if(!hasS(w)){addS(w);arr.push(canonicalize(w));}
     }
-    // 符号なし版を引っかけとして追加
     if(arr.length<4){
       const w=`(x${sgn(q.p)})(x${sgn(q.q)})`;
       if(!hasS(w)){addS(w);arr.push(canonicalize(w));}
@@ -1198,7 +1147,6 @@ function renderMistakes(){
 // ============================================================
 //  初期化
 // ============================================================
-renderGasBadge();
 show('start-screen');
 </script>
 </body>
