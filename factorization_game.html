@@ -1090,9 +1090,9 @@ function makeChoices(correct,q){
   }
 
   if(q&&(type==='dsq'||type==='psq')&&arr.length<4){
-    const ds=q.ds||q.ps;
-    if(ds){
-      for(const w of[`(x+${ds})^{2}`,`(x-${ds})^{2}`,`(x+${Math.abs(ds)})(x-${Math.abs(ds)})`]){
+    const abds=Math.abs(q.ds||q.ps||0);
+    if(abds>0){
+      for(const w of[`(x+${abds})^{2}`,`(x-${abds})^{2}`,`(x+${abds})(x-${abds})`]){
         if(arr.length>=4)break;
         if(!hasS(w)){addS(w);arr.push(canonicalize(w));}
       }
