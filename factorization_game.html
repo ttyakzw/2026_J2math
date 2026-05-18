@@ -453,7 +453,7 @@ body {
 
 <!-- ===== スタート画面 ===== -->
 <div id="start-screen">
-  <div class="logo-wrap">
+  <div class="logo-wrap" onclick="logoTap()">
     <div class="logo-en">Factorization Trial</div>
     <div class="logo-ja">因数分解<span>トライアル</span></div>
     <div class="logo-line"></div>
@@ -488,14 +488,8 @@ body {
   </div>
 
   <button class="start-btn" onclick="startGame()">スタート</button>
-  <button class="teacher-banner" onclick="openModal()">
-    <span style="font-size:1.1rem">⚙️</span>
-    <div class="teacher-banner-text">
-      <div class="teacher-banner-title">教員設定</div>
-      <div id="gas-badge-wrap"></div>
-    </div>
-    <span class="teacher-banner-arrow">›</span>
-  </button>
+  <!-- 教員設定: タイトルを5回タップで開く（生徒には非表示）-->
+  <div id="gas-badge-wrap" style="display:none"></div>
 </div>
 
 <!-- ===== ゲーム画面 ===== -->
@@ -642,10 +636,19 @@ function saveClasses() {
   s.textContent='保存しました ✓'; s.className='setup-status ok';
 }
 function renderGasBadge() {
-  const url=getGasUrl();
-  const set=url&&url!==DEFAULT_GAS_URL;
-  document.getElementById('gas-badge-wrap').innerHTML=
-    `<span class="gas-badge ${set?'set':'unset'}"><span class="gas-dot"></span>${set?'GAS連携済み':'GAS未設定'}</span>`;
+  // バッジは非表示のため何もしない
+}
+
+// ロゴを5回タップで教員設定を開く（生徒には非公開）
+let _logoTapCount = 0, _logoTapTimer = null;
+function logoTap() {
+  _logoTapCount++;
+  clearTimeout(_logoTapTimer);
+  _logoTapTimer = setTimeout(() => { _logoTapCount = 0; }, 2000);
+  if (_logoTapCount >= 5) {
+    _logoTapCount = 0;
+    openModal();
+  }
 }
 
 // ============================================================
