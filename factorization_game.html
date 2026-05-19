@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -113,6 +114,20 @@ body {
   margin-bottom: 14px;
 }
 .start-btn:active { background: #0e1a30; }
+
+.teacher-banner {
+  width: 100%; max-width: 480px;
+  padding: 11px 16px;
+  background: var(--surface); border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  display: flex; align-items: center; gap: 12px;
+  cursor: pointer; transition: all 0.15s;
+}
+.teacher-banner:active { background: #f5f5f5; }
+.teacher-banner-text  { flex: 1; }
+.teacher-banner-title { font-size: 0.85rem; font-weight: 500; }
+.teacher-banner-sub   { font-size: 0.72rem; color: var(--muted); margin-top: 1px; }
+.teacher-banner-arrow { color: var(--muted); }
 
 .gas-badge {
   display: inline-flex; align-items: center; gap: 5px;
@@ -394,6 +409,51 @@ body {
 #flash { position: fixed; inset: 0; pointer-events: none; opacity: 0; transition: opacity 0.12s; z-index: 999; }
 #flash.show { opacity: 1; }
 .gap { margin-top: 12px; }
+
+/* ===== スコア履歴 ===== */
+.history-section {
+  padding: 0 24px 16px;
+  max-width: 560px; margin: 0 auto; width: 100%;
+}
+.history-head {
+  display: flex; align-items: center; gap: 10px;
+  padding: 14px 0 10px;
+}
+.history-head::after { content:''; flex:1; height:1px; background:var(--border); }
+.history-head-label {
+  font-size: 0.68rem; letter-spacing: 0.22em; color: var(--muted); text-transform: uppercase;
+  white-space: nowrap;
+}
+.history-table {
+  width: 100%; border-collapse: collapse; font-size: 0.82rem;
+}
+.history-table th {
+  text-align: center; font-size: 0.62rem; letter-spacing: 0.15em;
+  color: var(--muted); text-transform: uppercase;
+  padding: 4px 6px 8px; font-weight: 500;
+}
+.history-table td {
+  text-align: center; padding: 7px 6px;
+  border-top: 1px solid var(--border);
+}
+.history-table tr.this-game td { background: #f8f9fb; font-weight: 500; }
+.history-table .col-date { color: var(--muted); font-size: 0.75rem; text-align: left; }
+.history-table .col-score { font-family: 'Lora', serif; font-size: 1.05rem; color: var(--accent); }
+.new-best-badge {
+  display: inline-flex; align-items: center;
+  background: var(--gold); color: #fff;
+  font-size: 0.58rem; font-weight: 700; letter-spacing: 0.1em;
+  padding: 2px 6px; border-radius: 10px; margin-left: 6px;
+  vertical-align: middle;
+}
+.level-best-wrap {
+  margin-left: auto; display: flex; flex-direction: column;
+  align-items: flex-end; gap: 3px; flex-shrink: 0;
+}
+.level-best-score {
+  font-size: 0.65rem; color: var(--accent2); font-weight: 500;
+  letter-spacing: 0.04em; white-space: nowrap;
+}
 </style>
 </head>
 <body>
@@ -433,7 +493,7 @@ body {
       <div class="setup-status" id="class-status"></div>
     </div>
 
-    <button class="modal-close-btn" onclick="document.getElementById('teacher-modal').classList.remove('active')">閉じる</button>
+    <button class="modal-close-btn" onclick="document.getElementById('teacher-modal').classList.remove('active'); renderGasBadge()">閉じる</button>
   </div>
 </div>
 
@@ -453,7 +513,10 @@ body {
         <div class="level-name">基礎 — 4択</div>
         <div class="level-desc">x²+bx+c 型・(x±a)²・x²-a² の因数分解</div>
       </div>
-      <span class="level-badge badge-easy">中学基礎</span>
+      <div class="level-best-wrap">
+        <span class="level-badge badge-easy">中学基礎</span>
+        <span class="level-best-score" id="best-lv1"></span>
+      </div>
     </button>
     <button class="level-btn" onclick="selectLevel('lv2',this)">
       <div class="level-num">2</div>
@@ -461,7 +524,10 @@ body {
         <div class="level-name">標準 — 4択</div>
         <div class="level-desc">共通因数・k(x+p)(x+q)・差の平方を含む</div>
       </div>
-      <span class="level-badge badge-std">標準</span>
+      <div class="level-best-wrap">
+        <span class="level-badge badge-std">標準</span>
+        <span class="level-best-score" id="best-lv2"></span>
+      </div>
     </button>
     <button class="level-btn" onclick="selectLevel('lv3',this)">
       <div class="level-num">3</div>
@@ -469,7 +535,10 @@ body {
         <div class="level-name">発展 — 4択</div>
         <div class="level-desc">Lv2 ＋ たすき掛け (ax+b)(cx+d) 型</div>
       </div>
-      <span class="level-badge badge-adv">発展</span>
+      <div class="level-best-wrap">
+        <span class="level-badge badge-adv">発展</span>
+        <span class="level-best-score" id="best-lv3"></span>
+      </div>
     </button>
   </div>
 
@@ -554,6 +623,8 @@ body {
     </div>
   </div>
 
+  <div class="history-section" id="score-history-section"></div>
+
   <div class="name-section">
     <div class="name-label">記録を送信する</div>
     <div id="send-area"></div>
@@ -578,13 +649,15 @@ body {
 // ============================================================
 //  設定
 // ============================================================
-const DEFAULT_GAS_URL    = 'https://script.google.com/macros/s/AKfycbxRCxCIrGE9QixxqLH03Lo-eK3rnMsAL9D02wXx7uQqpg6uq7UD05hBUbD_0UrbUAxvsA/exec';
-const DEFAULT_CLASS_LIST = ['2A','2B','2C','2D'];
+const DEFAULT_GAS_URL    = 'YOUR_GAS_URL_HERE';
+const DEFAULT_CLASS_LIST = ['2A','2B','2C','2D','2E','2F'];
 
-const LS_GAS   = 'factrial_gas_url';
-const LS_CLASS = 'factrial_classes';
-const LS_NAME  = 'factrial_name';
-const LS_CLS   = 'factrial_cls';
+const LS_GAS     = 'factrial_gas_url';
+const LS_CLASS   = 'factrial_classes';
+const LS_NAME    = 'factrial_name';
+const LS_CLS     = 'factrial_cls';
+const LS_HISTORY = 'factrial_history';
+const MAX_HISTORY = 10;
 
 function getGasUrl()    { return localStorage.getItem(LS_GAS) || DEFAULT_GAS_URL; }
 function getClassList() {
@@ -596,8 +669,7 @@ function getClassList() {
 //  設定モーダル
 // ============================================================
 function openModal() {
-  const cur=getGasUrl();
-  document.getElementById('setup-url').value     = cur===DEFAULT_GAS_URL?'':cur;
+  document.getElementById('setup-url').value     = getGasUrl()===DEFAULT_GAS_URL?'':getGasUrl();
   document.getElementById('setup-classes').value = getClassList().join(',');
   document.getElementById('url-status').textContent   = '';
   document.getElementById('class-status').textContent = '';
@@ -606,6 +678,7 @@ function openModal() {
 function closeModal(e) {
   if(e && e.target!==document.getElementById('teacher-modal')) return;
   document.getElementById('teacher-modal').classList.remove('active');
+  renderGasBadge();
 }
 function saveGasUrl() {
   const v=document.getElementById('setup-url').value.trim();
@@ -621,14 +694,92 @@ function saveClasses() {
   localStorage.setItem(LS_CLASS,v);
   s.textContent='保存しました ✓'; s.className='setup-status ok';
 }
+// ============================================================
+//  スコア履歴（localStorage）
+// ============================================================
+function saveHistory(lvl, sc, corr, tot, mc) {
+  let h = {};
+  try { h = JSON.parse(localStorage.getItem(LS_HISTORY) || '{}'); } catch(e) { h = {}; }
+  if (!h[lvl]) h[lvl] = [];
+  h[lvl].unshift({ ts: Date.now(), score: sc, correct: corr, total: tot, maxCombo: mc });
+  if (h[lvl].length > MAX_HISTORY) h[lvl] = h[lvl].slice(0, MAX_HISTORY);
+  try { localStorage.setItem(LS_HISTORY, JSON.stringify(h)); } catch(e) {}
+}
+
+function getHistory(lvl) {
+  try { return (JSON.parse(localStorage.getItem(LS_HISTORY) || '{}')[lvl] || []); }
+  catch(e) { return []; }
+}
+
+function getBest(lvl) {
+  const h = getHistory(lvl);
+  return h.length ? Math.max(...h.map(r => r.score)) : null;
+}
+
+function updateLevelBests() {
+  ['lv1','lv2','lv3'].forEach(lv => {
+    const el = document.getElementById('best-' + lv);
+    if (!el) return;
+    const best = getBest(lv);
+    el.textContent = best !== null ? 'ベスト ' + best : '';
+  });
+}
+
+function renderScoreHistory() {
+  const sec = document.getElementById('score-history-section');
+  if (!sec) return;
+  const hist = getHistory(level);
+  if (!hist.length) { sec.innerHTML = ''; return; }
+
+  const isNewBest = hist.length === 1 ||
+    hist[0].score >= Math.max(...hist.slice(1).map(r => r.score));
+
+  const rows = hist.slice(0, 5).map((r, i) => {
+    const isThis = i === 0;
+    const d = new Date(r.ts);
+    const mm = String(d.getMonth()+1).padStart(2,'0');
+    const dd = String(d.getDate()).padStart(2,'0');
+    const hh = String(d.getHours()).padStart(2,'0');
+    const mi = String(d.getMinutes()).padStart(2,'0');
+    const dateStr = isThis ? '今回' : `${mm}/${dd} ${hh}:${mi}`;
+    const rate = r.total > 0 ? Math.round(r.correct / r.total * 100) : 0;
+    return `<tr class="${isThis ? 'this-game' : ''}">
+      <td class="col-date">${dateStr}${isThis && isNewBest ? '<span class="new-best-badge">NEW BEST</span>' : ''}</td>
+      <td class="col-score">${r.score}</td>
+      <td>${rate}%</td>
+      <td>×${r.maxCombo}</td>
+    </tr>`;
+  }).join('');
+
+  sec.innerHTML = `
+    <div class="history-head">
+      <span class="history-head-label">このレベルの記録</span>
+    </div>
+    <table class="history-table">
+      <thead><tr>
+        <th style="text-align:left;padding-left:2px"></th>
+        <th>スコア</th>
+        <th>正答率</th>
+        <th>コンボ</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+}
+
+function renderGasBadge() {
+  // バッジは非表示のため何もしない
+}
 
 // ロゴを5回タップで教員設定を開く（生徒には非公開）
-let _logoTapCount=0, _logoTapTimer=null;
+let _logoTapCount = 0, _logoTapTimer = null;
 function logoTap() {
   _logoTapCount++;
   clearTimeout(_logoTapTimer);
-  _logoTapTimer=setTimeout(()=>{_logoTapCount=0;},2000);
-  if(_logoTapCount>=5){_logoTapCount=0;openModal();}
+  _logoTapTimer = setTimeout(() => { _logoTapCount = 0; }, 2000);
+  if (_logoTapCount >= 5) {
+    _logoTapCount = 0;
+    openModal();
+  }
 }
 
 // ============================================================
@@ -657,30 +808,37 @@ function selectLevel(lv,btn) {
   document.querySelectorAll('.level-btn').forEach(b=>b.classList.remove('selected'));
   btn.classList.add('selected');
 }
-function backToStart(){clearTimer();paused=false;show('start-screen');}
+function backToStart(){clearTimer();paused=false;updateLevelBests();show('start-screen');}
 
 // ============================================================
 //  一時停止
 // ============================================================
 function togglePause(){
   if(!paused){
+    // これからポーズする
     pauseCount++;
     clearTimer();
     paused=true;
     document.getElementById('pause-overlay').classList.add('active');
     const btn=document.getElementById('pause-btn');
     btn.textContent='再開'; btn.classList.add('pausing');
+    // 残り回数をモーダルに表示
     const remaining=3-pauseCount;
     const title=document.querySelector('.pause-title');
     if(title) title.textContent=remaining>0
       ? `一時停止（残り${remaining}回）`
       : `一時停止（この後終了）`;
   } else {
+    // 再開する
     paused=false;
     document.getElementById('pause-overlay').classList.remove('active');
     const btn=document.getElementById('pause-btn');
     btn.textContent='一時停止'; btn.classList.remove('pausing');
-    if(pauseCount>=3){ gameOver(); return; }
+    if(pauseCount>=3){
+      // 3回停止した → 再開せずにゲームオーバー
+      gameOver();
+      return;
+    }
     timerID=setInterval(tick,1000);
   }
 }
@@ -714,10 +872,13 @@ function startGame(){
 function clearTimer(){if(timerID){clearInterval(timerID);timerID=null;}}
 
 function gameOver(){
+  saveHistory(level, score, correctQ, totalQ, maxCombo);
+  updateLevelBests();
   document.getElementById('go-score').textContent   = score;
   document.getElementById('go-correct').textContent = correctQ;
   document.getElementById('go-wrong').textContent   = wrongQ;
   document.getElementById('go-total').textContent   = totalQ;
+  renderScoreHistory();
   renderMistakes();
   renderSendArea();
   show('gameover-screen');
@@ -732,78 +893,46 @@ function renderSendArea(){
   st.textContent=''; st.className='send-status';
 
   const url=getGasUrl();
-  // GASのURLが設定されていなければ警告（DEFAULT_GAS_URLは有効なURLなので常に表示）
-  const classList=getClassList();
-  const savedName=localStorage.getItem(LS_NAME)||'';
-  const savedCls =localStorage.getItem(LS_CLS)||'';
-  const savedNum =localStorage.getItem('factrial_num')||'';
-  const opts=classList.map(c=>`<option value="${c}"${c===savedCls?' selected':''}>${c}</option>`).join('');
-
-  area.innerHTML=`
-    <div class="send-row">
-      <select class="send-select" id="student-class" onchange="onFormChange()">
-        <option value="">クラス</option>${opts}
-      </select>
-      <input id="student-number" type="number"
-        placeholder="番号" min="1" max="50"
-        style="width:72px;flex:0 0 72px;padding:12px 8px;border:1.5px solid var(--border);border-radius:var(--radius);font-size:0.95rem;background:var(--surface);outline:none;"
-        value="${savedNum}"
-        oninput="onFormChange()">
-      <input class="name-input" id="student-name" type="text"
-        placeholder="名前（フルネーム）" maxlength="20"
-        value="${savedName.replace(/"/g,'&quot;')}"
-        oninput="onFormChange()">
-    </div>
-    <button class="send-btn" id="send-btn" onclick="sendLog()"
-      ${savedName&&savedCls&&savedNum?'':'disabled'}>成績を送信する</button>`;
-}
-
-function onFormChange(){
-  const n  =document.getElementById('student-name').value.trim();
-  const c  =document.getElementById('student-class').value;
-  const num=document.getElementById('student-number').value.trim();
-  const b  =document.getElementById('send-btn');
-  if(b) b.disabled=!(n&&c&&num);
-}
-
-// ============================================================
-//  GAS 送信 — GASページを新タブで開く（CORS問題を完全回避）
-//  GAS側の doGet がフォームを表示・スプレッドシートに記録する
-// ============================================================
-function sendLog(){
-  const name  =document.getElementById('student-name').value.trim();
-  const cls   =document.getElementById('student-class').value;
-  const number=document.getElementById('student-number').value.trim();
-  if(!name||!cls||!number) return;
-  localStorage.setItem(LS_NAME,name);
-  localStorage.setItem(LS_CLS,cls);
-  localStorage.setItem('factrial_num',number);
-
-  const url=getGasUrl();
-  if(!url){
-    const st=document.getElementById('send-status');
-    st.textContent='GAS URLが未設定です'; st.className='send-status err';
+  if(!url||url===DEFAULT_GAS_URL){
+    area.innerHTML=`<div class="gas-warning">
+      GASが設定されていないため成績を送信できません。<br>
+      <button class="gas-warning-btn" onclick="openModal()">⚙ 教員設定を開く</button>
+    </div>`;
     return;
   }
+  area.innerHTML=`<button class="send-btn" id="send-btn" onclick="sendLog()">成績を送信する</button>`;
+}
+
+// ============================================================
+//  GAS 送信 — URLパラメータ付きで GAS フォームを新タブで開く
+//  GAS 側 doGet でスコア表示 → クラス・番号・名前を入力 → 送信
+// ============================================================
+function sendLog(){
+  const url=getGasUrl();
+  if(!url||url===DEFAULT_GAS_URL) return;
 
   const lvLabel={lv1:'Lv1 基礎',lv2:'Lv2 標準',lv3:'Lv3 発展'}[level]||level;
   const seen=new Set();
-  const mistakesText=mistakes
+  const um=mistakes
     .filter(m=>{if(seen.has(m.text))return false;seen.add(m.text);return true;})
-    .map(m=>m.text+' → '+m.answer).join(' / ')||'なし';
+    .map(m=>({question:m.text,answer:m.answer}));
 
-  // スコア情報をURLパラメータに付けてGASページを新タブで開く
   const params=new URLSearchParams({
-    name, className:cls, number, level:lvLabel,
-    score:String(score), maxCombo:String(maxCombo),
-    total:String(totalQ), correct:String(correctQ), wrong:String(wrongQ),
-    mistakes:mistakesText,
+    level:    lvLabel,
+    score:    score,
+    maxCombo: maxCombo,
+    total:    totalQ,
+    correct:  correctQ,
+    wrong:    wrongQ,
+    mistakes: JSON.stringify(um)
   });
-  window.open(url+'?'+params.toString(), '_blank');
 
+  window.open(url+'?'+params.toString(),'_blank');
+
+  const btn=document.getElementById('send-btn');
+  if(btn){btn.textContent='✓ フォームを開きました';btn.disabled=true;}
   const st=document.getElementById('send-status');
-  st.textContent='✓ 記録ページが開きました。確認して送信ボタンを押してください。';
-  st.className='send-status ok';
+  st.textContent='別タブに入力フォームが開きます'; st.className='send-status';
 }
 
 // ============================================================
@@ -858,6 +987,7 @@ function polyLatex(A,B,C){
   let s='';
   if(A===1)s+='x^{2}'; else if(A===-1)s+='-x^{2}'; else if(A!==0)s+=`${A}x^{2}`;
   if(s===''){
+    // A=0: first term must not start with +
     const xt=xTerm(B).replace(/^\+/,'');
     if(xt){s=xt; s+=cTerm(C);}
     else   {s=cTerm(C).replace(/^\+/,'');}
@@ -914,12 +1044,13 @@ function genPerfectSquare(){
   const B=2*sg,C=sg*sg;
   return{text:polyLatex(1,B,C),cf:[`(x${sgn(sg)})^{2}`],expA:1,expB:B,expC:C};
 }
+// -x² 型: -(x+p)(x+q)
 function genNegSumProduct(){
   let p,q;
   do{p=randInt(-5,5);q=randInt(-5,5);}while(p===0||q===0||p===q);
-  const B=-(p+q),C=-(p*q);
-  return{text:polyLatex(-1,B,C),cf:[`-(x${sgn(p)})(x${sgn(q)})`],
-         expA:-1,expB:B,expC:C,type:'negsum',p,q};
+  const B=-(p+q), C=-(p*q);
+  return{text:polyLatex(-1,B,C), cf:[`-(x${sgn(p)})(x${sgn(q)})`],
+         expA:-1, expB:B, expC:C, type:'negsum', p, q};
 }
 function genTasuki(){
   let a,b,c,d,tries=0;
@@ -1017,6 +1148,7 @@ function makeChoices(correct,q){
     }
   }
 
+  // -x² 型ダミー
   if(type==='negsum'&&q){
     for(const[fp,fq]of[[q.p,-q.q],[-q.p,q.q],[-q.p,-q.q]]){
       if(arr.length>=4)break;
@@ -1024,6 +1156,7 @@ function makeChoices(correct,q){
       const w=`-(x${sgn(fp)})(x${sgn(fq)})`;
       if(!hasS(w)){addS(w);arr.push(canonicalize(w));}
     }
+    // 符号なし版を引っかけとして追加
     if(arr.length<4){
       const w=`(x${sgn(q.p)})(x${sgn(q.q)})`;
       if(!hasS(w)){addS(w);arr.push(canonicalize(w));}
@@ -1147,6 +1280,8 @@ function renderMistakes(){
 // ============================================================
 //  初期化
 // ============================================================
+renderGasBadge();
+updateLevelBests();
 show('start-screen');
 </script>
 </body>
