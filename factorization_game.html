@@ -649,8 +649,8 @@ body {
 // ============================================================
 //  設定
 // ============================================================
-const DEFAULT_GAS_URL    = 'https://script.google.com/macros/s/AKfycbzBJE47FFMoNT3ZKGbQ0daAaDWzeUctZUKWCs-zDxirpfK9y1QuPCLZT5JKl5yupHWwfg/exec';
-const DEFAULT_CLASS_LIST = ['2A','2B','2C','2D'];
+const DEFAULT_GAS_URL    = 'YOUR_GAS_URL_HERE';
+const DEFAULT_CLASS_LIST = ['2A','2B','2C','2D','2E','2F'];
 
 const LS_GAS     = 'factrial_gas_url';
 const LS_CLASS   = 'factrial_classes';
@@ -858,7 +858,21 @@ function confirmBack(){
 // ============================================================
 //  ゲーム
 // ============================================================
-function tick(){timeLeft--;updateHUD();if(timeLeft<=0){clearTimer();gameOver();}}
+function tick(){
+  timeLeft--;
+  updateHUD();
+  if(timeLeft<=0){
+    clearTimer();
+    // 時間切れ時点で未回答の問題を不正解として記録
+    if(currentQ && !handling){
+      totalQ++;
+      wrongQ++;
+      combo=0;
+      mistakes.push({text:currentQ.text, answer:currentQ.cf[0]});
+    }
+    gameOver();
+  }
+}
 function startGame(){
   handling=false;lastChoice=null;sameCount=0;
   score=0;combo=0;maxCombo=0;timeLeft=30;
