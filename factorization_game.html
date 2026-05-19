@@ -475,13 +475,13 @@ body {
     </div>
 
     <div class="setup-step">
-      <div class="setup-step-num">Step 2 — デプロイ URL を保存</div>
-      <div class="setup-step-text">GAS のデプロイ後に発行された URL を入力してください。</div>
-      <div class="setup-row">
-        <input class="setup-input" id="setup-url" type="url" placeholder="https://script.google.com/macros/s/...">
-        <button class="setup-save-btn" onclick="saveGasUrl()">保存</button>
+      <div class="setup-step-num">Step 2 — GAS URL（HTML に直接記載）</div>
+      <div class="setup-step-text">
+        HTML ファイル内の <code>const GAS_URL = '…'</code> を書き換えて
+        GitHub Pages に上げてください。<br>
+        現在の設定値：<br>
+        <code id="current-gas-url" style="font-size:0.72rem;word-break:break-all;"></code>
       </div>
-      <div class="setup-status" id="url-status"></div>
     </div>
 
     <div class="setup-step">
@@ -649,17 +649,15 @@ body {
 // ============================================================
 //  設定
 // ============================================================
-const DEFAULT_GAS_URL    = 'https://script.google.com/macros/s/AKfycbyQbuvld96kggBqC5eXwjccN1BJHWJtFRe7u9lDnTqbQcnR4MnmynaPRWhvJDU7rA9B_A/exec';
-const DEFAULT_CLASS_LIST = ['2A','2B','2C','2D'];
+// ★ GAS デプロイ後に発行された URL をここに貼り付けてください
+const GAS_URL = 'YOUR_GAS_URL_HERE';
 
-const LS_GAS     = 'factrial_gas_url';
+const DEFAULT_CLASS_LIST = ['2A','2B','2C','2D','2E','2F'];
+
 const LS_CLASS   = 'factrial_classes';
-const LS_NAME    = 'factrial_name';
-const LS_CLS     = 'factrial_cls';
 const LS_HISTORY = 'factrial_history';
 const MAX_HISTORY = 10;
 
-function getGasUrl()    { return localStorage.getItem(LS_GAS) || DEFAULT_GAS_URL; }
 function getClassList() {
   const v=localStorage.getItem(LS_CLASS);
   return v ? v.split(',').map(s=>s.trim()).filter(Boolean) : DEFAULT_CLASS_LIST;
@@ -669,9 +667,9 @@ function getClassList() {
 //  設定モーダル
 // ============================================================
 function openModal() {
-  document.getElementById('setup-url').value     = getGasUrl()===DEFAULT_GAS_URL?'':getGasUrl();
+  const el = document.getElementById('current-gas-url');
+  if (el) el.textContent = GAS_URL;
   document.getElementById('setup-classes').value = getClassList().join(',');
-  document.getElementById('url-status').textContent   = '';
   document.getElementById('class-status').textContent = '';
   document.getElementById('teacher-modal').classList.add('active');
 }
@@ -679,13 +677,6 @@ function closeModal(e) {
   if(e && e.target!==document.getElementById('teacher-modal')) return;
   document.getElementById('teacher-modal').classList.remove('active');
   renderGasBadge();
-}
-function saveGasUrl() {
-  const v=document.getElementById('setup-url').value.trim();
-  const s=document.getElementById('url-status');
-  if(!v||!v.startsWith('https://')){s.textContent='有効なURLを入力してください';s.className='setup-status err';return;}
-  localStorage.setItem(LS_GAS,v);
-  s.textContent='保存しました ✓'; s.className='setup-status ok';
 }
 function saveClasses() {
   const v=document.getElementById('setup-classes').value.trim();
@@ -906,11 +897,9 @@ function renderSendArea(){
   const st=document.getElementById('send-status');
   st.textContent=''; st.className='send-status';
 
-  const url=getGasUrl();
-  if(!url||url===DEFAULT_GAS_URL){
+  if(!GAS_URL || GAS_URL==='YOUR_GAS_URL_HERE'){
     area.innerHTML=`<div class="gas-warning">
-      GASが設定されていないため成績を送信できません。<br>
-      <button class="gas-warning-btn" onclick="openModal()">⚙ 教員設定を開く</button>
+      GAS URL が未設定です。HTMLファイルの <code>GAS_URL</code> を書き換えてください。
     </div>`;
     return;
   }
@@ -922,8 +911,8 @@ function renderSendArea(){
 //  GAS 側 doGet でスコア表示 → クラス・番号・名前を入力 → 送信
 // ============================================================
 function sendLog(){
-  const url=getGasUrl();
-  if(!url||url===DEFAULT_GAS_URL) return;
+  const url=GAS_URL;
+  if(!url||url==='YOUR_GAS_URL_HERE') return;
 
   const lvLabel={lv1:'Lv1 基礎',lv2:'Lv2 標準',lv3:'Lv3 発展'}[level]||level;
   const seen=new Set();
