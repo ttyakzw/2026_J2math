@@ -1,0 +1,1731 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>サイエンスリテラシー 授業資料</title>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;700;900&family=Noto+Sans+JP:wght@300;400;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1a1a2e;
+    --paper: #f5f0e8;
+    --accent1: #e63946;
+    --accent2: #2d6a4f;
+    --accent3: #f4a261;
+    --muted: #8d99ae;
+    --highlight: #fff3b0;
+    --card-bg: #ffffff;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Noto Sans JP', sans-serif;
+    background-color: var(--paper);
+    color: var(--ink);
+    line-height: 1.7;
+    background-image:
+      radial-gradient(circle at 10% 20%, rgba(230,57,70,0.04) 0%, transparent 50%),
+      radial-gradient(circle at 90% 80%, rgba(45,106,79,0.04) 0%, transparent 50%);
+  }
+
+  /* NAV */
+  nav {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: var(--ink);
+    display: flex;
+    gap: 0;
+    border-bottom: 3px solid var(--accent1);
+  }
+  nav button {
+    flex: 1;
+    padding: 14px 8px;
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    border-right: 1px solid rgba(255,255,255,0.08);
+    letter-spacing: 0.05em;
+  }
+  nav button:last-child { border-right: none; }
+  nav button.active { color: #fff; background: var(--accent1); }
+  nav button:hover:not(.active) { color: #fff; background: rgba(255,255,255,0.08); }
+
+  /* PAGES */
+  .page { display: none; }
+  .page.active { display: block; animation: fadeIn 0.35s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+  /* HERO */
+  .hero {
+    padding: 64px 24px 48px;
+    text-align: center;
+    border-bottom: 2px solid rgba(0,0,0,0.08);
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      -45deg,
+      transparent,
+      transparent 24px,
+      rgba(0,0,0,0.02) 24px,
+      rgba(0,0,0,0.02) 25px
+    );
+  }
+  .lesson-badge {
+    display: inline-block;
+    background: var(--ink);
+    color: #fff;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.75rem;
+    padding: 4px 14px;
+    border-radius: 2px;
+    margin-bottom: 16px;
+    letter-spacing: 0.1em;
+  }
+  .hero h1 {
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: clamp(2rem, 6vw, 3.5rem);
+    font-weight: 900;
+    line-height: 1.15;
+    margin-bottom: 8px;
+    position: relative;
+  }
+  .hero h1 .en {
+    display: block;
+    font-size: clamp(0.85rem, 2.5vw, 1.1rem);
+    font-weight: 400;
+    color: var(--muted);
+    font-family: 'Space Mono', monospace;
+    letter-spacing: 0.08em;
+    margin-top: 6px;
+  }
+  .hero-sub {
+    margin-top: 16px;
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+  .accent-line {
+    width: 60px;
+    height: 4px;
+    background: var(--accent1);
+    margin: 20px auto 0;
+    border-radius: 2px;
+  }
+
+  /* CONTENT AREA */
+  .content {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 40px 20px 80px;
+  }
+
+  /* SECTION HEADER */
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 48px 0 20px;
+  }
+  .section-header:first-child { margin-top: 0; }
+  .section-num {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    background: var(--accent1);
+    color: #fff;
+    padding: 3px 10px;
+    border-radius: 2px;
+    white-space: nowrap;
+  }
+  .section-header h2 {
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 1.25rem;
+    font-weight: 900;
+    border-bottom: 2px solid var(--ink);
+    padding-bottom: 2px;
+  }
+
+  /* CARD */
+  .card {
+    background: var(--card-bg);
+    border: 1.5px solid rgba(0,0,0,0.1);
+    border-radius: 4px;
+    padding: 24px 28px;
+    margin-bottom: 16px;
+    position: relative;
+    transition: box-shadow 0.2s;
+  }
+  .card:hover { box-shadow: 4px 4px 0 var(--ink); }
+  .card-title {
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-weight: 900;
+    font-size: 1.05rem;
+    margin-bottom: 10px;
+  }
+  .card-title .en {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--muted);
+    font-weight: 400;
+    display: block;
+    margin-top: 2px;
+    letter-spacing: 0.04em;
+  }
+
+  /* PURPOSE BOX */
+  .purpose-box {
+    background: var(--ink);
+    color: #fff;
+    border-radius: 4px;
+    padding: 24px 28px;
+    margin-bottom: 16px;
+  }
+  .purpose-box h3 {
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 1rem;
+    font-weight: 900;
+    margin-bottom: 10px;
+    opacity: 0.6;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+  }
+  .purpose-box p { font-size: 1rem; line-height: 1.75; }
+  .purpose-box .en { opacity: 0.6; font-size: 0.85rem; margin-top: 6px; }
+
+  /* CYCLE DIAGRAM */
+  .cycle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    padding: 32px 16px;
+    flex-wrap: wrap;
+  }
+  .cycle-node {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+  .cycle-circle {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-weight: 900;
+    font-size: 1.1rem;
+    border: 3px solid var(--ink);
+    gap: 2px;
+  }
+  .cycle-circle .jp { font-size: 1.2rem; }
+  .cycle-circle .en { font-size: 0.55rem; font-family: 'Space Mono', monospace; color: var(--muted); font-weight: 400; }
+  .cycle-q { background: var(--highlight); }
+  .cycle-l { background: #e8f5e9; }
+  .cycle-arrow {
+    font-size: 2rem;
+    color: var(--muted);
+    padding: 0 8px;
+    transform: translateY(-8px);
+  }
+
+  /* TIPS GRID */
+  .tips-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px;
+    margin-top: 4px;
+  }
+  .tip-card {
+    background: var(--card-bg);
+    border: 1.5px solid rgba(0,0,0,0.1);
+    border-left: 4px solid var(--accent2);
+    border-radius: 4px;
+    padding: 16px 18px;
+  }
+  .tip-num {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--accent2);
+    font-weight: 700;
+    margin-bottom: 6px;
+    letter-spacing: 0.1em;
+  }
+  .tip-card p { font-size: 0.92rem; }
+
+  /* 5W1H */
+  .wh-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-top: 8px;
+  }
+  .wh-item {
+    background: var(--highlight);
+    border-radius: 4px;
+    padding: 10px 14px;
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-weight: 700;
+    font-size: 0.9rem;
+    text-align: center;
+  }
+  .wh-item span { display: block; font-size: 0.68rem; color: var(--muted); font-weight: 400; margin-top: 2px; font-family: 'Space Mono', monospace; }
+
+  /* EXAMPLE CARD */
+  .example-card {
+    border: 2px solid var(--ink);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+  .example-header {
+    background: var(--ink);
+    color: #fff;
+    padding: 10px 20px;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.8rem;
+    letter-spacing: 0.08em;
+  }
+  .example-body { padding: 20px; }
+  .example-q {
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-weight: 900;
+    font-size: 1.1rem;
+    color: var(--accent1);
+    margin-bottom: 12px;
+    text-decoration: underline;
+    text-decoration-color: var(--accent1);
+    text-underline-offset: 3px;
+  }
+
+  /* QUOTE */
+  .quote-box {
+    border-left: 5px solid var(--accent3);
+    background: #fffbf0;
+    padding: 20px 24px;
+    margin-bottom: 16px;
+    border-radius: 0 4px 4px 0;
+    font-style: italic;
+  }
+  .quote-box p { font-size: 1rem; line-height: 1.8; }
+  .quote-box .attribution {
+    margin-top: 10px;
+    font-style: normal;
+    font-size: 0.8rem;
+    color: var(--muted);
+    font-family: 'Space Mono', monospace;
+  }
+
+  /* ACTIVITY BOX */
+  .activity {
+    background: var(--highlight);
+    border: 2px dashed var(--accent3);
+    border-radius: 4px;
+    padding: 24px 28px;
+    margin-bottom: 16px;
+  }
+  .activity-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+    color: var(--accent3);
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+  .activity h3 {
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-weight: 900;
+    font-size: 1.05rem;
+    margin-bottom: 10px;
+  }
+
+  /* COMPARE */
+  .compare {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .compare-col {
+    border-radius: 4px;
+    padding: 20px;
+  }
+  .compare-col.bad { background: #fff0f0; border: 1.5px solid #ffcccc; }
+  .compare-col.good { background: #f0fff4; border: 1.5px solid #c3f0d0; }
+  .compare-label {
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-weight: 900;
+    font-size: 0.85rem;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .compare-col ul { list-style: none; padding: 0; }
+  .compare-col li { font-size: 0.9rem; padding: 4px 0; border-bottom: 1px solid rgba(0,0,0,0.06); }
+  .compare-col li:last-child { border-bottom: none; }
+  .compare-col li::before { margin-right: 6px; }
+  .bad li::before { content: '✕'; color: #cc0000; }
+  .good li::before { content: '✓'; color: #2d6a4f; }
+
+  /* HYPOTHESIS FORMULA */
+  .formula {
+    background: var(--ink);
+    color: #fff;
+    border-radius: 4px;
+    padding: 24px 28px;
+    margin-bottom: 16px;
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 1.05rem;
+    font-weight: 700;
+    line-height: 1.8;
+  }
+  .formula .highlight { color: var(--accent3); }
+  .formula .en { font-size: 0.82rem; font-weight: 400; opacity: 0.65; display: block; margin-top: 6px; font-family: 'Noto Sans JP', sans-serif; }
+
+  /* HYPOTHESIS EXAMPLE */
+  .hyp-example {
+    border: 1.5px solid rgba(0,0,0,0.1);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 14px;
+    background: var(--card-bg);
+  }
+  .hyp-header {
+    background: var(--accent2);
+    color: #fff;
+    padding: 8px 18px;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+  }
+  .hyp-body { padding: 18px 20px; }
+  .hyp-q {
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-weight: 900;
+    font-size: 1rem;
+    margin-bottom: 12px;
+    color: var(--accent2);
+  }
+  .hyp-row {
+    display: grid;
+    grid-template-columns: 80px 1fr;
+    gap: 8px;
+    margin-bottom: 6px;
+    align-items: start;
+    font-size: 0.9rem;
+  }
+  .hyp-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.68rem;
+    background: var(--ink);
+    color: #fff;
+    padding: 2px 6px;
+    border-radius: 2px;
+    white-space: nowrap;
+    margin-top: 2px;
+    text-align: center;
+  }
+  .hyp-verify {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px dashed rgba(0,0,0,0.12);
+    font-size: 0.85rem;
+    color: var(--muted);
+  }
+  .hyp-verify strong { color: var(--ink); }
+
+  /* SEMMELWEIS */
+  .story-box {
+    border: 2px solid var(--ink);
+    border-radius: 4px;
+    padding: 24px;
+    background: var(--card-bg);
+    margin-bottom: 16px;
+  }
+  .story-step {
+    display: flex;
+    gap: 14px;
+    margin-bottom: 12px;
+    align-items: flex-start;
+  }
+  .story-step-num {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--accent1);
+    color: #fff;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.8rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .story-step p { font-size: 0.95rem; }
+
+  /* GOOD HYP CRITERIA */
+  .criteria-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .criteria-list li {
+    display: flex;
+    gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(0,0,0,0.06);
+    font-size: 0.92rem;
+    align-items: flex-start;
+  }
+  .criteria-list li:last-child { border-bottom: none; }
+  .criteria-icon {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--accent2);
+    color: #fff;
+    font-size: 0.7rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  /* WORKSHEET */
+  .worksheet {
+    border: 2px solid var(--ink);
+    border-radius: 4px;
+    padding: 24px;
+    background: #fafafa;
+    margin-bottom: 14px;
+  }
+  .ws-row {
+    margin-bottom: 18px;
+  }
+  .ws-label {
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-weight: 900;
+    font-size: 0.9rem;
+    margin-bottom: 6px;
+  }
+  .ws-blank {
+    height: 44px;
+    border-bottom: 2px solid var(--ink);
+    background: white;
+    border-radius: 2px 2px 0 0;
+    width: 100%;
+  }
+  .ws-blank.tall { height: 80px; }
+
+  /* FOOTER */
+  .page-footer {
+    margin-top: 60px;
+    padding-top: 20px;
+    border-top: 2px solid rgba(0,0,0,0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--muted);
+  }
+
+  /* RESPONSIVE */
+  @media (max-width: 600px) {
+    .wh-grid { grid-template-columns: repeat(2, 1fr); }
+    .compare { grid-template-columns: 1fr; }
+    .cycle-arrow { display: none; }
+    .cycle { gap: 16px; }
+    nav button { font-size: 0.75rem; padding: 12px 4px; }
+  }
+
+
+  /* QUESTION TYPE TAXONOMY CARDS */
+  .qtype-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+  .qtype-card {
+    border-radius: 4px;
+    border: 2px solid transparent;
+    padding: 0;
+    cursor: pointer;
+    transition: box-shadow 0.18s, transform 0.18s;
+    overflow: hidden;
+  }
+  .qtype-card:hover { box-shadow: 4px 4px 0 var(--ink); transform: translate(-2px,-2px); }
+  .qtype-card.open { box-shadow: 4px 4px 0 var(--ink); }
+  .qtype-header {
+    padding: 14px 16px 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .qtype-icon { font-size: 1.5rem; flex-shrink: 0; }
+  .qtype-name {
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-weight: 900;
+    font-size: 0.95rem;
+    line-height: 1.3;
+  }
+  .qtype-name small {
+    display: block;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.6rem;
+    font-weight: 400;
+    opacity: 0.7;
+    margin-top: 1px;
+    letter-spacing: 0.04em;
+  }
+  .qtype-body {
+    display: none;
+    padding: 0 16px 14px;
+    font-size: 0.82rem;
+    line-height: 1.65;
+    border-top: 1px solid rgba(0,0,0,0.08);
+    background: rgba(255,255,255,0.6);
+  }
+  .qtype-card.open .qtype-body { display: block; }
+  .qtype-body .ex {
+    margin-top: 8px;
+    padding: 8px 10px;
+    background: rgba(0,0,0,0.04);
+    border-radius: 3px;
+    font-style: italic;
+  }
+  .qtype-body .ex::before { content: "例："; font-style:normal; font-weight:700; }
+  .qtype-body .trigger {
+    margin-top: 6px;
+    font-size: 0.75rem;
+    opacity: 0.7;
+  }
+  .qtype-body .trigger::before { content: "▷ "; }
+
+  /* QUESTION TYPE MATRIX */
+  .q-axis-intro {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 20px;
+  }
+  .q-axis-card {
+    border-radius: 4px;
+    padding: 18px 20px;
+    border: 1.5px solid rgba(0,0,0,0.1);
+    background: var(--card-bg);
+  }
+  .q-axis-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    margin-bottom: 8px;
+    font-weight: 700;
+  }
+  .q-axis-card h4 {
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-weight: 900;
+    font-size: 1rem;
+    margin-bottom: 6px;
+  }
+  .q-axis-card p { font-size: 0.85rem; color: var(--muted); }
+
+  /* 2×2 MATRIX */
+  .matrix-wrap {
+    position: relative;
+    padding: 24px 0 12px;
+    margin-bottom: 20px;
+  }
+  .matrix-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 6px;
+    border: 2px solid var(--ink);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .matrix-cell {
+    padding: 16px;
+    font-size: 0.85rem;
+    min-height: 110px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    border: none;
+  }
+  .matrix-cell.tl { background: #f0fff4; }
+  .matrix-cell.tr { background: #fff0f0; }
+  .matrix-cell.bl { background: #fff3e0; }
+  .matrix-cell.br { background: #f5f5f5; }
+  .matrix-star {
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-weight: 900;
+    font-size: 0.8rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .matrix-cell ul {
+    list-style: none;
+    padding: 0;
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+  .matrix-cell ul li::before { content: '→ '; }
+  .matrix-axis-x {
+    display: flex;
+    justify-content: space-between;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.62rem;
+    color: var(--muted);
+    padding: 4px 4px 0;
+  }
+  .matrix-axis-y-wrap {
+    position: absolute;
+    left: -38px;
+    top: 50%;
+    transform: translateY(-50%) rotate(-90deg);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.62rem;
+    color: var(--muted);
+    white-space: nowrap;
+    display: flex;
+    gap: 24px;
+  }
+  .matrix-outer {
+    position: relative;
+    padding-left: 48px;
+  }
+
+  /* QUESTION SORT GAME */
+  .sort-intro {
+    font-size: 0.9rem;
+    margin-bottom: 14px;
+    padding: 12px 16px;
+    background: var(--ink);
+    color: #fff;
+    border-radius: 4px;
+  }
+  .sort-intro strong { color: var(--accent3); }
+  .q-cards-pool {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 16px;
+    min-height: 52px;
+    padding: 10px;
+    border: 2px dashed rgba(0,0,0,0.15);
+    border-radius: 4px;
+    background: #fafafa;
+  }
+  .q-card {
+    background: #fff;
+    border: 1.5px solid rgba(0,0,0,0.15);
+    border-radius: 4px;
+    padding: 8px 12px;
+    font-size: 0.82rem;
+    cursor: grab;
+    transition: box-shadow 0.15s, transform 0.15s;
+    user-select: none;
+    max-width: 260px;
+  }
+  .q-card:hover { box-shadow: 3px 3px 0 var(--ink); transform: translate(-1px,-1px); }
+  .q-card.dragging { opacity: 0.4; cursor: grabbing; }
+  .sort-zones {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .sort-zone {
+    border: 2px solid transparent;
+    border-radius: 4px;
+    padding: 12px;
+    min-height: 100px;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .sort-zone.tl { background: rgba(45,106,79,0.06); border-color: rgba(45,106,79,0.3); }
+  .sort-zone.tr { background: rgba(230,57,70,0.06); border-color: rgba(230,57,70,0.3); }
+  .sort-zone.bl { background: rgba(244,162,97,0.1); border-color: rgba(244,162,97,0.5); }
+  .sort-zone.br { background: rgba(0,0,0,0.03); border-color: rgba(0,0,0,0.12); }
+  .sort-zone.drag-over { border-style: solid; filter: brightness(0.97); }
+  .sort-zone-label {
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-weight: 900;
+    font-size: 0.8rem;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .sort-zone .q-card { margin-bottom: 6px; display: block; max-width: 100%; }
+  .sort-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-weight: 700;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .sort-btn.check { background: var(--ink); color: #fff; }
+  .sort-btn.check:hover { background: var(--accent2); }
+  .sort-btn.reset { background: #eee; color: var(--ink); }
+  .sort-btn.reset:hover { background: #ddd; }
+  .sort-result {
+    display: none;
+    margin-top: 14px;
+    padding: 16px 20px;
+    border-radius: 4px;
+    font-size: 0.9rem;
+  }
+  .sort-result.show { display: block; }
+  .sort-result.good { background: #f0fff4; border: 1.5px solid #c3f0d0; }
+  .sort-result.bad { background: #fff0f0; border: 1.5px solid #ffcccc; }
+  .q-card.correct { border-color: var(--accent2); background: #f0fff4; }
+  .q-card.wrong { border-color: var(--accent1); background: #fff0f0; }
+
+  /* SCORE */
+  .score-badge {
+    display: inline-block;
+    font-family: 'Space Mono', monospace;
+    font-size: 1.2rem;
+    font-weight: 700;
+    padding: 4px 14px;
+    border-radius: 2px;
+    margin-left: 8px;
+  }
+
+  /* SCROLL HINT */
+  .scroll-hint {
+    text-align: center;
+    padding: 8px;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--muted);
+    background: var(--ink);
+    opacity: 0.5;
+  }
+
+  .tag {
+    display: inline-block;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    background: var(--ink);
+    color: #fff;
+    padding: 2px 8px;
+    border-radius: 2px;
+    margin-right: 4px;
+    margin-bottom: 4px;
+    letter-spacing: 0.06em;
+  }
+  .tag.green { background: var(--accent2); }
+  .tag.red { background: var(--accent1); }
+  .tag.orange { background: var(--accent3); color: var(--ink); }
+</style>
+</head>
+<body>
+
+<nav>
+  <button class="active" onclick="showPage('p2')">＃２ 問いを立てる</button>
+  <button onclick="showPage('p34')">＃３・４ 仮説を立てる</button>
+</nav>
+
+<!-- ========== PAGE 2 ========== -->
+<div id="p2" class="page active">
+  <div class="hero">
+    <div class="lesson-badge">SCIENCE LITERACY / LESSON #2</div>
+    <h1>問いを立てる<span class="en">Externalize the Questions</span></h1>
+    <p class="hero-sub">「ふしぎ」を言葉にする力を育てよう</p>
+    <div class="accent-line"></div>
+  </div>
+
+  <div class="content">
+
+    <!-- PURPOSE -->
+    <div class="section-header">
+      <span class="section-num">01 / 目的</span>
+      <h2>この時間の目的</h2>
+    </div>
+    <div class="purpose-box">
+      <h3>The Purpose of This Session</h3>
+      <p>「問いをたてる」という営みを<strong>意識的</strong>に行う</p>
+      <p class="en">Consciously engaging in the act of "Externalizing the Questions"</p>
+    </div>
+    <div class="card">
+      <p>登校中「ふしぎだなあ」と感じたモノ・コトがあるはず！<br>
+      無意識に忘れないで，<strong>意識的に言語化</strong>しよう！</p>
+      <p style="margin-top:8px; color:var(--muted); font-size:0.85rem;">There must be things on your way to school that made you think, "That's strange!" — Make a conscious effort to externalize them!</p>
+    </div>
+
+    <!-- SCIENCE LITERACY -->
+    <div class="section-header">
+      <span class="section-num">02 / 定義</span>
+      <h2>サイエンスリテラシーとは？</h2>
+    </div>
+    <div class="tips-grid">
+      <div class="tip-card">
+        <div class="tip-num">SCIENCE</div>
+        <p><strong>科学</strong>＝ 理科だけじゃない！<br>
+        <span style="font-size:0.82rem; color:var(--muted);">It's not just natural science</span></p>
+      </div>
+      <div class="tip-card" style="border-left-color: var(--accent1);">
+        <div class="tip-num" style="color:var(--accent1);">LITERACY</div>
+        <p><strong>リテラシー</strong>＝「読み書き」の能力・お作法<br>
+        <span style="font-size:0.82rem; color:var(--muted);">The ability to read &amp; write / Manner</span></p>
+      </div>
+    </div>
+
+    <!-- CYCLE -->
+    <div class="section-header">
+      <span class="section-num">03 / 構造</span>
+      <h2>科学のサイクル</h2>
+    </div>
+    <div class="card" style="padding: 16px;">
+      <div class="cycle">
+        <div class="cycle-node">
+          <div class="cycle-circle cycle-q">
+            <span class="jp">？</span>
+            <span class="en">Question</span>
+          </div>
+          <div style="font-family:'Zen Kaku Gothic New',sans-serif; font-weight:900; font-size:0.85rem;">【問う】</div>
+        </div>
+        <div class="cycle-arrow">→</div>
+        <div class="cycle-node">
+          <div class="cycle-circle" style="background:#fff3e0; font-size:0.85rem; text-align:center; padding: 10px;">
+            <span class="jp" style="font-size:0.9rem;">ふしぎ</span>
+            <span class="en" style="font-size:0.6rem; margin-top:2px;">Mystery</span>
+            <span style="font-size:0.65rem; color:var(--accent1); margin-top:4px; font-family:'Space Mono',monospace;">言語化！</span>
+          </div>
+          <div style="font-size:0.78rem; color:var(--muted); text-align:center; max-width:110px;">
+            なぜ？ そもそも…？
+          </div>
+        </div>
+        <div class="cycle-arrow">→</div>
+        <div class="cycle-node">
+          <div class="cycle-circle cycle-l">
+            <span class="jp">！</span>
+            <span class="en">Learn</span>
+          </div>
+          <div style="font-family:'Zen Kaku Gothic New',sans-serif; font-weight:900; font-size:0.85rem;">【学ぶ】</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- EXAMPLE -->
+    <div class="section-header">
+      <span class="section-num">04 / 事例</span>
+      <h2>ふしぎを言語化した例</h2>
+    </div>
+    <div class="example-card">
+      <div class="example-header">EXAMPLE — Ig Nobel Prize in Physics (2014)</div>
+      <div class="example-body">
+        <div class="example-q">🍌 なぜバナナの皮はすべる？<br>
+        <span style="font-size:0.85rem; font-family:'Space Mono',monospace; color:var(--muted); font-weight:400;">Why are banana peels slippery?</span></div>
+        <p style="font-size:0.9rem;">馬渕清資 氏 が研究。踏むとバナナの皮にある<strong>小胞が潰れて粘液がしみ出し</strong>，摩擦係数が激減することを発見。</p>
+        <p style="font-size:0.82rem; color:var(--muted); margin-top:6px;">Kiyoshi Mabuchi discovered that when stepped on, vesicles on a banana peel burst, releasing a sticky substance, which drastically reduces the coefficient of friction.</p>
+        <div style="margin-top:12px; padding:10px 14px; background:var(--highlight); border-radius:4px; font-size:0.88rem;">
+          💡 日常の「ふしぎ」が，立派な科学研究になる！
+        </div>
+      </div>
+    </div>
+
+    <!-- IMPORTANCE -->
+    <div class="section-header">
+      <span class="section-num">05 / 意義</span>
+      <h2>言語化の大切さ</h2>
+    </div>
+    <div class="tips-grid">
+      <div class="tip-card">
+        <div class="tip-num">REASON 01</div>
+        <p>何がわからないのかわかる，<strong>共有できる</strong>，再現できる</p>
+      </div>
+      <div class="tip-card">
+        <div class="tip-num">REASON 02</div>
+        <p>言語として残る，<strong>色褪せない</strong>，保存される</p>
+      </div>
+      <div class="tip-card" style="grid-column: 1 / -1;">
+        <div class="tip-num">REASON 03</div>
+        <p>言語化があってはじめて <strong>【！】（わかった！）</strong> が得られる</p>
+      </div>
+    </div>
+
+    <!-- TOMONAGA QUOTE -->
+    <div class="section-header">
+      <span class="section-num">06 / ことば</span>
+      <h2>朝永振一郎の言葉</h2>
+    </div>
+    <div class="quote-box">
+      <p>「ふしぎだ」と思うこと — これが科学の芽です。<br>
+      よく観察して，よく考えること — そして最後になぞがとけた，これが科学の花です。</p>
+      <div class="attribution">— 朝永振一郎（ノーベル物理学賞受賞者）</div>
+    </div>
+
+    <!-- TIPS FOR QUESTIONING -->
+    <div class="section-header">
+      <span class="section-num">07 / コツ</span>
+      <h2>問いを立てるコツ</h2>
+    </div>
+    <div class="card">
+      <div class="card-title">コツ① 5W1Hで問いを作る</div>
+      <div class="wh-grid">
+        <div class="wh-item">🕐 いつ<span>When</span></div>
+        <div class="wh-item">📍 どこで<span>Where</span></div>
+        <div class="wh-item">👤 誰が<span>Who</span></div>
+        <div class="wh-item">📦 何を<span>What</span></div>
+        <div class="wh-item" style="background:var(--accent1); color:#fff;">❓ なぜ<span style="color:rgba(255,255,255,0.7);">Why</span></div>
+        <div class="wh-item">🔧 どのように<span>How</span></div>
+      </div>
+      <div style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap;">
+        <span class="tip-num" style="padding:6px 12px; background:var(--accent2); color:#fff; border-radius:2px;">コツ②：範囲を絞る</span>
+        <span class="tip-num" style="padding:6px 12px; background:var(--accent3); color:var(--ink); border-radius:2px;">コツ③：ペンを止めない</span>
+      </div>
+      <div style="margin-top:10px; font-size:0.9rem;">
+        キーワード：<strong>「なぜ？」「そもそも…？」</strong>
+      </div>
+    </div>
+
+    <!-- QUESTION TYPES: 7 TYPES -->
+    <div class="section-header">
+      <span class="section-num">08 / 問いの種類</span>
+      <h2>問いには種類がある</h2>
+    </div>
+    <p style="font-size:0.9rem; margin-bottom:16px; color:var(--muted);">カードをクリックすると，問いの例と使い方が見られるよ。</p>
+    <div class="qtype-grid" id="qtypeGrid"></div>
+
+    <!-- AXIS + MATRIX -->
+    <div class="section-header" style="margin-top:40px;">
+      <span class="section-num">09 / 良い問いの条件</span>
+      <h2>良い問いってどんな問い？</h2>
+    </div>
+
+    <div class="q-axis-intro">
+      <div class="q-axis-card">
+        <div class="q-axis-label" style="color:var(--accent2);">AXIS A — スコープ（広さ）</div>
+        <h4>問いの範囲は適切か？</h4>
+        <p>広すぎると調べきれない。狭すぎると一般化できない。「ちょうどよい」範囲が大切。</p>
+      </div>
+      <div class="q-axis-card">
+        <div class="q-axis-label" style="color:var(--accent1);">AXIS B — 探究可能性</div>
+        <h4>実際に調べられるか？</h4>
+        <p>実験・観察・調査でYes / No が言える問いかどうか。「好み」「価値観」は調べられない。</p>
+      </div>
+    </div>
+
+    <div class="matrix-outer">
+      <div class="matrix-axis-y-wrap">
+        <span>← 探究できない</span>
+        <span>探究できる →</span>
+      </div>
+      <div class="matrix-wrap">
+        <div class="matrix-grid">
+          <div class="matrix-cell tl">
+            <div class="matrix-star">⭐ 良い問い</div>
+            <ul>
+              <li>スコープ：ちょうどよい</li>
+              <li>探究：できる</li>
+              <li style="color:var(--accent2); font-weight:700;">→ 科学的探究に向く！</li>
+            </ul>
+          </div>
+          <div class="matrix-cell tr">
+            <div class="matrix-star" style="color:var(--accent3);">⚠ 要修正</div>
+            <ul>
+              <li>スコープ：広すぎ or 狭すぎ</li>
+              <li>探究：できる</li>
+              <li>→ 範囲を絞れば良い問いに！</li>
+            </ul>
+          </div>
+          <div class="matrix-cell bl">
+            <div class="matrix-star" style="color:var(--accent3);">⚠ 要修正</div>
+            <ul>
+              <li>スコープ：ちょうどよい</li>
+              <li>探究：できない</li>
+              <li>→ 問いの立て方を変えよう</li>
+            </ul>
+          </div>
+          <div class="matrix-cell br">
+            <div class="matrix-star" style="color:var(--muted);">✕ 難しい問い</div>
+            <ul>
+              <li>スコープ：広すぎ or 狭すぎ</li>
+              <li>探究：できない</li>
+              <li>→ 大きく見直しが必要</li>
+            </ul>
+          </div>
+        </div>
+        <div class="matrix-axis-x">
+          <span>← スコープ：広すぎ／狭すぎ</span>
+          <span>スコープ：ちょうどよい →</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-header">
+      <span class="section-num">10 / ワーク</span>
+      <h2>問いを仕分けしてみよう</h2>
+    </div>
+    <div class="sort-intro">
+      下の問いカードを，4つのゾーンにドラッグ＆ドロップしてみよう！<br>
+      <strong>2つの軸</strong>（スコープ・探究可能性）で判断してね。
+    </div>
+
+    <div class="q-cards-pool" id="cardPool"></div>
+
+    <div class="sort-zones">
+      <div class="sort-zone tl" id="zone-tl" ondragover="onDragOver(event)" ondrop="onDrop(event,'tl')" ondragleave="onDragLeave(event)">
+        <div class="sort-zone-label">⭐ <span style="color:var(--accent2);">良い問い</span></div>
+      </div>
+      <div class="sort-zone tr" id="zone-tr" ondragover="onDragOver(event)" ondrop="onDrop(event,'tr')" ondragleave="onDragLeave(event)">
+        <div class="sort-zone-label">📐 <span>スコープ要修正</span></div>
+      </div>
+      <div class="sort-zone bl" id="zone-bl" ondragover="onDragOver(event)" ondrop="onDrop(event,'bl')" ondragleave="onDragLeave(event)">
+        <div class="sort-zone-label">🔍 <span>問い方を変えよう</span></div>
+      </div>
+      <div class="sort-zone br" id="zone-br" ondragover="onDragOver(event)" ondrop="onDrop(event,'br')" ondragleave="onDragLeave(event)">
+        <div class="sort-zone-label">✕ <span style="color:var(--muted);">大きく見直しが必要</span></div>
+      </div>
+    </div>
+
+    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+      <button class="sort-btn check" onclick="checkAnswers()">✓ 答え合わせ</button>
+      <button class="sort-btn reset" onclick="resetGame()">↺ リセット</button>
+    </div>
+    <div class="sort-result" id="sortResult"></div>
+
+    <div class="section-header" style="margin-top:40px;">
+      <span class="section-num">11 / 比較</span>
+      <h2>良い問い・悪い問いの違い</h2>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:20px;">
+      <div class="example-card">
+        <div class="example-header" style="background:var(--muted);">テーマ：自転車</div>
+        <div class="example-body" style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
+          <div>
+            <div style="font-family:'Space Mono',monospace; font-size:0.65rem; color:var(--accent1); margin-bottom:6px;">✕ 広すぎる問い</div>
+            <p style="font-size:0.88rem;">「自転車はなぜ存在するのか？」</p>
+            <p style="font-size:0.78rem; color:var(--muted); margin-top:4px;">→ 哲学・歴史・文化…何でも答えになってしまう</p>
+          </div>
+          <div>
+            <div style="font-family:'Space Mono',monospace; font-size:0.65rem; color:var(--accent2); margin-bottom:6px;">⭐ ちょうどよい問い</div>
+            <p style="font-size:0.88rem;">「登校時間帯に自転車の速度が速くなるのはなぜか？」</p>
+            <p style="font-size:0.78rem; color:var(--muted); margin-top:4px;">→ 観察・計測で確かめられる！</p>
+          </div>
+        </div>
+      </div>
+      <div class="example-card">
+        <div class="example-header" style="background:var(--muted);">テーマ：食べ物</div>
+        <div class="example-body" style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
+          <div>
+            <div style="font-family:'Space Mono',monospace; font-size:0.65rem; color:var(--accent1); margin-bottom:6px;">✕ 探究できない問い</div>
+            <p style="font-size:0.88rem;">「ラーメンとうどん，どちらがおいしいか？」</p>
+            <p style="font-size:0.78rem; color:var(--muted); margin-top:4px;">→ 個人の好みの話。Yes/Noが言えない</p>
+          </div>
+          <div>
+            <div style="font-family:'Space Mono',monospace; font-size:0.65rem; color:var(--accent2); margin-bottom:6px;">⭐ 探究できる問い</div>
+            <p style="font-size:0.88rem;">「気温が高いほど，辛い食べ物を好む人は増えるか？」</p>
+            <p style="font-size:0.78rem; color:var(--muted); margin-top:4px;">→ アンケートや実験で調べられる！</p>
+          </div>
+        </div>
+      </div>
+      <div class="example-card">
+        <div class="example-header" style="background:var(--muted);">テーマ：植物</div>
+        <div class="example-body" style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
+          <div>
+            <div style="font-family:'Space Mono',monospace; font-size:0.65rem; color:var(--accent1); margin-bottom:6px;">✕ 狭すぎる問い</div>
+            <p style="font-size:0.88rem;">「今朝8時に僕の庭のA株のトマトが赤くなったのはなぜ？」</p>
+            <p style="font-size:0.78rem; color:var(--muted); margin-top:4px;">→ その株だけの話。一般化できない</p>
+          </div>
+          <div>
+            <div style="font-family:'Space Mono',monospace; font-size:0.65rem; color:var(--accent2); margin-bottom:6px;">⭐ ちょうどよい問い</div>
+            <p style="font-size:0.88rem;">「日当たりの量はトマトが赤くなる速さに影響するか？」</p>
+            <p style="font-size:0.78rem; color:var(--muted); margin-top:4px;">→ 複数の株で実験・比較できる！</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ACTIVITY -->
+    <div class="section-header">
+      <span class="section-num">12 / 活動</span>
+      <h2>やってみよう</h2>
+    </div>
+    <div class="activity">
+      <div class="activity-label">ACTIVITY A</div>
+      <h3>📚 教室にあるものについて「問い」を立ててみよう</h3>
+      <p style="font-size:0.9rem;">ポイント：ふしぎを言語化するという意識</p>
+    </div>
+    <div class="activity">
+      <div class="activity-label">ACTIVITY B</div>
+      <h3>🏫 朝起きてから学校に来るまでの「問い」を立てよう</h3>
+    </div>
+    <div class="card" style="border-color:var(--accent1);">
+      <div class="card-title">グループでシェア → 良い問いを磨こう！
+        <span class="en">Share → Identify "interesting" questions → Brush up!</span>
+      </div>
+      <ol style="padding-left:20px; font-size:0.92rem;">
+        <li style="margin-bottom:6px;">問いをグループでシェアして，「おもしろい」と感じた問いを挙げよう</li>
+        <li style="margin-bottom:6px;">おもしろい問い（良い問い）の共通点はなんだろう？</li>
+        <li>自分の問いをおもしろい問いに<strong>ブラッシュアップ</strong>しよう！</li>
+      </ol>
+    </div>
+
+    <div class="page-footer">
+      <span>SCIENCE LITERACY #2 — 問いを立てる</span>
+      <span>Externalize the Questions</span>
+    </div>
+  </div>
+</div>
+
+<!-- ========== PAGE 3・4 ========== -->
+<div id="p34" class="page">
+  <div class="hero" style="--accent-color: var(--accent2);">
+    <div class="lesson-badge">SCIENCE LITERACY / LESSON #3・4</div>
+    <h1>根拠ある仮説を立てる<span class="en">Formulate a Well-Founded Hypothesis</span></h1>
+    <p class="hero-sub">事実・意見・仮説を区別し，論理的に予測する</p>
+    <div class="accent-line" style="background: var(--accent2);"></div>
+  </div>
+
+  <div class="content">
+
+    <!-- PURPOSE -->
+    <div class="section-header">
+      <span class="section-num" style="background:var(--accent2);">01 / 目的</span>
+      <h2>この時間の目的</h2>
+    </div>
+    <div class="purpose-box">
+      <h3>The Purpose of This Session</h3>
+      <p>① 事実・意見・仮説などが<strong>異なるもの</strong>であることを知る</p>
+      <p style="margin-top:6px;">② <strong>根拠ある仮説</strong>を立てる練習をする</p>
+      <p class="en">① Recognize that facts, opinions, and hypotheses are distinct<br>② Practice formulating well-founded hypotheses</p>
+    </div>
+
+    <!-- FACT / OPINION -->
+    <div class="section-header">
+      <span class="section-num" style="background:var(--accent2);">02 / 基礎知識</span>
+      <h2>事実と意見を区別しよう</h2>
+    </div>
+    <div class="card">
+      <div class="card-title">練習問題：どれが事実？ どれが意見？<span class="en">Which is fact? Which is opinion?</span></div>
+      <div style="margin-bottom:14px; padding:14px; background:#f9f9f9; border-radius:4px; font-size:0.9rem; border-left:3px solid var(--muted);">
+        「僕がこの問題集をおすすめする理由は3つ。<br>
+        ①駅前の本屋で<strong>一番売れている</strong>こと。<br>
+        ②苦手な人でも<strong>わかりやすい</strong>こと。<br>
+        ③<strong>楽しいイラスト</strong>が入っていること。」
+      </div>
+      <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;">
+        <span class="tag red">①→ 事実（Fact）</span>
+        <span class="tag orange">②③→ 意見（Opinion）</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">さらに考えよう</div>
+      <div style="display:flex; flex-direction:column; gap:10px;">
+        <div style="display:flex; gap:10px; align-items:center; font-size:0.9rem;">
+          <span class="tag">①</span>
+          <span>Aという問題集を使ったBくんは100点を取った</span>
+          <span class="tag red" style="margin-left:auto; flex-shrink:0;">事実</span>
+        </div>
+        <div style="display:flex; gap:10px; align-items:center; font-size:0.9rem;">
+          <span class="tag">②</span>
+          <span>Aという問題集はとても良い問題集だ</span>
+          <span class="tag orange" style="margin-left:auto; flex-shrink:0;">意見</span>
+        </div>
+        <div style="display:flex; gap:10px; align-items:center; font-size:0.9rem;">
+          <span class="tag">③</span>
+          <span>平成の次の年号は「平和」だ（発表前）</span>
+          <span class="tag green" style="margin-left:auto; flex-shrink:0;">意見／仮説</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- SPECTRUM -->
+    <div class="section-header">
+      <span class="section-num" style="background:var(--accent2);">03 / 整理</span>
+      <h2>正しさと根拠のスペクトル</h2>
+    </div>
+    <div class="card" style="padding:20px;">
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; font-size:0.85rem; text-align:center;">
+        <div>
+          <div style="font-family:'Space Mono',monospace; font-size:0.65rem; color:var(--muted); margin-bottom:6px;">DEGREE OF CORRECTNESS</div>
+          <div style="display:flex; flex-direction:column; gap:4px;">
+            <div style="background:#1a1a2e; color:#fff; padding:6px; border-radius:2px; font-size:0.8rem;">誰にとっても正しい（真理）</div>
+            <div style="background:#e8f5e9; padding:6px; border-radius:2px; font-size:0.8rem;">私にとって正しい（意見）</div>
+            <div style="background:#fff3e0; padding:6px; border-radius:2px; font-size:0.8rem;">正しいかわからない（推測）</div>
+          </div>
+        </div>
+        <div>
+          <div style="font-family:'Space Mono',monospace; font-size:0.65rem; color:var(--muted); margin-bottom:6px;">DEGREE OF EVIDENCE</div>
+          <div style="display:flex; flex-direction:column; gap:4px;">
+            <div style="background:#2d6a4f; color:#fff; padding:6px; border-radius:2px; font-size:0.8rem;">妥当性の高い根拠がある</div>
+            <div style="background:#c8e6c9; padding:6px; border-radius:2px; font-size:0.8rem;">根拠がある</div>
+            <div style="background:#f5f5f5; padding:6px; border-radius:2px; font-size:0.8rem;">根拠はない（当てずっぽう）</div>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:14px; padding:10px 14px; background:var(--highlight); border-radius:4px; font-size:0.88rem;">
+        💡 <strong>仮説</strong>とは…「根拠はあるが，まだ確かめていない予測」！
+      </div>
+    </div>
+
+    <!-- PURPOSE OF HYPOTHESIS -->
+    <div class="section-header">
+      <span class="section-num" style="background:var(--accent2);">04 / なぜ</span>
+      <h2>仮説を立てる目的</h2>
+    </div>
+    <div class="compare">
+      <div class="compare-col bad">
+        <div class="compare-label">❌ 仮説なし</div>
+        <ul>
+          <li>闇雲な試行錯誤</li>
+          <li>失敗が行き止まり</li>
+          <li>失敗が時間の無駄</li>
+        </ul>
+      </div>
+      <div class="compare-col good">
+        <div class="compare-label" style="color:var(--accent2);">✅ 仮説あり</div>
+        <ul>
+          <li>的を絞った検証</li>
+          <li>失敗で次の予測ができる</li>
+          <li>失敗が新たなデータ発見に</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- SEMMELWEIS -->
+    <div class="section-header">
+      <span class="section-num" style="background:var(--accent2);">05 / 事例</span>
+      <h2>仮説が世界を救った：ゼンメルワイス</h2>
+    </div>
+    <div class="story-box">
+      <p style="font-size:0.85rem; color:var(--muted); margin-bottom:16px; font-family:'Space Mono',monospace;">The Story of How a Hypothesis Saved the World: Semmelweis</p>
+      <div class="story-step">
+        <div class="story-step-num">①</div>
+        <p><strong>問題</strong>：19世紀，産後の女性が亡くなる「産褥熱」が蔓延。誰もが「悪い空気」や「運命」のせいにしていた。</p>
+      </div>
+      <div class="story-step">
+        <div class="story-step-num">②</div>
+        <p><strong>観察</strong>：解剖直後の医師が担当する病棟の方が，死亡率が圧倒的に高い。</p>
+      </div>
+      <div class="story-step">
+        <div class="story-step-num" style="background:var(--accent2);">③</div>
+        <p><strong>仮説</strong>：医師の手に付着した「目に見えない死の粒子」が原因ではないか？</p>
+      </div>
+      <div class="story-step">
+        <div class="story-step-num">④</div>
+        <p><strong>検証</strong>：診察前の「手洗い」を徹底。（彼の死後に広く実施）</p>
+      </div>
+      <div class="story-step" style="margin-bottom:0;">
+        <div class="story-step-num" style="background:var(--accent3); color:var(--ink);">⑤</div>
+        <p><strong>結果</strong>：死亡率が劇的に低下！</p>
+      </div>
+      <div style="margin-top:16px; padding:12px 16px; background:var(--ink); color:#fff; border-radius:4px; font-size:0.9rem;">
+        💡 細菌の存在を知らなくても「<strong>観察</strong>」と「<strong>仮説</strong>」があれば，命を救う「解決策」に辿り着ける！
+      </div>
+    </div>
+
+    <!-- GOOD HYPOTHESIS -->
+    <div class="section-header">
+      <span class="section-num" style="background:var(--accent2);">06 / 基準</span>
+      <h2>よい仮説とは？</h2>
+    </div>
+    <div class="card">
+      <ul class="criteria-list">
+        <li><div class="criteria-icon">①</div><div><strong>具体的</strong>：数値を使うなど，「どうなるか」が明確</div></li>
+        <li><div class="criteria-icon">②</div><div><strong>確かめられる</strong>：実験や調査でYes/Noが言える</div></li>
+        <li><div class="criteria-icon">③</div><div><strong>論理的</strong>：筋道が通っている</div></li>
+        <li><div class="criteria-icon">④</div><div><strong>条件と結果が明確</strong>：「〇〇ほど，〜〜となる」</div></li>
+        <li><div class="criteria-icon" style="background:var(--accent1);">⑤</div><div><strong>根拠（理由）がある</strong>：「〜だから…」</div></li>
+      </ul>
+    </div>
+
+    <!-- FORMULA -->
+    <div class="section-header">
+      <span class="section-num" style="background:var(--accent2);">07 / 型</span>
+      <h2>よい仮説の型</h2>
+    </div>
+    <div class="formula">
+      「もし <span class="highlight">（条件）</span> ならば，<span class="highlight">（結果）</span> になるはずだ。<br>
+      　なぜなら <span class="highlight">（根拠）</span> だからだ。」
+      <span class="en">"If (condition), then (result) should occur. Because (reason)."<br>→ You'll see how to verify it!</span>
+    </div>
+    <div class="card" style="border-color:var(--accent2);">
+      <div class="card-title">仮説を立てる 2ステップ<span class="en">2 Steps to Formulate a Hypothesis</span></div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; font-size:0.92rem;">
+        <div style="padding:14px; background:#f0fff4; border-radius:4px;">
+          <div style="font-family:'Space Mono',monospace; font-size:0.65rem; color:var(--accent2); margin-bottom:6px;">STEP 1 — PREDICTION</div>
+          <p><strong>予想（結論）</strong>「ズバリ〇〇だと思う！」</p>
+        </div>
+        <div style="padding:14px; background:#fff3e0; border-radius:4px;">
+          <div style="font-family:'Space Mono',monospace; font-size:0.65rem; color:var(--accent3); margin-bottom:6px;">STEP 2 — REASON</div>
+          <p><strong>根拠（理由）</strong>「なぜなら〜〜だから！」<br>
+          <span style="font-size:0.82rem; color:var(--muted);">経験・知識をもとに。□□同様に…</span></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- EXAMPLES -->
+    <div class="section-header">
+      <span class="section-num" style="background:var(--accent2);">08 / 例</span>
+      <h2>仮説の例</h2>
+    </div>
+
+    <div class="hyp-example">
+      <div class="hyp-header">EXAMPLE 01 — コンビニの肉まん</div>
+      <div class="hyp-body">
+        <div class="hyp-q">❓ コンビニのレジ横にからあげや肉まんが置かれているのはなぜ？</div>
+        <div class="hyp-row">
+          <span class="hyp-label">条件</span>
+          <span>会計待ちの時に商品が目に入る</span>
+        </div>
+        <div class="hyp-row">
+          <span class="hyp-label">結果</span>
+          <span>ついつい追加で買ってしまう人が増える</span>
+        </div>
+        <div class="hyp-row">
+          <span class="hyp-label" style="background:var(--accent2);">根拠</span>
+          <span>お腹が空いている時に美味しそうな匂いや見た目に刺激されると，予定になかった買い物をしてしまう心理がある</span>
+        </div>
+        <div class="hyp-verify"><strong>検証方法：</strong>ホットスナックをレジ横ではなく，お弁当コーナーの隅に移動した時とで，売上の変化を比較する。</div>
+      </div>
+    </div>
+
+    <div class="hyp-example">
+      <div class="hyp-header">EXAMPLE 02 — テスト前に部屋掃除</div>
+      <div class="hyp-body">
+        <div class="hyp-q">❓ テスト前になると，なぜか部屋の掃除をしたくなるのはなぜ？</div>
+        <div class="hyp-row">
+          <span class="hyp-label">条件</span>
+          <span>勉強への不安が強い</span>
+        </div>
+        <div class="hyp-row">
+          <span class="hyp-label">結果</span>
+          <span>部屋の掃除を始めてしまう</span>
+        </div>
+        <div class="hyp-row">
+          <span class="hyp-label" style="background:var(--accent2);">根拠</span>
+          <span>掃除という簡単な作業で達成感を得て，不安から逃げようとする</span>
+        </div>
+        <div class="hyp-verify"><strong>検証方法：</strong>「テスト勉強が進んでいる時」と「行き詰まっている時」で，掃除をしたくなる頻度をアンケート調査する。</div>
+      </div>
+    </div>
+
+    <div class="hyp-example">
+      <div class="hyp-header">EXAMPLE 03 — 山の上のポテチ</div>
+      <div class="hyp-body">
+        <div class="hyp-q">❓ ポテトチップスの袋を高い山に持っていくと膨らむのはなぜ？</div>
+        <div class="hyp-row">
+          <span class="hyp-label">条件</span>
+          <span>周りの空気が薄くなる（気圧が下がる）</span>
+        </div>
+        <div class="hyp-row">
+          <span class="hyp-label">結果</span>
+          <span>袋が膨らむ</span>
+        </div>
+        <div class="hyp-row">
+          <span class="hyp-label" style="background:var(--accent2);">根拠</span>
+          <span>袋の内側から押し返す空気の力が，外側から押す力より強くなる</span>
+        </div>
+        <div class="hyp-verify"><strong>検証方法：</strong>密閉容器の中を真空ポンプで吸い，袋が膨らむかどうかを実験する。</div>
+      </div>
+    </div>
+
+    <!-- ACTIVITY -->
+    <div class="section-header">
+      <span class="section-num" style="background:var(--accent2);">09 / 活動</span>
+      <h2>自分の仮説を立てよう</h2>
+    </div>
+    <div class="activity" style="border-color:var(--accent2);">
+      <div class="activity-label" style="color:var(--accent2);">ACTIVITY</div>
+      <h3>🏫 登下校中のもの・ことについて仮説を立てよう</h3>
+      <ol style="padding-left:20px; font-size:0.9rem; margin-top:10px;">
+        <li style="margin-bottom:4px;">登下校中のもの・ことについて「問い」を立てる</li>
+        <li>その「問い」について仮説を考える</li>
+      </ol>
+    </div>
+    <div class="card">
+      <div class="card-title">仮説を書くコツ<span class="en">Tips for Writing a Hypothesis</span></div>
+      <div class="tips-grid">
+        <div class="tip-card">
+          <div class="tip-num">TIP 01</div>
+          <p>たくさん書いてみる</p>
+        </div>
+        <div class="tip-card">
+          <div class="tip-num">TIP 02</div>
+          <p>「〇〇ほど，〜〜になる」の形で書く</p>
+        </div>
+        <div class="tip-card">
+          <div class="tip-num">TIP 03</div>
+          <p>「〇〇だから，〜〜だ」と根拠を意識</p>
+        </div>
+        <div class="tip-card">
+          <div class="tip-num">TIP 04</div>
+          <p>数値化できるものは具体的に書く</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- WORKSHEET -->
+    <div class="section-header">
+      <span class="section-num" style="background:var(--accent2);">10 / ワーク</span>
+      <h2>ワークシート</h2>
+    </div>
+    <div class="worksheet">
+      <div class="ws-row">
+        <div class="ws-label">❓ 問い</div>
+        <div class="ws-blank"></div>
+      </div>
+      <div class="ws-row">
+        <div class="ws-label">💡 予想（結論）</div>
+        <div class="ws-blank"></div>
+      </div>
+      <div class="ws-row">
+        <div class="ws-label">📌 理由（根拠）</div>
+        <div class="ws-blank tall"></div>
+      </div>
+      <div class="ws-row" style="margin-bottom:0;">
+        <div class="ws-label">🔬 検証方法</div>
+        <div class="ws-blank tall"></div>
+      </div>
+    </div>
+    <div style="text-align:center; font-size:0.85rem; color:var(--muted); margin-top:8px;">
+      ← コピーして複数使いましょう
+    </div>
+
+    <div class="page-footer">
+      <span>SCIENCE LITERACY #3・4 — 根拠ある仮説を立てる</span>
+      <span>Formulate a Well-Founded Hypothesis</span>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ===== NAV =====
+  function showPage(id) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    event.target.classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+
+  // ===== 7 QUESTION TYPES =====
+  const QTYPES = [
+    {
+      icon: '📖',
+      name: '言葉や定義を問う',
+      en: 'Definition',
+      color: '#e8f4f8',
+      border: '#7ec8e3',
+      desc: 'そもそもその言葉はどういう意味？概念を正確につかむための問い。',
+      ex: '「雑草」とはどんな植物のことをいうのか？',
+      trigger: '「〇〇とは何か？」「そもそも〇〇ってどういう意味？」'
+    },
+    {
+      icon: '🔍',
+      name: '原因を問う',
+      en: 'Cause',
+      color: '#fff3e0',
+      border: '#f4a261',
+      desc: 'なぜそれが起きているのか？背景や仕組みを探る問い。探究の核心。',
+      ex: '雨の日に学校の廊下が滑りやすくなるのはなぜか？',
+      trigger: '「なぜ〇〇は〜なのか？」「〇〇の原因は？」'
+    },
+    {
+      icon: '🤔',
+      name: '信憑性を問う',
+      en: 'Credibility',
+      color: '#fce4ec',
+      border: '#e63946',
+      desc: 'その情報は本当に正しい？根拠はあるの？批判的思考の入り口。',
+      ex: '「チョコレートを食べると頭が良くなる」という情報の根拠は何か？',
+      trigger: '「それは本当か？」「根拠はあるか？」「誰が言っているか？」'
+    },
+    {
+      icon: '🌉',
+      name: '比喩を問う',
+      en: 'Analogy / Metaphor',
+      color: '#f3e5f5',
+      border: '#9c27b0',
+      desc: '他のものに例えるとどうなる？異なる分野の知識を橋渡しする問い。',
+      ex: '脳の記憶のしくみは，コンピュータのメモリにどこまで似ているか？',
+      trigger: '「〇〇を□□に例えると？」「〇〇と□□の共通点は？」'
+    },
+    {
+      icon: '📚',
+      name: '先行研究・事例を問う',
+      en: 'Prior Research',
+      color: '#e8f5e9',
+      border: '#2d6a4f',
+      desc: 'すでに誰かが調べていないか？既存の知識や事例を活かす問い。',
+      ex: 'バナナの皮の滑りやすさについて，これまでどんな研究がある？',
+      trigger: '「これまでに〇〇を調べた人は？」「似た事例はあるか？」'
+    },
+    {
+      icon: '🌊',
+      name: '影響を問う',
+      en: 'Impact / Effect',
+      color: '#e3f2fd',
+      border: '#1565c0',
+      desc: 'それが変わると何が変わる？原因から結果へ，影響の連鎖を追う問い。',
+      ex: '登校時間を30分早めると，生徒の集中力にどんな影響があるか？',
+      trigger: '「〇〇が増えると/減ると〜はどうなるか？」「〇〇の影響は？」'
+    },
+    {
+      icon: '🔗',
+      name: '方法や関連性を問う',
+      en: 'Method / Relation',
+      color: '#fffde7',
+      border: '#f9a825',
+      desc: '〇〇と□□はどうつながっている？または，どうすれば〇〇できる？手段と関係性の問い。',
+      ex: '睡眠時間と記憶の定着には関係があるか？',
+      trigger: '「〇〇と□□はどう関係する？」「どうすれば〇〇できる？」'
+    },
+  ];
+
+  function initQTypes() {
+    const grid = document.getElementById('qtypeGrid');
+    if (!grid) return;
+    QTYPES.forEach((qt, i) => {
+      const card = document.createElement('div');
+      card.className = 'qtype-card';
+      card.style.background = qt.color;
+      card.style.borderColor = qt.border;
+      card.innerHTML = `
+        <div class="qtype-header">
+          <div class="qtype-icon">${qt.icon}</div>
+          <div class="qtype-name">${qt.name}<small>${qt.en}</small></div>
+        </div>
+        <div class="qtype-body">
+          <div>${qt.desc}</div>
+          <div class="ex">${qt.ex}</div>
+          <div class="trigger">${qt.trigger}</div>
+        </div>`;
+      card.addEventListener('click', () => {
+        const isOpen = card.classList.contains('open');
+        document.querySelectorAll('.qtype-card').forEach(c => c.classList.remove('open'));
+        if (!isOpen) card.classList.add('open');
+      });
+      grid.appendChild(card);
+    });
+  }
+
+  // ===== QUESTION SORT GAME =====
+  const QUESTIONS = [
+    { id:'q1', text:'気温が高いほど，道路のアスファルトの温度は高くなるか？', zone:'tl', hint:'スコープ適切＆計測できる → 良い問い！' },
+    { id:'q2', text:'宇宙はなぜ存在するのか？', zone:'br', hint:'広すぎて科学的に探究しにくい' },
+    { id:'q3', text:'今日の朝7時42分に渡り廊下を通った人数は何人か？', zone:'tr', hint:'探究できるが時間・場所が狭すぎ。一般化できない' },
+    { id:'q4', text:'犬と猫，どちらがかわいいか？', zone:'br', hint:'好みの問いで探究できない＆スコープも曖昧' },
+    { id:'q5', text:'雨の日は晴れの日より，学校の廊下が滑りやすくなるか？', zone:'tl', hint:'スコープ適切＆測定できる → 良い問い！' },
+    { id:'q6', text:'植物はなぜきれいな花を咲かせるのか？', zone:'bl', hint:'スコープはある程度よいが「きれい」は価値観で測れない' },
+    { id:'q7', text:'ゴミ箱の近くに置いたゴミは，離れた場所より多く捨てられるか？', zone:'tl', hint:'スコープ適切＆実験で確かめられる → 良い問い！' },
+    { id:'q8', text:'音楽はなぜ人を感動させるのか？', zone:'bl', hint:'スコープはあるが「感動」を科学的に測るのが難しい' },
+  ];
+
+  let draggingId = null;
+
+  function shuffle(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+
+  function initGame() {
+    const pool = document.getElementById('cardPool');
+    if (!pool) return;
+    pool.innerHTML = '';
+    ['zone-tl','zone-tr','zone-bl','zone-br'].forEach(id => {
+      const z = document.getElementById(id);
+      if (z) [...z.querySelectorAll('.q-card')].forEach(c => c.remove());
+    });
+    const result = document.getElementById('sortResult');
+    if (result) { result.className = 'sort-result'; result.innerHTML = ''; }
+
+    shuffle([...QUESTIONS]).forEach(q => {
+      const card = document.createElement('div');
+      card.className = 'q-card';
+      card.id = q.id;
+      card.textContent = q.text;
+      card.draggable = true;
+      card.addEventListener('dragstart', () => {
+        draggingId = q.id;
+        setTimeout(() => card.classList.add('dragging'), 0);
+      });
+      card.addEventListener('dragend', () => card.classList.remove('dragging'));
+      pool.appendChild(card);
+    });
+  }
+
+  function onDragOver(e) {
+    e.preventDefault();
+    e.currentTarget.classList.add('drag-over');
+  }
+  function onDragLeave(e) {
+    e.currentTarget.classList.remove('drag-over');
+  }
+  function onDrop(e, zoneKey) {
+    e.preventDefault();
+    e.currentTarget.classList.remove('drag-over');
+    if (!draggingId) return;
+    const card = document.getElementById(draggingId);
+    if (!card) return;
+    card.classList.remove('correct','wrong');
+    card.title = '';
+    e.currentTarget.appendChild(card);
+    draggingId = null;
+  }
+
+  function checkAnswers() {
+    let correct = 0;
+    QUESTIONS.forEach(q => {
+      const card = document.getElementById(q.id);
+      if (!card) return;
+      const parent = card.parentElement;
+      const isRight = parent && parent.id === 'zone-' + q.zone;
+      card.classList.toggle('correct', isRight);
+      card.classList.toggle('wrong', !isRight);
+      card.title = (isRight ? '✓ ' : '× ') + q.hint;
+      if (isRight) correct++;
+    });
+    const total = QUESTIONS.length;
+    const result = document.getElementById('sortResult');
+    if (correct === total) {
+      result.className = 'sort-result show good';
+      result.innerHTML = `🎉 全問正解！<span class="score-badge" style="background:var(--accent2);color:#fff;">${correct}/${total}</span><br><span style="font-size:0.85rem;">2つの軸で問いを評価する力がついた！</span>`;
+    } else {
+      result.className = 'sort-result show bad';
+      result.innerHTML = `<span class="score-badge" style="background:var(--accent1);color:#fff;">${correct}/${total}</span> 正解<br><span style="font-size:0.85rem;">赤いカードにカーソルを当てるとヒントが出るよ。もう一度考えてみよう！</span>`;
+    }
+  }
+
+  function resetGame() { initGame(); }
+
+  document.addEventListener('DOMContentLoaded', () => { initGame(); initQTypes(); });
+</script>
+</body>
+</html>
