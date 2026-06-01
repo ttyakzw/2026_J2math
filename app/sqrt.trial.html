@@ -268,13 +268,23 @@ canvas.log-chart{width:100%!important;border-radius:12px;}
 .wk-bar.bad{background:var(--wrong);}
 .wk-rate{font-size:11px;font-weight:800;}
 
-/* ── 問題タイプ一覧 ── */
-.qtype-list{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:10px 0 18px;text-align:left;}
-.qtype-item{background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;
-  padding:7px 11px;font-size:11px;}
-.qtype-item strong{color:var(--accent);display:block;margin-bottom:2px;font-size:10px;}
-.qtype-item.new{border-color:rgba(6,182,212,.4);background:rgba(6,182,212,.06);}
-.qtype-item.new strong{color:var(--accent3);}
+/* ── 問題例カード ── */
+.qtype-list{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0 18px;}
+.qtype-item{background:var(--surface2);border:1.5px solid var(--border);border-radius:12px;
+  padding:10px 10px 8px;text-align:center;}
+.qtype-item strong{color:var(--accent);display:block;margin-bottom:6px;font-size:10px;
+  font-weight:800;letter-spacing:.5px;text-transform:uppercase;text-align:left;}
+.qtype-item .ex-expr{min-height:38px;display:flex;align-items:center;justify-content:center;}
+.qtype-item .ex-expr .katex-display>.katex{font-size:1.4em;}
+.qtype-item .ex-expr .katex{font-size:1.2em;color:var(--text);}
+.qtype-item .ex-ans{font-size:10px;color:var(--text-muted);margin-top:4px;}
+.qtype-item .ex-ans .katex{font-size:1em;color:var(--accent2);}
+.qtype-item.diff-basic{border-color:rgba(22,163,74,.3);background:rgba(22,163,74,.05);}
+.qtype-item.diff-basic strong{color:var(--correct);}
+.qtype-item.diff-mid{border-color:rgba(217,119,6,.3);background:rgba(217,119,6,.05);}
+.qtype-item.diff-mid strong{color:var(--warning);}
+.qtype-item.diff-hard{border-color:rgba(139,92,246,.3);background:rgba(139,92,246,.05);}
+.qtype-item.diff-hard strong{color:var(--accent2);}
 
 /* ── 習熟度バッジ ── */
 .mastery-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;}
@@ -391,7 +401,7 @@ canvas.log-chart{width:100%!important;border-radius:12px;}
   <!-- スタート画面 -->
   <div class="start-screen" id="startScreen">
     <h2>⏱ タイムトライアル</h2>
-    <p><strong>10問合計で30秒！</strong> 3問連続正解で⏱+3秒ボーナス！<br>速く・正確に解いてランクを目指そう！</p>
+    <p><strong>10問・30秒スタート！</strong> 正解するたびに⏱+1秒！<br>速く・正確に解いてランクを目指そう！</p>
     <div class="qtype-list" id="qtypeList"></div>
     <button class="start-btn" onclick="startGame()">スタート ▶</button>
   </div>
@@ -1053,13 +1063,13 @@ function checkAnswer(){
     isCorrect=(a===q.answerA&&b===q.answerB);markInputs(['inpA','inpB'],isCorrect);
   }
 
-  stopTimer();answered=true;
+  answered=true;
   document.getElementById('hintBtn').style.display='none';
 
   if(isCorrect){
     correct++;streak++;
     if(streak>maxStreak)maxStreak=streak;
-    // 正解で+1秒
+    // 正解で+1秒（タイマーは止めない）
     timerVal=Math.min(timerVal+1,TIME_LIMIT);
     updateTimerUI();
     const fb=document.getElementById('feedback');
@@ -1257,21 +1267,61 @@ function switchLevel(l){
 }
 
 /* ── スタート画面タイプ一覧 ── */
+/* ── スタート画面：問題例カード ── */
 function renderQtypeList(){
-  const el=document.getElementById('qtypeList');if(!el)return;
-  if(level===1){
-    el.innerHTML=`
-      <div class="qtype-item"><strong>基本〜応用</strong>√を簡略化して a√b の形に</div>
-      <div class="qtype-item"><strong>発展</strong>√(分数) の有理化</div>
-      <div class="qtype-item new"><strong>発展 NEW ✦</strong>√n の整数部分を求める</div>
-      <div class="qtype-item" style="opacity:0"></div>`;
-  }else{
-    el.innerHTML=`
-      <div class="qtype-item"><strong>基本</strong>同じ根号の3項加減</div>
-      <div class="qtype-item"><strong>応用</strong>根号の整理・乗除・有理化</div>
-      <div class="qtype-item new"><strong>応用〜発展 ✦</strong>式の値（代入して整数を求める）</div>
-      <div class="qtype-item new"><strong>発展 ✦</strong>共役な式で分母の有理化</div>`;
-  }
+  const el=document.getElementById('qtypeList');
+  if(!el) return;
+  el.innerHTML='';
+
+  // レベルごとの問題例 [難易度クラス, ラベル, 問題TeX, 答えTeX]
+  const lv1examples=[
+    ['diff-basic','基本','\\sqrt{48}','= 4\\sqrt{3}'],
+    ['diff-mid',  '応用','\\sqrt{245}','= 7\\sqrt{5}'],
+    ['diff-hard', '発展','\\sqrt{\\dfrac{3}{5}}','= \\dfrac{\\sqrt{15}}{5}'],
+    ['diff-hard', '発展','\\sqrt{20}\\text{ の整数部分}','= 4'],
+  ];
+  const lv2examples=[
+    ['diff-basic','基本','\\sqrt{18}+\\sqrt{2}-\\sqrt{8}','= 2\\sqrt{2}'],
+    ['diff-mid',  '応用','\\sqrt{3}\\times\\sqrt{6}+\\sqrt{2}','= 3\\sqrt{2}+\\sqrt{2}=4\\sqrt{2}'],  // ←簡略
+    ['diff-hard', '発展','(\\sqrt{5}+\\sqrt{3})^2','= 8+2\\sqrt{15}'],
+    ['diff-hard', '発展','x=\\sqrt{3}+1\\text{ のとき }x^2-2x','= 2'],
+  ];
+
+  // Lv2 応用の解説を短くする（表示上は答えだけ）
+  const lv2examplesFixed=[
+    ['diff-basic','基本','\\sqrt{18}+\\sqrt{2}-\\sqrt{8}','= 2\\sqrt{2}'],
+    ['diff-mid',  '応用','\\dfrac{6}{\\sqrt{3}}+2\\sqrt{3}','= 4\\sqrt{3}'],
+    ['diff-hard', '発展','(\\sqrt{7}-\\sqrt{2})^2','= 9-2\\sqrt{14}'],
+    ['diff-hard', '発展','\\dfrac{1}{\\sqrt{5}+2}','= \\sqrt{5}-2'],
+  ];
+
+  const examples = level===1 ? lv1examples : lv2examplesFixed;
+
+  examples.forEach(([cls, label, qTex, ansTex])=>{
+    const card=document.createElement('div');
+    card.className=`qtype-item ${cls}`;
+
+    // ラベル
+    const lbl=document.createElement('strong');
+    lbl.textContent=label;
+    card.appendChild(lbl);
+
+    // 問題式
+    const exprWrap=document.createElement('div');
+    exprWrap.className='ex-expr';
+    try{ katex.render(qTex, exprWrap, {throwOnError:false, displayMode:false}); }
+    catch(e){ exprWrap.textContent=qTex; }
+    card.appendChild(exprWrap);
+
+    // 答え
+    const ansWrap=document.createElement('div');
+    ansWrap.className='ex-ans';
+    try{ ansWrap.innerHTML=katex.renderToString(ansTex, {throwOnError:false, displayMode:false}); }
+    catch(e){ ansWrap.textContent=ansTex; }
+    card.appendChild(ansWrap);
+
+    el.appendChild(card);
+  });
 }
 
 /* ══════════════════════════════════════════════════════
