@@ -327,6 +327,51 @@ canvas.log-chart{width:100%!important;border-radius:12px;}
 .missed-steps{margin-top:8px;}
 .missed-steps-title{font-size:11px;font-weight:700;color:var(--text-muted);margin-bottom:6px;}
 
+
+/* ── 復習指示パネル ── */
+.review-panel {
+  width:100%; max-width:720px; margin-top:14px;
+}
+.review-toggle {
+  width:100%; padding:13px 18px;
+  background:linear-gradient(135deg,#eff6ff,#e0e7ff);
+  border:1.5px solid #93c5fd; border-radius:14px;
+  color:#1d4ed8; font-family:'M PLUS Rounded 1c',sans-serif;
+  font-size:14px; font-weight:800; cursor:pointer;
+  display:flex; justify-content:space-between; align-items:center;
+  transition:background .18s; -webkit-tap-highlight-color:transparent;
+}
+.review-toggle:hover { background:linear-gradient(135deg,#dbeafe,#c7d2fe); }
+.review-body {
+  display:none;
+  background:var(--surface); border:1.5px solid #bfdbfe;
+  border-radius:0 0 14px 14px; border-top:none;
+  padding:14px 16px; font-size:13px;
+}
+.review-item {
+  display:flex; gap:10px; align-items:flex-start;
+  padding:10px 0; border-bottom:1px dashed var(--border);
+}
+.review-item:last-child { border-bottom:none; }
+.review-no {
+  background:#1d4ed8; color:white;
+  font-size:11px; font-weight:800;
+  padding:3px 9px; border-radius:10px;
+  white-space:nowrap; flex-shrink:0; margin-top:1px;
+}
+.review-content { flex:1; line-height:1.7; }
+.review-content strong { color:var(--text); display:block; margin-bottom:2px; font-size:12px; }
+.review-content .katex { font-size:1em; color:var(--accent2); }
+.review-prnt {
+  display:inline-block; background:#f0fdf4; border:1px solid #bbf7d0;
+  color:#166534; font-size:11px; font-weight:700;
+  padding:2px 8px; border-radius:8px; margin-top:4px;
+}
+.review-ok {
+  background:rgba(22,163,74,.08); border-color:rgba(22,163,74,.25);
+}
+.review-ok .review-no { background:var(--correct); }
+
 </style>
 </head>
 <body>
@@ -1190,6 +1235,166 @@ function renderMissedReview(){
   else document.body.appendChild(wrap);
 }
 
+
+/* ── 授業プリント復習指示 ── */
+// ゲームの問題タイプ → プリント対応マップ
+const PRINT_MAP = {
+  // Lv1
+  '簡略化': {
+    title: '根号の簡単化（a√b の形に変形）',
+    prints: ['No.5 例105・練習112', 'No.6 左側'],
+    hint: '√(a²×b)=a√b の変形。完全平方数を根号の外に出す練習をしよう。',
+    drills: ['練習112 (1)〜(8)', '練習113 (1)〜(3)'],
+  },
+  '有理化': {
+    title: '分数の根号・分母の有理化',
+    prints: ['No.6 ◎分母の有理化・例106・練習115'],
+    hint: '√(p/q)=√p/√q。分母に同じ√をかけて整数にする練習。',
+    drills: ['練習115 (1)〜(3)', '練習112 (5)(6)'],
+  },
+  '整数部分': {
+    title: '平方根の大小・整数部分',
+    prints: ['No.4 ◎平方根の大小・練習106・練習107'],
+    hint: 'n²< a <(n+1)² となる n を見つける。近似値の表も活用しよう。',
+    drills: ['練習106 (1)〜(4)', '練習107 (2)〜(5)'],
+  },
+  // Lv2
+  '加減算': {
+    title: '平方根の加法・減法',
+    prints: ['No.7 ◎平方根の和・練習116・練習117・練習118'],
+    hint: '係数が同じ根号だけ計算できる。まず各項を a√b の形にしてから。',
+    drills: ['練習116 (1)〜(4)', '練習117 (1)〜(4)', '練習118 (1)(2)'],
+  },
+  '計算': {
+    title: '平方根の乗除・混合計算',
+    prints: ['No.5 ◎平方根の計算・練習109・練習110', 'No.6 練習113・練習114'],
+    hint: '√a×√b=√(ab)、√a÷√b=√(a/b) の公式を使いこなそう。',
+    drills: ['練習109 (1)〜(6)', '練習113 (1)〜(3)', '練習114 (1)〜(4)'],
+  },
+  'まとめ': {
+    title: '根号を含む式のまとめ計算',
+    prints: ['No.7 練習117 (3)(4)', 'No.8 練習119'],
+    hint: '各根号を簡単にしてから同類項をまとめる。2種の根号を別々に整理。',
+    drills: ['練習117 (3)(4)', '練習118 (1)(2)', '練習119 (1)〜(4)'],
+  },
+  '展開': {
+    title: '乗法公式を使った展開（根号を含む）',
+    prints: ['No.8 練習120・練習121'],
+    hint: '(a+b)²=a²+2ab+b²、(a+b)(a-b)=a²-b² を根号に応用。',
+    drills: ['練習120 (1)〜(6)', '練習121 (1)〜(3)'],
+  },
+  '乗法': {
+    title: '根号を含む乗法・分配法則',
+    prints: ['No.8 練習119 (3)(4)・練習120 (5)(6)'],
+    hint: '分配法則で√ a(b+c)=ab+ac の形に展開しよう。',
+    drills: ['練習119 (1)〜(4)', '練習120 (5)(6)'],
+  },
+  '式の値': {
+    title: '式の値（根号を含む式に代入）',
+    prints: ['No.10 練習123 ①②③'],
+    hint: 'x=√n+a を代入して展開。√の項が消えて整数が残る仕組みに注目。',
+    drills: ['練習123 ① x²+2xy+y²', '練習123 ② 3x²-6xy+3y²'],
+  },
+  '共役有理化': {
+    title: '共役な式を使った有理化',
+    prints: ['No.8 練習122'],
+    hint: '(√a+b)(√a-b)=a-b² で分母を整数にする。符号が逆の式をかける。',
+    drills: ['練習122 (1)(2)(3)'],
+  },
+};
+
+function renderReviewPanel(){
+  // 既存削除
+  const old=document.getElementById('reviewPanel');
+  if(old) old.remove();
+
+  // missedQuestionsがなければ何もしない
+  if(!missedQuestions||missedQuestions.length===0) return;
+
+  // 間違えた問題タイプを集計
+  const typeCounts={};
+  missedQuestions.forEach(q=>{
+    const t=q.qtype||'その他';
+    typeCounts[t]=(typeCounts[t]||0)+1;
+  });
+
+  const types=Object.keys(typeCounts);
+  if(types.length===0) return;
+
+  const wrap=document.createElement('div');
+  wrap.id='reviewPanel';
+  wrap.className='review-panel';
+
+  // ヘッダー
+  const hdr=document.createElement('button');
+  hdr.className='review-toggle';
+  hdr.innerHTML=`<span>📖 授業プリント復習ガイド（${types.length}項目）</span><span class="review-arrow">▼</span>`;
+  hdr.onclick=()=>{
+    const body=document.getElementById('reviewBody');
+    const arrow=hdr.querySelector('.review-arrow');
+    const open=body.style.display==='block';
+    body.style.display=open?'none':'block';
+    arrow.textContent=open?'▼':'▲';
+  };
+
+  const body=document.createElement('div');
+  body.id='reviewBody';
+  body.className='review-body';
+  body.style.display='none';
+
+  // 「全問正解だった分野」も最後に表示
+  const allTypes=['簡略化','有理化','整数部分','加減算','計算','まとめ','展開','乗法','式の値','共役有理化'];
+
+  // 間違い分野（優先）
+  types.forEach(t=>{
+    const info=PRINT_MAP[t];
+    if(!info) return;
+    const n=typeCounts[t];
+    const item=document.createElement('div');
+    item.className='review-item';
+    item.innerHTML=`
+      <div class="review-no">❌ ${n}問</div>
+      <div class="review-content">
+        <strong>${info.title}</strong>
+        <div style="color:var(--text-muted);font-size:12px;margin-bottom:4px;">${info.hint}</div>
+        <div>${info.prints.map(p=>`<span class="review-prnt">📄 ${p}</span>`).join(' ')}</div>
+        <div style="margin-top:4px;font-size:11px;color:var(--text-muted);">練習問題：${info.drills.join('　')}</div>
+      </div>`;
+    body.appendChild(item);
+  });
+
+  // 区切り
+  if(types.length>0){
+    const sep=document.createElement('div');
+    sep.style.cssText='padding:8px 0 4px;font-size:11px;font-weight:800;color:var(--correct);';
+    sep.textContent='✅ 正解できた分野（念のため確認）';
+    body.appendChild(sep);
+  }
+
+  // 正解分野
+  allTypes.filter(t=>!typeCounts[t]).forEach(t=>{
+    const info=PRINT_MAP[t];
+    if(!info) return;
+    const item=document.createElement('div');
+    item.className='review-item review-ok';
+    item.innerHTML=`
+      <div class="review-no" style="background:var(--correct);">✅</div>
+      <div class="review-content">
+        <strong>${info.title}</strong>
+        <div>${info.prints.map(p=>`<span class="review-prnt">📄 ${p}</span>`).join(' ')}</div>
+      </div>`;
+    body.appendChild(item);
+  });
+
+  wrap.appendChild(hdr);
+  wrap.appendChild(body);
+
+  // stats-rowの前に挿入（missedReviewの後）
+  const stats=document.querySelector('.stats-row');
+  if(stats) stats.parentNode.insertBefore(wrap, stats);
+  else document.body.appendChild(wrap);
+}
+
 function inputError(){
   document.getElementById('feedback').textContent='すべての欄を入力してね！';
   document.getElementById('feedback').className='feedback wrong';
@@ -1233,10 +1438,13 @@ function showFinish(isTimeout=false){
 
   // 間違えた問題の解説（折りたたみ）
   renderMissedReview();
+  // 授業プリント復習ガイド
+  setTimeout(renderReviewPanel, 100);
 }
 
 function restartGame(){
   const mr=document.getElementById('missedReview');if(mr)mr.remove();
+  const rp=document.getElementById('reviewPanel');if(rp)rp.remove();
   correct=0;wrong=0;streak=0;maxStreak=0;qIndex=0;missedQuestions=[];
   timerVal=TIME_LIMIT;
   updateStats();updateStreak();resetTimerUI();
