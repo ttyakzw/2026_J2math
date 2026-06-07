@@ -431,7 +431,7 @@ canvas.log-chart{width:100%!important;border-radius:12px;}
 </div>
 
 <div class="timer-row">
-  <div class="timer-display" id="timerDisplay">30</div>
+  <div class="timer-display" id="timerDisplay">60</div>
   <div class="timer-track"><div class="timer-fill" id="timerFill" style="width:100%"></div></div>
 </div>
 
@@ -483,7 +483,7 @@ canvas.log-chart{width:100%!important;border-radius:12px;}
   <!-- スタート画面 -->
   <div class="start-screen" id="startScreen">
     <h2>⏱ タイムトライアル</h2>
-    <p><strong>10問・30秒スタート！</strong> 正解するたびに⏱+1秒！<br>速く・正確に解いてランクを目指そう！</p>
+    <p><strong>10問・1分スタート！</strong> 正解するたびに⏱+1秒！<br>速く・正確に解いてランクを目指そう！</p>
     <div class="qtype-list" id="qtypeList"></div>
     <button class="start-btn" onclick="startGame()">スタート ▶</button>
   </div>
@@ -538,15 +538,15 @@ canvas.log-chart{width:100%!important;border-radius:12px;}
 /* ══════════════════════════════════════════════════════
    ★ 教員設定 — GAS URL とクラス一覧をここに記入 ★
    ══════════════════════════════════════════════════════ */
-const https://script.google.com/macros/s/AKfycbyHe2u5gOxJVhmU9Vwaft6RbuPAwmdA4k81l44sD5hPRG5OyptZXBucJKiDVqaiZlfBNw/exec = '';   // ← デプロイ後の URL を貼り付ける
-const CLASS_LIST = ['A','B','C','DF'];  // ← クラス名を変更する
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbwSP332Pg0uIbo5-osCKdo-gKKfY3kzjA6V-M05SRBID5IsTta8cIU-xY72VHLadMvaRg/exec';   // ← デプロイ後の URL を貼り付ける
+const CLASS_LIST = ['A','B','C','D'];  // ← クラス名を変更する
 
 /* ── KaTeX ── */
 function kt(tex,el,display){katex.render(tex,el,{throwOnError:false,displayMode:!!display});}
 function ktHTML(tex,display){return katex.renderToString(tex,{throwOnError:false,displayMode:!!display});}
 
 /* ── 定数 ── */
-const TIME_LIMIT=30, WARN_SEC=15, DANGER_SEC=8;
+const TIME_LIMIT=60, WARN_SEC=20, DANGER_SEC=10;
 /* ── State ── */
 let level=1,qIndex=0,correct=0,wrong=0,streak=0,maxStreak=0;
 let questions=[],currentQ=null,answered=false;
@@ -1654,9 +1654,9 @@ let sessionQtypeLog={}; // {タイプ名: {c:正解数, t:合計数}}
 function loadName(){return localStorage.getItem(NAME_KEY)||'';}
 function saveName(){
   const cls=document.getElementById('classSelect').value;
-  if(!cls){alert('クラス');return;}
+  if(!cls){alert('クラスを選んでね！');return;}
   const val=document.getElementById('nameInput').value.trim();
-  if(!val){alert('名前');return;}
+  if(!val){alert('名前を入力してね！');return;}
   playerName=val;
   playerClass=cls;
   localStorage.setItem(NAME_KEY,val);
