@@ -538,8 +538,8 @@ canvas.log-chart{width:100%!important;border-radius:12px;}
 /* ══════════════════════════════════════════════════════
    ★ 教員設定 — GAS URL とクラス一覧をここに記入 ★
    ══════════════════════════════════════════════════════ */
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbyiULCn_JLtis1gMdO2D6Mxc4YLCmZz5kpvhJv9WKKCasBkiYgDXU6hl1--9ccydZJ4Xw/exec';   // ← デプロイ後の URL を貼り付ける
-const CLASS_LIST = ['1組','2組','3組'];  // ← クラス名を変更する
+const https://script.google.com/macros/s/AKfycbyHe2u5gOxJVhmU9Vwaft6RbuPAwmdA4k81l44sD5hPRG5OyptZXBucJKiDVqaiZlfBNw/exec = '';   // ← デプロイ後の URL を貼り付ける
+const CLASS_LIST = ['A','B','C','DF'];  // ← クラス名を変更する
 
 /* ── KaTeX ── */
 function kt(tex,el,display){katex.render(tex,el,{throwOnError:false,displayMode:!!display});}
@@ -610,28 +610,56 @@ const L1_INT_POOL=[
   {tex:'3\\sqrt{2}',ip:4,hint:'3√2=√18。√16=4, √25=5, √18はどちらの間？',steps:['3\\sqrt{2} = \\sqrt{18}','4^2=16 < 18 < 25=5^2 \\quad \\therefore\\; \\text{整数部分} = 4']},
 ];
 
-function genLevel1(idx){
-  const diff=idx<4?1:idx<7?2:3;
-  if(diff===3){
-    if(Math.random()<0.5){
-      const p=L1_INT_POOL[Math.floor(Math.random()*L1_INT_POOL.length)];
-      return{diff:3,qtype:'整数部分',hint:p.hint,
-        displayTex:p.tex,ansMode:'single',inputLabel:'整数部分',
-        answerA:p.ip,steps:p.steps,correctTex:`${p.ip}`};
-    }
-    const p=L1_FRAC[Math.floor(Math.random()*L1_FRAC.length)];
-    return{diff:3,qtype:'有理化',hint:p.hint,
-      displayTex:`\\sqrt{${p.tex}}`,answerA:p.ansa,fracDen:p.fracDen,ansMode:'frac',
-      steps:p.steps,correctTex:`\\dfrac{\\sqrt{${p.ansa}}}{${p.fracDen}}`};
+// ── Lv1: a√b → √c 逆変換プール ─────────────────────────────────────
+const L1_REV=[
+  [2,2,8],[2,3,12],[3,2,18],[2,5,20],[2,6,24],[3,3,27],
+  [2,7,28],[4,2,32],[3,5,45],[4,3,48],[5,2,50],[3,7,63],
+  [5,3,75],[4,5,80],[6,2,72],[7,2,98],[6,3,108],[5,5,125],
+  [7,3,147],[9,2,162],[10,2,200],[9,3,243],[7,5,245],
+];
+
+// Lv1: 引数なし・内部でランダムにタイプを選ぶ（完全ランダム）
+function genLevel1(){
+  const t=Math.random();
+
+  if(t<0.40){
+    // 簡略化: 基本・応用の全プールから
+    const all=[...L1_EASY,...L1_MED];
+    const [inside,a,b,steps]=all[Math.floor(Math.random()*all.length)];
+    const isEasy=L1_EASY.some(r=>r[0]===inside);
+    return{diff:isEasy?1:2, qtype:'簡略化',
+      hint:isEasy
+        ?`${inside}の中から完全平方数を探そう。${inside}÷4, ÷9... と試してみよう`
+        :`大きな完全平方数を探そう。√${inside}=√(□×${b}) の□は？`,
+      displayTex:`\\sqrt{${inside}}`, answerA:a, answerB:b,
+      steps:[`\\sqrt{${inside}} = \\sqrt{${steps}}`,`= \\sqrt{${a*a}} \\times \\sqrt{${b}} = ${T(a,b)}`],
+      correctTex:T(a,b)};
   }
-  const pool=diff===1?L1_EASY:L1_MED;
-  const [inside,a,b,steps]=pool[Math.floor(Math.random()*pool.length)];
-  const hintText=diff===1?`${inside}の中から完全平方数を探そう。${inside}÷4, ÷9... と試してみよう`
-    :`大きな完全平方数を探そう。√${inside}=√(□×${b}) の□は？`;
-  return{diff,qtype:'簡略化',hint:hintText,
-    displayTex:`\\sqrt{${inside}}`,answerA:a,answerB:b,
-    steps:[`\\sqrt{${inside}} = \\sqrt{${steps}}`,`= \\sqrt{${a*a}} \\times \\sqrt{${b}} = ${T(a,b)}`],
-    correctTex:T(a,b)};
+
+  if(t<0.65){
+    // 逆変換: a√b = √? （√の中を答える）
+    const [a,b,c]=L1_REV[Math.floor(Math.random()*L1_REV.length)];
+    return{diff:1, qtype:'逆変換',
+      hint:`${a}√${b} を √c の形にしよう。${a}√${b}=√(${a}²×${b})=√?`,
+      displayTex:`${a}\\sqrt{${b}} = \\sqrt{\\phantom{000}}`,
+      ansMode:'single_sqrt', answerA:c,
+      steps:[`${a}\\sqrt{${b}} = \\sqrt{${a}^2 \\times ${b}} = \\sqrt{${c}}`],
+      correctTex:`\\sqrt{${c}}`};
+  }
+
+  if(t<0.80){
+    // 整数部分
+    const p=L1_INT_POOL[Math.floor(Math.random()*L1_INT_POOL.length)];
+    return{diff:3, qtype:'整数部分', hint:p.hint,
+      displayTex:p.tex, ansMode:'single', inputLabel:'整数部分',
+      answerA:p.ip, steps:p.steps, correctTex:`${p.ip}`};
+  }
+
+  // 有理化
+  const p=L1_FRAC[Math.floor(Math.random()*L1_FRAC.length)];
+  return{diff:3, qtype:'有理化', hint:p.hint,
+    displayTex:`\\sqrt{${p.tex}}`, answerA:p.ansa, fracDen:p.fracDen, ansMode:'frac',
+    steps:p.steps, correctTex:`\\dfrac{\\sqrt{${p.ansa}}}{${p.fracDen}}`};
 }
 
 /* ══════════ Lv2 データ ══════════ */
@@ -868,18 +896,19 @@ function genLevel2(idx){
 
 /* ── Build questions ── */
 function buildQuestions(){
-  // diff=1,2,3 の問題を均等に生成してシャッフル（難易度ソートなし・完全ランダム）
   questions=[];
-  const gen=level===1?genLevel1:genLevel2;
-  // 各難易度を3〜4問ずつ生成してプールを作り、10問をランダム抽出
-  const pool=[];
-  for(let d=1;d<=3;d++){
-    // diff を固定して生成するためにidxを調整
-    const idxMap={1:0,2:5,3:8}; // genLevel1/2 の diff判定: idx<4→1, idx<7→2, else→3
-    for(let k=0;k<5;k++) pool.push(gen(idxMap[d]));
+  if(level===1){
+    // Lv1: genLevel1()をそのまま10回（内部でランダムにタイプ選択）
+    for(let i=0;i<TOTAL;i++) questions.push(genLevel1());
+  } else {
+    // Lv2: 各難易度(1/2/3)を均等にプールしてシャッフル
+    const pool=[];
+    const idxMap={1:0,2:5,3:8};
+    for(let d=1;d<=3;d++)
+      for(let k=0;k<5;k++) pool.push(genLevel2(idxMap[d]));
+    shuffle(pool);
+    questions=pool.slice(0,TOTAL);
   }
-  shuffle(pool);
-  questions=pool.slice(0,TOTAL);
 }
 
 /* ── Timer ── */
@@ -1002,6 +1031,22 @@ function updateStreak(){
 function buildAnswerUI(q){
   const area=document.getElementById('answerArea');
   area.innerHTML='';
+  if(q.ansMode==='single_sqrt'){
+    // a√b = √[?] の形：√の中の数を1欄入力
+    area.innerHTML=`
+      <div style="font-size:13px;color:var(--text-muted);margin-bottom:6px;">
+        答えを <span id="sqrtCLabel"></span> の形で入力
+      </div>
+      <div class="answer-row" style="align-items:flex-end;">
+        <div class="input-wrap">
+          <input type="number" class="answer-input wide" readonly onclick="nkFocus('inpA')" id="inpA" placeholder="c">
+          <div class="input-label">√の中の数</div>
+        </div>
+      </div>`;
+    kt('\sqrt{c}',document.getElementById('sqrtCLabel'),false);
+    initNkFocus(['inpA']); return;
+  }
+
   if(q.ansMode==='single'){
     area.innerHTML=`<div class="answer-row" style="align-items:flex-end;">
       <div class="input-wrap">
@@ -1119,7 +1164,23 @@ function checkAnswer(){
   if(answered)return;
   const q=currentQ;
   let isCorrect=false;
-  if(q.ansMode==='single'){
+  if(q.ansMode==='single_sqrt'){
+    // a√b = √[?] の形：√の中の数を1欄入力
+    area.innerHTML=`
+      <div style="font-size:13px;color:var(--text-muted);margin-bottom:6px;">
+        答えを <span id="sqrtCLabel"></span> の形で入力
+      </div>
+      <div class="answer-row" style="align-items:flex-end;">
+        <div class="input-wrap">
+          <input type="number" class="answer-input wide" readonly onclick="nkFocus('inpA')" id="inpA" placeholder="c">
+          <div class="input-label">√の中の数</div>
+        </div>
+      </div>`;
+    kt('\sqrt{c}',document.getElementById('sqrtCLabel'),false);
+    initNkFocus(['inpA']); return;
+  }
+
+  if(q.ansMode==='single_sqrt'||q.ansMode==='single'){
     const a=parseInt(document.getElementById('inpA').value);
     if(isNaN(a)){inputError();return;}
     isCorrect=(a===q.answerA);markInputs(['inpA'],isCorrect);
@@ -1593,9 +1654,9 @@ let sessionQtypeLog={}; // {タイプ名: {c:正解数, t:合計数}}
 function loadName(){return localStorage.getItem(NAME_KEY)||'';}
 function saveName(){
   const cls=document.getElementById('classSelect').value;
-  if(!cls){alert('クラスを選んでね！');return;}
+  if(!cls){alert('クラス');return;}
   const val=document.getElementById('nameInput').value.trim();
-  if(!val){alert('名前を入力してね！');return;}
+  if(!val){alert('名前');return;}
   playerName=val;
   playerClass=cls;
   localStorage.setItem(NAME_KEY,val);
@@ -1717,7 +1778,7 @@ function sendResult(btn){
   fetch(GAS_URL, {
     method:'POST',
     mode:'no-cors',
-    headers:{'Content-Type':'application/json'},
+    headers:{'Content-Type':'text/plain'},
     body:JSON.stringify(payload)
   }).then(()=>{
     if(statusEl){ statusEl.textContent='✅ 送信しました！'; statusEl.className='send-status ok'; }
@@ -1896,4 +1957,4 @@ function renderWeakness(){
 })();
 </script>
 </body>
-</html>
+</html>F
