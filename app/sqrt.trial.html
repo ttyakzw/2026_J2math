@@ -372,6 +372,40 @@ canvas.log-chart{width:100%!important;border-radius:12px;}
 }
 .review-ok .review-no { background:var(--correct); }
 
+
+/* ── クラス選択・送信機能 ── */
+.class-select {
+  width:100%; max-width:260px; padding:10px 14px;
+  font-size:15px; font-weight:700; border:2px solid var(--border);
+  border-radius:12px; background:var(--surface2); color:var(--text);
+  font-family:'M PLUS Rounded 1c',sans-serif;
+  outline:none; margin-bottom:12px; display:block;
+  margin-left:auto; margin-right:auto;
+  -webkit-appearance:none; appearance:none;
+  text-align:center;
+}
+.class-select:focus { border-color:var(--accent); }
+.send-btn {
+  padding:12px 36px;
+  background:linear-gradient(135deg,#16a34a,#15803d);
+  border:none; border-radius:50px; color:white;
+  font-family:'M PLUS Rounded 1c',sans-serif;
+  font-size:15px; font-weight:800; cursor:pointer;
+  box-shadow:0 4px 14px rgba(22,163,74,.3);
+  transition:transform .15s, box-shadow .15s;
+  display:block; margin:10px auto 0;
+}
+.send-btn:hover { transform:translateY(-2px); box-shadow:0 6px 18px rgba(22,163,74,.35); }
+.send-btn:active { transform:scale(.97); }
+.send-btn:disabled { opacity:.5; cursor:not-allowed; transform:none; }
+.send-status {
+  text-align:center; font-size:13px; font-weight:700;
+  min-height:20px; margin-top:8px;
+}
+.send-status.ok   { color:var(--correct); }
+.send-status.err  { color:var(--wrong); }
+.send-status.wait { color:var(--text-muted); }
+
 </style>
 </head>
 <body>
@@ -414,8 +448,11 @@ canvas.log-chart{width:100%!important;border-radius:12px;}
 
   <!-- 名前入力 -->
   <div class="name-screen" id="nameScreen" style="display:none;">
-    <h2>👤 なまえを入力してね</h2>
-    <p>記録を保存するために名前を入力してください</p>
+    <h2>👤 なまえ・クラスを入力してね</h2>
+    <p>記録を保存するために名前とクラスを入力してください</p>
+    <select class="class-select" id="classSelect">
+      <option value="">クラスを選んでね</option>
+    </select>
     <input type="text" class="name-input" id="nameInput" placeholder="例：たろう" maxlength="10">
     <button class="start-btn" onclick="saveName()" style="font-size:15px;padding:11px 34px;">決定 →</button>
   </div>
@@ -497,6 +534,13 @@ canvas.log-chart{width:100%!important;border-radius:12px;}
 </div>
 
 <script>
+
+/* ══════════════════════════════════════════════════════
+   ★ 教員設定 — GAS URL とクラス一覧をここに記入 ★
+   ══════════════════════════════════════════════════════ */
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbyiULCn_JLtis1gMdO2D6Mxc4YLCmZz5kpvhJv9WKKCasBkiYgDXU6hl1--9ccydZJ4Xw/exec';   // ← デプロイ後の URL を貼り付ける
+const CLASS_LIST = ['1組','2組','3組'];  // ← クラス名を変更する
+
 /* ── KaTeX ── */
 function kt(tex,el,display){katex.render(tex,el,{throwOnError:false,displayMode:!!display});}
 function ktHTML(tex,display){return katex.renderToString(tex,{throwOnError:false,displayMode:!!display});}
@@ -1429,6 +1473,8 @@ function showFinish(isTimeout=false){
     </div>`;
   document.getElementById('answerArea').innerHTML=
     `<button class="start-btn" onclick="restartGame()" style="font-size:15px;padding:12px 38px;">もう一度 🔄</button>
+     <button class="send-btn" id="sendBtn" onclick="sendResult(this)">📤 成績を送信する</button>
+     <div class="send-status" id="sendStatus"></div>
      <button class="nav-btn" onclick="openLogScreen()" style="margin-top:8px;">📊 記録を見る</button>`;
   document.getElementById('checkBtn').style.display='none';
   document.getElementById('nextBtn').className='next-btn';
@@ -1537,17 +1583,23 @@ function renderQtypeList(){
    ══════════════════════════════════════════════════════ */
 const LOG_PREFIX='sqrt_log_';
 const NAME_KEY='sqrt_player_name';
+const CLASS_KEY='sqrt_player_class';
 const QTYPE_KEY_PREFIX='sqrt_qtype_';
 let playerName='';
+let playerClass='';
 let logTabState='chart';
 let sessionQtypeLog={}; // {タイプ名: {c:正解数, t:合計数}}
 
 function loadName(){return localStorage.getItem(NAME_KEY)||'';}
 function saveName(){
+  const cls=document.getElementById('classSelect').value;
+  if(!cls){alert('クラスを選んでね！');return;}
   const val=document.getElementById('nameInput').value.trim();
   if(!val){alert('名前を入力してね！');return;}
   playerName=val;
+  playerClass=cls;
   localStorage.setItem(NAME_KEY,val);
+  localStorage.setItem(CLASS_KEY,cls);
   document.getElementById('nameScreen').style.display='none';
   document.getElementById('startScreen').style.display='block';
   updateLogBtn();renderQtypeList();
@@ -1614,6 +1666,68 @@ function openLogScreen(){
   document.getElementById('numpadWrap').style.display='none';
   renderLogScreen();
 }
+
+/* ── クラス選択初期化 ── */
+function initClassSelect(){
+  const sel=document.getElementById('classSelect');
+  if(!sel) return;
+  sel.innerHTML='<option value="">クラスを選んでね</option>';
+  CLASS_LIST.forEach(c=>{
+    const opt=document.createElement('option');
+    opt.value=c; opt.textContent=c;
+    if(c===playerClass) opt.selected=true;
+    sel.appendChild(opt);
+  });
+}
+
+/* ── 成績送信 ── */
+function sendResult(btn){
+  if(!GAS_URL){ alert('GAS URLが設定されていません。\nHTML内の GAS_URL を設定してください。'); return; }
+  const logs=getLogs();
+  if(logs.length===0){ alert('送信する記録がありません'); return; }
+  const latest=logs[logs.length-1]; // 最新1件を送信
+
+  // 弱点タイプ集計
+  const qtypeData=getQtypeLogs();
+  const weakTypes=Object.entries(qtypeData)
+    .filter(([,v])=>v.t>=1)
+    .map(([type,v])=>({type, count:v.t-v.c, rate:Math.round(v.c/v.t*100)}))
+    .filter(w=>w.count>0)
+    .sort((a,b)=>b.count-a.count);
+
+  const payload={
+    sender:    'sqrt',          // GASが因数分解と振り分けるための識別子
+    name:      playerName,
+    className: playerClass,
+    level:     latest.level,
+    correct:   latest.correct,
+    total:     latest.total,
+    rate:      latest.rate,
+    usedTime:  latest.usedTime,
+    rank:      latest.rank,
+    maxStreak: latest.maxStreak||0,
+    timeout:   latest.timeout||false,
+    weakTypes: weakTypes,
+  };
+
+  const statusEl=document.getElementById('sendStatus');
+  btn.disabled=true;
+  if(statusEl){ statusEl.textContent='送信中…'; statusEl.className='send-status wait'; }
+
+  fetch(GAS_URL, {
+    method:'POST',
+    mode:'no-cors',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(payload)
+  }).then(()=>{
+    if(statusEl){ statusEl.textContent='✅ 送信しました！'; statusEl.className='send-status ok'; }
+    btn.textContent='✅ 送信済み';
+  }).catch(err=>{
+    btn.disabled=false;
+    if(statusEl){ statusEl.textContent='❌ 送信失敗。Wi-Fiを確認してください'; statusEl.className='send-status err'; }
+  });
+}
+
 function closeLogScreen(){
   document.getElementById('logScreen').style.display='none';
   if(!playerName){document.getElementById('nameScreen').style.display='block';}
@@ -1772,7 +1886,9 @@ function renderWeakness(){
 /* ── 初期化 ── */
 (function init(){
   playerName=loadName();
+  playerClass=localStorage.getItem(CLASS_KEY)||'';
   updateLogBtn();
+  initClassSelect();
   if(!playerName){
     document.getElementById('startScreen').style.display='none';
     document.getElementById('nameScreen').style.display='block';
