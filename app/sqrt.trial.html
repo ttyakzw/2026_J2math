@@ -536,7 +536,7 @@ canvas.log-chart{width:100%!important;border-radius:12px;}
 /* ══════════════════════════════════════════════════════
    ★ 教員設定 — GAS URL とクラス一覧をここに記入 ★
    ══════════════════════════════════════════════════════ */
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbyP22c-Y055Zj8dYqh2A_b6K0LAe8TrLA337GWx3Ty5-zf7yfXGKYQfEFAT-yJTwB7Z0Q/exec';   // ← デプロイ後の URL を貼り付ける
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbx-UMDRNqbN-g4Ssh89E1tTWPYTt4KGHSQzOrHQtZqCD5owilxDvqV6GcwhysWg-FQW7g/exec';   // ← デプロイ後の URL を貼り付ける
 const CLASS_LIST = ['A','B','C','D'];
 
 /* ── KaTeX ── */
@@ -638,8 +638,8 @@ function genLevel1(){
     // 逆変換: a√b = √? （√の中を答える）
     const [a,b,c]=L1_REV[Math.floor(Math.random()*L1_REV.length)];
     return{diff:1, qtype:'逆変換',
-      hint:`${a}√${b} を √c の形にしよう。${a}√${b}=√(${a}²×${b})=√?`,
-      displayTex:`${a}\\sqrt{${b}} = \\sqrt{\\phantom{000}}`,
+      hint:`${a}√${b} = √(${a}²×${b}) = √?`,
+      displayTex:`${a}\\sqrt{${b}}`,
       ansMode:'single_sqrt', answerA:c,
       steps:[`${a}\\sqrt{${b}} = \\sqrt{${a}^2 \\times ${b}} = \\sqrt{${c}}`],
       correctTex:`\\sqrt{${c}}`};
@@ -1030,28 +1030,27 @@ function buildAnswerUI(q){
   const area=document.getElementById('answerArea');
   area.innerHTML='';
   if(q.ansMode==='single_sqrt'){
-    // a√b = √[?] の形：√の中の数を1欄入力
+    // a√b = √[?] の形：「= √ [入力欄]」をanswerAreaに表示
     area.innerHTML=`
-      <div style="font-size:13px;color:var(--text-muted);margin-bottom:6px;">
-        答えを <span id="sqrtCLabel"></span> の形で入力
-      </div>
       <div class="answer-row" style="align-items:flex-end;">
+        <div style="font-size:28px;font-weight:800;color:var(--text-muted);padding-bottom:16px;">=</div>
         <div class="input-wrap">
-          <input type="number" class="answer-input wide" readonly onclick="nkFocus('inpA')" id="inpA" placeholder="c">
+          <div class="answer-label-math" id="sqrtCLabel" style="margin-bottom:4px;"></div>
+          <input type="number" class="answer-input wide" readonly
+            onclick="nkFocus('inpA')" id="inpA" placeholder="?">
           <div class="input-label">√の中の数</div>
         </div>
       </div>`;
-    kt('\\sqrt{c}',document.getElementById('sqrtCLabel'),false);
+    kt('\\sqrt{\\phantom{00}}', document.getElementById('sqrtCLabel'), false);
     initNkFocus(['inpA']); return;
   }
-
   if(q.ansMode==='single'){
     area.innerHTML=`<div class="answer-row" style="align-items:flex-end;">
       <div class="input-wrap">
         <input type="number" class="answer-input wide" readonly onclick="nkFocus('inpA')" id="inpA" placeholder="?">
         <div class="input-label">${q.inputLabel||'答え'}</div>
       </div></div>`;
-    initNkFocus(['inpA']);return;
+    initNkFocus(['inpA']); return;
   }
   if(q.ansMode==='conj_minus'||q.ansMode==='conj_plus'){
     const sign=q.ansMode==='conj_minus'?'-':'+';
@@ -1162,22 +1161,6 @@ function checkAnswer(){
   if(answered)return;
   const q=currentQ;
   let isCorrect=false;
-  if(q.ansMode==='single_sqrt'){
-    // a√b = √[?] の形：√の中の数を1欄入力
-    area.innerHTML=`
-      <div style="font-size:13px;color:var(--text-muted);margin-bottom:6px;">
-        答えを <span id="sqrtCLabel"></span> の形で入力
-      </div>
-      <div class="answer-row" style="align-items:flex-end;">
-        <div class="input-wrap">
-          <input type="number" class="answer-input wide" readonly onclick="nkFocus('inpA')" id="inpA" placeholder="c">
-          <div class="input-label">√の中の数</div>
-        </div>
-      </div>`;
-    kt('\\sqrt{c}',document.getElementById('sqrtCLabel'),false);
-    initNkFocus(['inpA']); return;
-  }
-
   if(q.ansMode==='single_sqrt'||q.ansMode==='single'){
     const a=parseInt(document.getElementById('inpA').value);
     if(isNaN(a)){inputError();return;}
@@ -1739,50 +1722,49 @@ function initClassSelect(){
 
 /* ── 成績送信 ── */
 function sendResult(btn){
-  if(!GAS_URL){ alert('GAS URLが設定されていません。\nHTML内の GAS_URL を設定してください。'); return; }
+  if(!GAS_URL){
+    alert('GAS URLが設定されていません。\nHTML内の GAS_URL を設定してください。');
+    return;
+  }
   const logs=getLogs();
   if(logs.length===0){ alert('送信する記録がありません'); return; }
-  const latest=logs[logs.length-1]; // 最新1件を送信
+  const latest=logs[logs.length-1];
 
-  // 弱点タイプ集計
+  // 弱点タイプ（間違い数の多い順・上位3件をカンマ区切りで）
   const qtypeData=getQtypeLogs();
-  const weakTypes=Object.entries(qtypeData)
-    .filter(([,v])=>v.t>=1)
-    .map(([type,v])=>({type, count:v.t-v.c, rate:Math.round(v.c/v.t*100)}))
-    .filter(w=>w.count>0)
-    .sort((a,b)=>b.count-a.count);
+  const weakness=Object.entries(qtypeData)
+    .map(([type,v])=>({type,miss:v.t-v.c}))
+    .filter(w=>w.miss>0)
+    .sort((a,b)=>b.miss-a.miss)
+    .slice(0,3)
+    .map(w=>`${w.type}(${w.miss}問)`)
+    .join(',');
 
-  const payload={
-    sender:    'sqrt',          // GASが因数分解と振り分けるための識別子
-    name:      playerClass,  // クラス名を送信
-    className: playerClass,
-    level:     latest.level,
-    correct:   latest.correct,
-    total:     latest.total,
-    rate:      latest.rate,
-    usedTime:  latest.usedTime,
-    rank:      latest.rank,
-    maxStreak: latest.maxStreak||0,
-    timeout:   latest.timeout||false,
-    weakTypes: weakTypes,
-  };
+  // URLパラメータで送信（GETリクエスト）→ CORSの問題なし
+  const params=new URLSearchParams({
+    className:  playerClass,
+    level:      latest.level||'',
+    correct:    latest.correct??'',
+    total:      latest.total??10,
+    rate:       latest.rate??'',
+    usedTime:   latest.usedTime??'',
+    rank:       latest.rank||'',
+    maxStreak:  latest.maxStreak||0,
+    timeout:    latest.timeout?'true':'false',
+    weakness:   weakness,
+  });
 
   const statusEl=document.getElementById('sendStatus');
   btn.disabled=true;
   if(statusEl){ statusEl.textContent='送信中…'; statusEl.className='send-status wait'; }
 
-  fetch(GAS_URL, {
-    method:'POST',
-    mode:'no-cors',
-    headers:{'Content-Type':'text/plain'},
-    body:JSON.stringify(payload)
-  }).then(()=>{
+  // img タグを使ったビーコン送信（最も確実・CORS完全回避）
+  const img=new Image();
+  img.onload=img.onerror=()=>{
     if(statusEl){ statusEl.textContent='✅ 送信しました！'; statusEl.className='send-status ok'; }
     btn.textContent='✅ 送信済み';
-  }).catch(err=>{
-    btn.disabled=false;
-    if(statusEl){ statusEl.textContent='❌ 送信失敗。Wi-Fiを確認してください'; statusEl.className='send-status err'; }
-  });
+  };
+  img.src=GAS_URL+'?'+params.toString();
 }
 
 function closeLogScreen(){
