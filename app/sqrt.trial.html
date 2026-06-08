@@ -446,15 +446,13 @@ canvas.log-chart{width:100%!important;border-radius:12px;}
   </div>
   <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
 
-  <!-- 名前入力 -->
+  <!-- クラス選択 -->
   <div class="name-screen" id="nameScreen" style="display:none;">
-    <h2>👤 なまえ・クラスを入力してね</h2>
-    <p>記録を保存するために名前とクラスを入力してください</p>
+    <h2>クラスを選択</h2>
     <select class="class-select" id="classSelect">
-      <option value="">クラスを選んでね</option>
+      <option value="">▼ クラス</option>
     </select>
-    <input type="text" class="name-input" id="nameInput" placeholder="例：たろう" maxlength="10">
-    <button class="start-btn" onclick="saveName()" style="font-size:15px;padding:11px 34px;">決定 →</button>
+    <button class="start-btn" onclick="saveName()" style="font-size:15px;padding:11px 34px;margin-top:8px;">決定 →</button>
   </div>
 
   <!-- ログ画面 -->
@@ -538,8 +536,8 @@ canvas.log-chart{width:100%!important;border-radius:12px;}
 /* ══════════════════════════════════════════════════════
    ★ 教員設定 — GAS URL とクラス一覧をここに記入 ★
    ══════════════════════════════════════════════════════ */
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbwSP332Pg0uIbo5-osCKdo-gKKfY3kzjA6V-M05SRBID5IsTta8cIU-xY72VHLadMvaRg/exec';   // ← デプロイ後の URL を貼り付ける
-const CLASS_LIST = ['A','B','C','D'];  // ← クラス名を変更する
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbyP22c-Y055Zj8dYqh2A_b6K0LAe8TrLA337GWx3Ty5-zf7yfXGKYQfEFAT-yJTwB7Z0Q/exec';   // ← デプロイ後の URL を貼り付ける
+const CLASS_LIST = ['A','B','C','D'];
 
 /* ── KaTeX ── */
 function kt(tex,el,display){katex.render(tex,el,{throwOnError:false,displayMode:!!display});}
@@ -1043,7 +1041,7 @@ function buildAnswerUI(q){
           <div class="input-label">√の中の数</div>
         </div>
       </div>`;
-    kt('\sqrt{c}',document.getElementById('sqrtCLabel'),false);
+    kt('\\sqrt{c}',document.getElementById('sqrtCLabel'),false);
     initNkFocus(['inpA']); return;
   }
 
@@ -1176,7 +1174,7 @@ function checkAnswer(){
           <div class="input-label">√の中の数</div>
         </div>
       </div>`;
-    kt('\sqrt{c}',document.getElementById('sqrtCLabel'),false);
+    kt('\\sqrt{c}',document.getElementById('sqrtCLabel'),false);
     initNkFocus(['inpA']); return;
   }
 
@@ -1654,12 +1652,10 @@ let sessionQtypeLog={}; // {タイプ名: {c:正解数, t:合計数}}
 function loadName(){return localStorage.getItem(NAME_KEY)||'';}
 function saveName(){
   const cls=document.getElementById('classSelect').value;
-  if(!cls){alert('クラスを選んでね！');return;}
-  const val=document.getElementById('nameInput').value.trim();
-  if(!val){alert('名前を入力してね！');return;}
-  playerName=val;
+  if(!cls){alert('クラスを選んでください');return;}
+  playerName=cls;   // クラス名をそのままキーに使う
   playerClass=cls;
-  localStorage.setItem(NAME_KEY,val);
+  localStorage.setItem(NAME_KEY,cls);
   localStorage.setItem(CLASS_KEY,cls);
   document.getElementById('nameScreen').style.display='none';
   document.getElementById('startScreen').style.display='block';
@@ -1758,7 +1754,7 @@ function sendResult(btn){
 
   const payload={
     sender:    'sqrt',          // GASが因数分解と振り分けるための識別子
-    name:      playerName,
+    name:      playerClass,  // クラス名を送信
     className: playerClass,
     level:     latest.level,
     correct:   latest.correct,
@@ -1809,12 +1805,12 @@ function switchLogTab(tab){
 
 function updateLogBtn(){
   const btn=document.getElementById('logBtn');
-  if(btn)btn.textContent=playerName?`📊 ${playerName}の記録`:'📊 記録';
+  if(btn)btn.textContent=playerName?`📊 ${playerName}クラス`:'📊 記録';
 }
 
 function renderLogScreen(){
   const logs=getLogs();
-  document.getElementById('logTitle').textContent=playerName?`📊 ${playerName} の学習記録`:'📊 学習記録';
+  document.getElementById('logTitle').textContent=playerName?`📊 ${playerName}クラスの学習記録`:'📊 学習記録';
   const noMsg=document.getElementById('noLogMsg');
   if(logs.length===0){
     noMsg.style.display='block';
@@ -1957,4 +1953,4 @@ function renderWeakness(){
 })();
 </script>
 </body>
-</html>F
+</html>
