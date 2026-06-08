@@ -406,6 +406,26 @@ canvas.log-chart{width:100%!important;border-radius:12px;}
 .send-status.err  { color:var(--wrong); }
 .send-status.wait { color:var(--text-muted); }
 
+
+/* ── 出席番号入力 ── */
+.number-input {
+  width:100%; max-width:180px;
+  padding:11px 16px; font-size:22px; font-weight:800;
+  border:2px solid var(--border); border-radius:14px;
+  background:var(--surface2); color:var(--text);
+  outline:none; text-align:center;
+  font-family:'M PLUS Rounded 1c',sans-serif;
+  margin-bottom:12px; display:block; margin-left:auto; margin-right:auto;
+  -moz-appearance:textfield;
+}
+.number-input::-webkit-outer-spin-button,
+.number-input::-webkit-inner-spin-button{-webkit-appearance:none;}
+.number-input:focus{border-color:var(--accent);}
+.setup-label{
+  font-size:12px; color:var(--text-muted);
+  text-align:center; margin-bottom:6px; display:block;
+}
+
 </style>
 </head>
 <body>
@@ -446,13 +466,21 @@ canvas.log-chart{width:100%!important;border-radius:12px;}
   </div>
   <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
 
-  <!-- クラス選択 -->
+  <!-- クラス・出席番号選択 -->
   <div class="name-screen" id="nameScreen" style="display:none;">
-    <h2>クラスを選択</h2>
+    <h2>クラスと出席番号を選択</h2>
+    <span class="setup-label">クラス</span>
     <select class="class-select" id="classSelect">
       <option value="">▼ クラス</option>
     </select>
-    <button class="start-btn" onclick="saveName()" style="font-size:15px;padding:11px 34px;margin-top:8px;">決定 →</button>
+    <span class="setup-label">出席番号</span>
+    <input type="number" class="number-input" id="numberInput"
+      placeholder="番" min="1" max="50">
+    <span class="setup-label">名前</span>
+    <input type="text" class="name-input" id="nameInput"
+      placeholder="山田 太郎" maxlength="10">
+    <button class="start-btn" onclick="saveName()"
+      style="font-size:15px;padding:11px 34px;margin-top:4px;">決定 →</button>
   </div>
 
   <!-- ログ画面 -->
@@ -536,7 +564,7 @@ canvas.log-chart{width:100%!important;border-radius:12px;}
 /* ══════════════════════════════════════════════════════
    ★ 教員設定 — GAS URL とクラス一覧をここに記入 ★
    ══════════════════════════════════════════════════════ */
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbzWSi1oN9UiwESrBsvHDF8lNvG64tVNWUUt6CRmTjx4Lql8hGsYDzq0UOsuXMYlNHAp/exec';   // ← デプロイ後の URL を貼り付ける
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbxeFPnWBvPLnEiSAia28nNncZNc7I-hN-PWohCcvfjb6oEQR9D7l_r0HJW2VDSQOT93/exec';   // ← デプロイ後の URL を貼り付ける
 const CLASS_LIST = ['A','B','C','D'];
 
 /* ── KaTeX ── */
@@ -1626,9 +1654,13 @@ function renderQtypeList(){
 const LOG_PREFIX='sqrt_log_';
 const NAME_KEY='sqrt_player_name';
 const CLASS_KEY='sqrt_player_class';
+const NUMBER_KEY='sqrt_player_number';
+const STUDENT_NAME_KEY='sqrt_student_name';
 const QTYPE_KEY_PREFIX='sqrt_qtype_';
 let playerName='';
 let playerClass='';
+let playerNumber='';
+let studentName='';
 let logTabState='chart';
 let sessionQtypeLog={}; // {タイプ名: {c:正解数, t:合計数}}
 
@@ -1636,10 +1668,18 @@ function loadName(){return localStorage.getItem(NAME_KEY)||'';}
 function saveName(){
   const cls=document.getElementById('classSelect').value;
   if(!cls){alert('クラスを選んでください');return;}
-  playerName=cls;   // クラス名をそのままキーに使う
+  const num=document.getElementById('numberInput').value.trim();
+  if(!num||isNaN(num)||Number(num)<1){alert('出席番号を入力してください');return;}
+  const sname=document.getElementById('nameInput').value.trim();
+  if(!sname){alert('名前を入力してください');return;}
+  playerNumber=num;
+  studentName=sname;
+  playerName=cls;
   playerClass=cls;
   localStorage.setItem(NAME_KEY,cls);
   localStorage.setItem(CLASS_KEY,cls);
+  localStorage.setItem(NUMBER_KEY,num);
+  localStorage.setItem(STUDENT_NAME_KEY,sname);
   document.getElementById('nameScreen').style.display='none';
   document.getElementById('startScreen').style.display='block';
   updateLogBtn();renderQtypeList();
@@ -1743,6 +1783,8 @@ function sendResult(btn){
   // URLパラメータで送信（GETリクエスト）→ CORSの問題なし
   const params=new URLSearchParams({
     className:  playerClass,
+    number:     playerNumber,
+    studentName: studentName,
     level:      latest.level||'',
     correct:    latest.correct??'',
     total:      latest.total??10,
@@ -1787,7 +1829,7 @@ function switchLogTab(tab){
 
 function updateLogBtn(){
   const btn=document.getElementById('logBtn');
-  if(btn)btn.textContent=playerName?`📊 ${playerName}クラス`:'📊 記録';
+  if(btn)btn.textContent=(playerName&&playerNumber&&studentName)?`📊 ${playerName}クラス ${playerNumber}番 ${studentName}`:'📊 記録';
 }
 
 function renderLogScreen(){
@@ -1926,8 +1968,16 @@ function renderWeakness(){
 (function init(){
   playerName=loadName();
   playerClass=localStorage.getItem(CLASS_KEY)||'';
+  playerNumber=localStorage.getItem(NUMBER_KEY)||'';
+  studentName=localStorage.getItem(STUDENT_NAME_KEY)||'';
   updateLogBtn();
   initClassSelect();
+  setTimeout(()=>{
+    const ni=document.getElementById('numberInput');
+    if(ni&&playerNumber) ni.value=playerNumber;
+    const nn=document.getElementById('nameInput');
+    if(nn&&studentName) nn.value=studentName;
+  },100);
   if(!playerName){
     document.getElementById('startScreen').style.display='none';
     document.getElementById('nameScreen').style.display='block';
