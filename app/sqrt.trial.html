@@ -86,7 +86,7 @@ header{width:100%;max-width:720px;display:flex;align-items:center;justify-conten
 /* ── Question ── */
 .question-area{text-align:center;margin-bottom:20px;min-height:96px;
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;}
-.question-hint{font-size:12px;color:var(--text-muted);min-height:18px;}
+.question-hint{display:none;}
 #questionExpr{min-height:68px;display:flex;align-items:center;justify-content:center;}
 .qtype-badge{display:inline-block;font-size:10px;font-weight:800;padding:2px 9px;
   border-radius:10px;margin-bottom:2px;background:rgba(6,182,212,.12);color:var(--accent3);
@@ -1036,8 +1036,9 @@ function nextQuestion(){
 }
 
 function updateProgress(){
-  document.getElementById('progressFill').style.width=(qIndex/TOTAL*100)+'%';
-  document.getElementById('progressLabel').textContent=`${qIndex} / ${TOTAL} 問`;
+  // エンドレスなのでプログレスバーは非表示、問題番号だけ表示
+  document.getElementById('progressFill').style.width='0%';
+  document.getElementById('progressLabel').textContent=`${qIndex+1} 問目`;
 }
 function updateStats(){
   const t=correct+wrong;
@@ -1520,7 +1521,7 @@ function markInputs(ids,ok){
 /* ── Finish ── */
 function showFinish(isTimeout=false){
   const usedTime=TIME_LIMIT-Math.max(timerVal,0);
-  saveLog(correct,TOTAL,usedTime,isTimeout);
+  saveLog(correct,correct+wrong||1,usedTime,isTimeout);
   stopTimer();
   document.getElementById('numpadWrap').style.display='none';
   document.getElementById('hintBtn').style.display='none';
@@ -1528,12 +1529,13 @@ function showFinish(isTimeout=false){
   document.getElementById('timerFill').style.width='0%';
   document.getElementById('timerFill').className='timer-fill danger';
   document.getElementById('timerDisplay').className='timer-display danger';
-  const rate=Math.round(correct/TOTAL*100);
+  const answered=correct+wrong||1;
+  const rate=Math.round(correct/answered*100);
   const rank=rate===100?'S':rate>=80?'A':rate>=60?'B':'C';
   const rankMsg={S:'パーフェクト！！🏆',A:'すごい！よくできました⭐',B:'もう少し！練習を続けよう💪',C:'もう一度チャレンジしてみよう！'};
   const rankClass={S:'rank-S',A:'rank-A',B:'rank-B',C:'rank-C'};
   const toLine=isTimeout?'<div style="font-size:14px;color:var(--wrong);margin-top:4px;">⏰ 時間切れ！</div>':'';
-  document.getElementById('questionHint').textContent=`${TOTAL}問中 ${correct}問正解　／　${usedTime}秒使用　／　最大${maxStreak}連続`;
+  document.getElementById('questionHint').textContent=`${qIndex}問中 ${correct}問正解　／　${usedTime}秒使用　／　最大${maxStreak}連続`;
   document.getElementById('questionExpr').innerHTML=`
     <div style="text-align:center;line-height:1.6;">
       <div class="finish-rank ${rankClass[rank]}">RANK ${rank}</div>
@@ -1550,7 +1552,7 @@ function showFinish(isTimeout=false){
   document.getElementById('nextBtn').className='next-btn';
   document.getElementById('explanation').className='explanation';
   document.getElementById('progressFill').style.width='100%';
-  document.getElementById('progressLabel').textContent=`${TOTAL} / ${TOTAL} 問`;
+  document.getElementById('progressLabel').textContent=`${qIndex} 問目`;
 
   // 間違えた問題の解説（折りたたみ）
   renderMissedReview();
@@ -1995,4 +1997,4 @@ function renderWeakness(){
 })();
 </script>
 </body>
-</html>
+</html>F
