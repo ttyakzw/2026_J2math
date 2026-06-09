@@ -564,7 +564,7 @@ canvas.log-chart{width:100%!important;border-radius:12px;}
 /* ══════════════════════════════════════════════════════
    ★ 教員設定 — GAS URL とクラス一覧をここに記入 ★
    ══════════════════════════════════════════════════════ */
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbynj1c0DlhrPW1N7uR3tjkcgwurFEvdIiEbXRPQC29DpTTLdecMXxwXn7NaUx1Rz-Hx/exec';   // ← デプロイ後の URL を貼り付ける
+const GAS_URL = 'https://script.google.com/macros/s/AKfycby0yZre9hLJwbcOWgXM0SCuPxCNAK0yP_rtUcgmRIeH54Gefpwmi6rO570m-62DgWAQ/exec';
 const CLASS_LIST = ['A','B','C','D'];
 
 /* ── KaTeX ── */
@@ -1762,15 +1762,16 @@ function initClassSelect(){
 
 /* ── 成績送信 ── */
 function sendResult(btn){
-  if(!GAS_URL){
-    alert('GAS URLが設定されていません。\nHTML内の GAS_URL を設定してください。');
+  // GAS_URL未設定チェック
+  if(!GAS_URL || GAS_URL.includes('ここに')){
+    alert('GAS URLが設定されていません。\nHTML内の GAS_URL を書き換えてください。');
     return;
   }
   const logs=getLogs();
   if(logs.length===0){ alert('送信する記録がありません'); return; }
   const latest=logs[logs.length-1];
 
-  // 弱点タイプ（間違い数の多い順・上位3件をカンマ区切りで）
+  // 弱点タイプ（上位3件）
   const qtypeData=getQtypeLogs();
   const weakness=Object.entries(qtypeData)
     .map(([type,v])=>({type,miss:v.t-v.c}))
@@ -1780,33 +1781,42 @@ function sendResult(btn){
     .map(w=>`${w.type}(${w.miss}問)`)
     .join(',');
 
-  // URLパラメータで送信（GETリクエスト）→ CORSの問題なし
   const params=new URLSearchParams({
-    className:  playerClass,
-    number:     playerNumber,
+    className:   playerClass,
+    number:      playerNumber,
     studentName: studentName,
-    level:      latest.level||'',
-    correct:    latest.correct??'',
-    total:      latest.total??10,
-    rate:       latest.rate??'',
-    usedTime:   latest.usedTime??'',
-    rank:       latest.rank||'',
-    maxStreak:  latest.maxStreak||0,
-    timeout:    latest.timeout?'true':'false',
-    weakness:   weakness,
+    level:       latest.level||'',
+    correct:     latest.correct??'',
+    total:       latest.total??10,
+    rate:        latest.rate??'',
+    usedTime:    latest.usedTime??'',
+    rank:        latest.rank||'',
+    maxStreak:   latest.maxStreak||0,
+    timeout:     latest.timeout?'true':'false',
+    weakness:    weakness,
   });
 
-  const statusEl=document.getElementById('sendStatus');
-  btn.disabled=true;
+  const url = GAS_URL + '?' + params.toString();
+  const statusEl = document.getElementById('sendStatus');
+  btn.disabled = true;
   if(statusEl){ statusEl.textContent='送信中…'; statusEl.className='send-status wait'; }
 
-  // img タグを使ったビーコン送信（最も確実・CORS完全回避）
-  const img=new Image();
-  img.onload=img.onerror=()=>{
-    if(statusEl){ statusEl.textContent='✅ 送信しました！'; statusEl.className='send-status ok'; }
-    btn.textContent='✅ 送信済み';
-  };
-  img.src=GAS_URL+'?'+params.toString();
+  // fetchで送信（no-corsなし・GASはJSONを返す）
+  fetch(url)
+    .then(r => r.text())
+    .then(text => {
+      console.log('GAS response:', text);
+      if(statusEl){ statusEl.textContent='✅ 送信しました！'; statusEl.className='send-status ok'; }
+      btn.textContent='✅ 送信済み';
+    })
+    .catch(err => {
+      console.error('送信エラー:', err);
+      // fetchが失敗してもGASには届いている可能性があるのでimgでリトライ
+      const img = new Image();
+      img.src = url;
+      if(statusEl){ statusEl.textContent='✅ 送信しました！'; statusEl.className='send-status ok'; }
+      btn.textContent='✅ 送信済み';
+    });
 }
 
 function closeLogScreen(){
