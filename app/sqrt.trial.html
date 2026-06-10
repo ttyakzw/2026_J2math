@@ -472,7 +472,7 @@ canvas.log-chart{width:100%!important;border-radius:12px;}
 /* ══════════════════════════════════════════════════════
    ★ 教員設定 ★
    ══════════════════════════════════════════════════════ */
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbwhd_g_18blLtnMSH7Xe46BZzv3hrauT8OSlJZOjp6IUnIuQpi8z7RbiMaHAeTF4B0/exec';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycby0yZre9hLJwbcOWgXM0SCuPxCNAK0yP_rtUcgmRIeH54Gefpwmi6rO570m-62DgWAQ/exec';
 const CLASS_LIST = ['A','B','C','D'];
 
 /* ── KaTeX ── */
@@ -538,11 +538,52 @@ const L1_REV=[
   [7,3,147],[9,2,162],[10,2,200],[9,3,243],[7,5,245],
 ];
 
+/* ══════════════════════════════════════════════════════
+   シャッフルキュー管理
+   各カテゴリのプールをシャッフルしてキューに入れ、
+   全問消化したら再シャッフルして循環させる
+   ══════════════════════════════════════════════════════ */
+const _queues = {};
+function pickFrom(key, pool) {
+  if (!_queues[key] || _queues[key].length === 0) {
+    const indices = pool.map((_,i) => i);
+    // Fisher-Yatesシャッフル
+    for (let i = indices.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [indices[i], indices[j]] = [indices[j], indices[i]];
+    }
+    _queues[key] = indices;
+  }
+  return pool[_queues[key].shift()];
+}
+// ゲーム開始時にキューをリセット
+function resetQueues() {
+  Object.keys(_queues).forEach(k => delete _queues[k]);
+  // Lv1タイプ順序もリセット
+  _l1TypeQueue = [];
+}
+
+/* Lv1：タイプ順序もシャッフルキューで管理（同じタイプ連続を防ぐ） */
+const L1_TYPES = ['簡略化','簡略化','逆変換','逆変換','整数部分','有理化']; // 比率調整
+let _l1TypeQueue = [];
+function nextL1Type() {
+  if (_l1TypeQueue.length === 0) {
+    _l1TypeQueue = [...L1_TYPES];
+    for (let i = _l1TypeQueue.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [_l1TypeQueue[i], _l1TypeQueue[j]] = [_l1TypeQueue[j], _l1TypeQueue[i]];
+    }
+  }
+  return _l1TypeQueue.shift();
+}
+
 function genLevel1(){
-  const t=Math.random();
-  if(t<0.40){
-    const all=[...L1_EASY,...L1_MED];
-    const [inside,a,b,steps]=all[Math.floor(Math.random()*all.length)];
+  const type = nextL1Type();
+
+  if(type === '簡略化'){
+    // 係数a≥2、根号内b≥2 のものだけ（√1にならない）
+    const all=[...L1_EASY,...L1_MED].filter(([,a,b])=>a>=2&&b>=2);
+    const [inside,a,b,steps]=pickFrom('l1_simplify', all);
     const isEasy=L1_EASY.some(r=>r[0]===inside);
     return{diff:isEasy?1:2,qtype:'簡略化',
       hint:isEasy?`${inside}の中から完全平方数を探そう。${inside}÷4, ÷9... と試してみよう`:`大きな完全平方数を探そう。√${inside}=√(□×${b}) の□は？`,
@@ -550,20 +591,26 @@ function genLevel1(){
       steps:[`\\sqrt{${inside}} = \\sqrt{${steps}}`,`= \\sqrt{${a*a}} \\times \\sqrt{${b}} = ${T(a,b)}`],
       correctTex:T(a,b)};
   }
-  if(t<0.65){
-    const [a,b,c]=L1_REV[Math.floor(Math.random()*L1_REV.length)];
+
+  if(type === '逆変換'){
+    // a≥2、b≥2 のもののみ（問題文に1√bや係数1が出ない）
+    const validRev = L1_REV.filter(([a,b])=>a>=2&&b>=2);
+    const [a,b,c]=pickFrom('l1_rev', validRev);
     return{diff:1,qtype:'逆変換',hint:`${a}√${b} = √(${a}²×${b}) = √?`,
       displayTex:`${a}\\sqrt{${b}}`,ansMode:'single_sqrt',answerA:c,
       steps:[`${a}\\sqrt{${b}} = \\sqrt{${a}^2 \\times ${b}} = \\sqrt{${c}}`],
       correctTex:`\\sqrt{${c}}`};
   }
-  if(t<0.80){
-    const p=L1_INT_POOL[Math.floor(Math.random()*L1_INT_POOL.length)];
+
+  if(type === '整数部分'){
+    const p=pickFrom('l1_int', L1_INT_POOL);
     return{diff:3,qtype:'整数部分',hint:p.hint,
       displayTex:p.tex,ansMode:'single',inputLabel:'整数部分',
       answerA:p.ip,steps:p.steps,correctTex:`${p.ip}`};
   }
-  const p=L1_FRAC[Math.floor(Math.random()*L1_FRAC.length)];
+
+  // 有理化
+  const p=pickFrom('l1_frac', L1_FRAC);
   return{diff:3,qtype:'有理化',hint:p.hint,
     displayTex:`\\sqrt{${p.tex}}`,answerA:p.ansa,fracDen:p.fracDen,ansMode:'frac',
     steps:p.steps,correctTex:`\\dfrac{\\sqrt{${p.ansa}}}{${p.fracDen}}`};
@@ -577,15 +624,29 @@ function shuffle(arr){for(let i=arr.length-1;i>0;i--){const j=rnd(0,i);[arr[i],a
 function genL2diff1(){
   const roots=[2,3,5,6,7];
   const base=roots[rnd(0,roots.length-1)];
-  const coeffs=[rnd(2,6),1,rnd(2,5)];shuffle(coeffs);
-  const[a,b,c]=coeffs;
-  function termTex(coeff,base){if(coeff>1&&Math.random()<0.5)return`\\sqrt{${coeff*coeff*base}}`;return T(coeff,base);}
-  const tA=termTex(a,base),tB=termTex(b,base),tC=termTex(c,base);
-  const patterns=[
-    {q:`${tA}+${tB}+${tC}`,ans:a+b+c,steps:[`\\text{各項を簡単にすると}：${T(a,base)},\\;${T(b,base)},\\;${T(c,base)}`,`(${a}+${b}+${c})\\sqrt{${base}} = ${T(a+b+c,base)}`]},
-    {q:`${tA}+${tB}-${tC}`,ans:a+b-c,steps:[`\\text{各項を簡単にすると}：${T(a,base)},\\;${T(b,base)},\\;${T(c,base)}`,`(${a}+${b}-${c})\\sqrt{${base}} = ${T(a+b-c,base)}`]},
-    {q:`${tA}-${tB}+${tC}`,ans:a-b+c,steps:[`\\text{各項を簡単にすると}：${T(a,base)},\\;${T(b,base)},\\;${T(c,base)}`,`(${a}-${b}+${c})\\sqrt{${base}} = ${T(a-b+c,base)}`]},
-  ].filter(p=>p.ans>0);
+  // 係数はすべて2以上、答えも2以上になる組み合わせのみ生成
+  let a,b,c,patterns;
+  let tries=0;
+  do {
+    a=rnd(2,6); b=rnd(2,5); c=rnd(2,5);
+    // 同じ値が続かないように
+    if(b===a) b = b<5 ? b+1 : b-1;
+    if(c===a||c===b) c = c<5 ? c+1 : c-1;
+    function termTex2(coeff,base){if(Math.random()<0.5)return`\\sqrt{${coeff*coeff*base}}`;return T(coeff,base);}
+    const tA=termTex2(a,base),tB=termTex2(b,base),tC=termTex2(c,base);
+    patterns=[
+      {q:`${tA}+${tB}+${tC}`,ans:a+b+c,steps:[`\\text{各項を簡単にすると}：${T(a,base)},\\;${T(b,base)},\\;${T(c,base)}`,`(${a}+${b}+${c})\\sqrt{${base}} = ${T(a+b+c,base)}`]},
+      {q:`${tA}+${tB}-${tC}`,ans:a+b-c,steps:[`\\text{各項を簡単にすると}：${T(a,base)},\\;${T(b,base)},\\;${T(c,base)}`,`(${a}+${b}-${c})\\sqrt{${base}} = ${T(a+b-c,base)}`]},
+      {q:`${tA}-${tB}+${tC}`,ans:a-b+c,steps:[`\\text{各項を簡単にすると}：${T(a,base)},\\;${T(b,base)},\\;${T(c,base)}`,`(${a}-${b}+${c})\\sqrt{${base}} = ${T(a-b+c,base)}`]},
+    ].filter(p=>p.ans>=2); // 答えの係数も2以上
+    tries++;
+  } while(patterns.length===0 && tries<20);
+  if(patterns.length===0){
+    // フォールバック：確実に成立する値
+    a=4;b=2;c=3;
+    const tA=T(a,base),tB=T(b,base),tC=T(c,base);
+    patterns=[{q:`${tA}+${tB}+${tC}`,ans:a+b+c,steps:[`(${a}+${b}+${c})\\sqrt{${base}} = ${T(a+b+c,base)}`]}];
+  }
   const p=patterns[rnd(0,patterns.length-1)];
   return{diff:1,qtype:'加減算',hint:`それぞれ √${base} の形に変形してから、係数（前の数）を計算しよう`,
     displayTex:p.q,answerA:p.ans,answerB:base,steps:p.steps,correctTex:T(p.ans,base)};
@@ -614,7 +675,7 @@ const L2D2_POOL=[
   {ansMode:'two_roots',q:'\\sqrt{18}+\\sqrt{5}-\\sqrt{2}',r1c:2,r1n:2,r2c:1,r2n:5,ct:'2\\sqrt{2}+\\sqrt{5}',hint:'√18=3√2 に変形。√2の係数を計算しよう',steps:['\\sqrt{18}=3\\sqrt{2}','3\\sqrt{2}-\\sqrt{2}=2\\sqrt{2}','\\text{答え: }2\\sqrt{2}+\\sqrt{5}']},
 ];
 function genL2diff2(){
-  const p=L2D2_POOL[rnd(0,L2D2_POOL.length-1)];
+  const p=pickFrom('l2d2', L2D2_POOL);
   if(p.ansMode==='two_roots')return{diff:2,qtype:'まとめ',hint:p.hint,displayTex:p.q,ansMode:'two_roots',r1c:p.r1c,r1n:p.r1n,r2c:p.r2c,r2n:p.r2n,answerA:p.r1c,answerB:p.r1n,steps:p.steps,correctTex:p.ct};
   return{diff:2,qtype:'計算',hint:p.hint,displayTex:p.q,answerA:p.a,answerB:p.b,steps:p.steps,correctTex:T(p.a,p.b)};
 }
@@ -636,7 +697,7 @@ const L2D3_POOL=[
   {ansMode:'int_minus_sqrt',q:'\\dfrac{\\sqrt{50}}{\\sqrt{2}}-\\sqrt{3}',expandA:5,expandB:1,expandN:3,ct:'5-\\sqrt{3}',hint:'√50÷√2=√25=5',steps:['\\dfrac{\\sqrt{50}}{\\sqrt{2}} = \\sqrt{25} = 5','5 - \\sqrt{3}']},
 ];
 function genL2diff3_expand(){
-  const p=L2D3_POOL[rnd(0,L2D3_POOL.length-1)];
+  const p=pickFrom('l2d3', L2D3_POOL);
   if(p.ansMode==='expand')return{diff:3,qtype:'展開',hint:p.hint,displayTex:p.q,ansMode:'expand',expandA:p.expandA,expandB:p.expandB,expandN:p.expandN,steps:p.steps,correctTex:p.ct};
   if(p.ansMode==='expand_minus')return{diff:3,qtype:'展開',hint:p.hint,displayTex:p.q,ansMode:'expand_minus',expandA:p.expandA,expandB:p.expandB,expandN:p.expandN,steps:p.steps,correctTex:p.ct};
   if(p.ansMode==='int_plus_sqrt')return{diff:3,qtype:'計算',hint:p.hint,displayTex:p.q,ansMode:'expand',expandA:p.expandA,expandB:p.expandB,expandN:p.expandN,steps:p.steps,correctTex:p.ct};
@@ -664,25 +725,34 @@ const L2_CONJ_POOL=[
   {q:'\\dfrac{1}{\\sqrt{10}-3}',conjN:10,conjB:3,sign:'plus',ct:'\\sqrt{10}+3',hint:'(√10-3)(√10+3)=1になることを使おう',steps:['\\dfrac{\\sqrt{10}+3}{10-9} = \\sqrt{10}+3']},
 ];
 
-function genLevel2(){
-  const r=Math.random();
-  if(r<0.33)return genL2diff1();
-  if(r<0.66){
-    if(Math.random()<0.25){
-      const p=L2_EXPR_POOL[rnd(0,L2_EXPR_POOL.length-1)];
-      return{diff:2,qtype:'式の値',hint:p.hint,hintMode:'katex',hintTex:p.hintTex,displayTex:p.exprTex,ansMode:'single',inputLabel:'式の値',answerA:p.ans,steps:p.steps,correctTex:String(p.ans)};
+/* Lv2：タイプ順序もシャッフルキューで管理 */
+const L2_TYPES = ['加減算','加減算','計算','計算','式の値','展開','展開','共役有理化'];
+let _l2TypeQueue = [];
+function nextL2Type() {
+  if (_l2TypeQueue.length === 0) {
+    _l2TypeQueue = [...L2_TYPES];
+    for (let i = _l2TypeQueue.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [_l2TypeQueue[i], _l2TypeQueue[j]] = [_l2TypeQueue[j], _l2TypeQueue[i]];
     }
-    return genL2diff2();
   }
-  const r2=Math.random();
-  if(r2<0.35){
-    const p=L2_EXPR_POOL[rnd(0,L2_EXPR_POOL.length-1)];
-    return{diff:3,qtype:'式の値',hint:p.hint,hintMode:'katex',hintTex:p.hintTex,displayTex:p.exprTex,ansMode:'single',inputLabel:'式の値',answerA:p.ans,steps:p.steps,correctTex:String(p.ans)};
+  return _l2TypeQueue.shift();
+}
+
+function genLevel2(){
+  const type = nextL2Type();
+  if(type==='加減算') return genL2diff1();
+  if(type==='計算') return genL2diff2();
+  if(type==='式の値'){
+    const p=pickFrom('l2_expr', L2_EXPR_POOL);
+    const diff=Math.random()<0.5?2:3;
+    return{diff,qtype:'式の値',hint:p.hint,hintMode:'katex',hintTex:p.hintTex,displayTex:p.exprTex,ansMode:'single',inputLabel:'式の値',answerA:p.ans,steps:p.steps,correctTex:String(p.ans)};
   }
-  if(r2<0.7){
-    const p=L2_CONJ_POOL[rnd(0,L2_CONJ_POOL.length-1)];
+  if(type==='共役有理化'){
+    const p=pickFrom('l2_conj', L2_CONJ_POOL);
     return{diff:3,qtype:'共役有理化',hint:p.hint,displayTex:p.q,ansMode:p.sign==='minus'?'conj_minus':'conj_plus',conjN:p.conjN,conjB:p.conjB,steps:p.steps,correctTex:p.ct};
   }
+  // 展開
   return genL2diff3_expand();
 }
 
@@ -729,6 +799,8 @@ function startGame(){
   correct=0;wrong=0;streak=0;maxStreak=0;qIndex=0;
   missedQuestions=[];
   timerVal=TIME_LIMIT;
+  resetQueues();
+  _l2TypeQueue=[];
   updateStats();updateStreak();
   showNextQuestion();
   startTimer();
