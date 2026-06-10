@@ -8,19 +8,18 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/katex.min.css">
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/katex.min.js"></script>
 <style>
-:root {
-  --bg:#f0f4ff; --surface:#ffffff; --surface2:#eef1fb; --border:#d0d8f0;
-  --text:#1a1e3a; --text-muted:#6b72a0;
-  --accent:#3a5bff; --accent2:#8b5cf6; --accent3:#06b6d4;
-  --correct:#16a34a; --wrong:#dc2626; --warning:#d97706;
-  --timer-ok:#3a5bff; --timer-warn:#d97706; --timer-danger:#dc2626;
-  --bonus:#0891b2;
+:root{
+  --bg:#f0f4ff;--surface:#ffffff;--surface2:#eef1fb;--border:#d0d8f0;
+  --text:#1a1e3a;--text-muted:#6b72a0;
+  --accent:#3a5bff;--accent2:#8b5cf6;--accent3:#06b6d4;
+  --correct:#16a34a;--wrong:#dc2626;--warning:#d97706;
+  --timer-ok:#3a5bff;--timer-warn:#d97706;--timer-danger:#dc2626;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
 body{background:var(--bg);color:var(--text);font-family:'M PLUS Rounded 1c',sans-serif;
   min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:14px 12px 40px;
-  background-image:radial-gradient(ellipse at 10% 0%,rgba(58,91,255,0.08) 0%,transparent 55%),
-    radial-gradient(ellipse at 90% 100%,rgba(139,92,246,0.07) 0%,transparent 55%);}
+  background-image:radial-gradient(ellipse at 10% 0%,rgba(58,91,255,.08) 0%,transparent 55%),
+    radial-gradient(ellipse at 90% 100%,rgba(139,92,246,.07) 0%,transparent 55%);}
 .katex{color:var(--text);}
 .katex-display{color:var(--text);margin:0;}
 #questionExpr .katex-display>.katex{font-size:2.6em;}
@@ -29,6 +28,7 @@ body{background:var(--bg);color:var(--text);font-family:'M PLUS Rounded 1c',sans
 .answer-label-math .katex{font-size:1.25em;}
 #questionHint .katex{font-size:1em;color:var(--text-muted);}
 
+/* Header */
 header{width:100%;max-width:720px;display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
 .logo{font-family:'Kaisei Decol',serif;font-size:19px;font-weight:700;
   background:linear-gradient(135deg,var(--accent),var(--accent2));
@@ -40,24 +40,37 @@ header{width:100%;max-width:720px;display:flex;align-items:center;justify-conten
   color:#fff;font-size:12px;font-weight:800;border-radius:20px;padding:3px 10px;}
 .streak-badge.visible{display:inline-block;}
 
-.level-tabs{display:flex;gap:6px;background:var(--surface);border:1.5px solid var(--border);
-  border-radius:50px;padding:4px;margin-bottom:12px;box-shadow:0 2px 8px rgba(58,91,255,.07);}
-.tab-btn{padding:7px 18px;border:none;border-radius:46px;font-family:'M PLUS Rounded 1c',sans-serif;
-  font-size:13px;font-weight:700;cursor:pointer;background:transparent;color:var(--text-muted);transition:all .2s;}
-.tab-btn.active{background:linear-gradient(135deg,var(--accent),var(--accent2));color:white;
-  box-shadow:0 2px 10px rgba(58,91,255,.25);}
+/* ★ Level selector — 見やすく大きなカード型 */
+.level-selector{width:100%;max-width:720px;display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
+.lv-card{padding:12px 14px;border:2px solid var(--border);border-radius:16px;
+  background:var(--surface);cursor:pointer;transition:all .2s;text-align:left;
+  font-family:'M PLUS Rounded 1c',sans-serif;}
+.lv-card:hover{border-color:var(--accent);background:#f5f7ff;}
+.lv-card.active{border-color:var(--accent);background:linear-gradient(135deg,#eef1ff,#f3f0ff);
+  box-shadow:0 4px 14px rgba(58,91,255,.18);}
+.lv-card-title{font-size:14px;font-weight:800;color:var(--text);margin-bottom:4px;}
+.lv-card.active .lv-card-title{color:var(--accent);}
+.lv-card-desc{font-size:11px;color:var(--text-muted);line-height:1.5;}
+.lv-card-badge{display:inline-block;font-size:10px;font-weight:800;padding:2px 8px;
+  border-radius:10px;margin-bottom:5px;}
+.lv-badge-1{background:rgba(22,163,74,.12);color:var(--correct);}
+.lv-badge-2{background:rgba(139,92,246,.12);color:var(--accent2);}
 
+/* Timer */
 .timer-row{width:100%;max-width:720px;display:flex;align-items:center;gap:10px;margin-bottom:12px;}
 .timer-display{font-size:28px;font-weight:800;min-width:54px;text-align:center;
   font-variant-numeric:tabular-nums;color:var(--timer-ok);transition:color .4s;}
 .timer-display.warn{color:var(--timer-warn);}
 .timer-display.danger{color:var(--timer-danger);animation:shake .3s ease infinite alternate;}
+.timer-display.paused{color:var(--correct);}
 @keyframes shake{from{transform:translateX(-2px);}to{transform:translateX(2px);}}
 .timer-track{flex:1;height:10px;background:var(--surface2);border-radius:5px;overflow:hidden;border:1.5px solid var(--border);}
 .timer-fill{height:100%;border-radius:5px;background:var(--timer-ok);transition:width .25s linear,background .4s;}
 .timer-fill.warn{background:var(--timer-warn);}
 .timer-fill.danger{background:var(--timer-danger);}
+.timer-fill.paused{background:var(--correct);}
 
+/* Bonus toast */
 .bonus-toast{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(0);
   background:linear-gradient(135deg,#0891b2,#6366f1);color:white;
   font-size:20px;font-weight:800;padding:14px 32px;border-radius:50px;
@@ -66,6 +79,7 @@ header{width:100%;max-width:720px;display:flex;align-items:center;justify-conten
 .bonus-toast.show{transform:translate(-50%,-50%) scale(1);}
 .bonus-toast.hide{transform:translate(-50%,-50%) scale(0);opacity:0;}
 
+/* Card */
 .card{width:100%;max-width:720px;background:var(--surface);border:1.5px solid var(--border);
   border-radius:20px;padding:22px 24px 20px;margin-bottom:14px;box-shadow:0 4px 24px rgba(58,91,255,.08);}
 .progress-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
@@ -78,6 +92,7 @@ header{width:100%;max-width:720px;display:flex;align-items:center;justify-conten
 .progress-fill{height:100%;border-radius:3px;
   background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .4s ease;}
 
+/* Question */
 .question-area{text-align:center;margin-bottom:20px;min-height:96px;
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;}
 .question-hint{display:none;}
@@ -90,6 +105,7 @@ header{width:100%;max-width:720px;display:flex;align-items:center;justify-conten
 .diff-2{background:rgba(217,119,6,.12);color:var(--warning);}
 .diff-3{background:rgba(220,38,38,.12);color:var(--wrong);}
 
+/* Answer inputs */
 .answer-area{display:flex;flex-direction:column;gap:12px;align-items:center;}
 .answer-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:center;}
 .input-wrap{display:flex;flex-direction:column;align-items:center;gap:4px;}
@@ -108,6 +124,7 @@ header{width:100%;max-width:720px;display:flex;align-items:center;justify-conten
 .times-sign{font-size:20px;color:var(--text-muted);padding-bottom:16px;}
 .eq-sign{font-size:20px;color:var(--text-muted);padding-bottom:16px;}
 
+/* Buttons */
 .check-btn{padding:12px 40px;background:linear-gradient(135deg,var(--accent),var(--accent2));
   border:none;border-radius:50px;color:white;font-family:'M PLUS Rounded 1c',sans-serif;
   font-size:15px;font-weight:800;cursor:pointer;transition:transform .15s,box-shadow .15s;
@@ -120,22 +137,33 @@ header{width:100%;max-width:720px;display:flex;align-items:center;justify-conten
 .next-btn:hover{background:var(--border);transform:translateY(-1px);}
 .next-btn.visible{display:inline-block;}
 
-.hint-btn{padding:7px 20px;background:#fff7ed;border:1.5px solid #fed7aa;border-radius:20px;
-  color:#c2410c;font-family:'M PLUS Rounded 1c',sans-serif;font-size:12px;font-weight:700;
+/* ★ パスボタン */
+.pass-btn{padding:8px 22px;background:#fff7ed;border:1.5px solid #fed7aa;border-radius:20px;
+  color:#c2410c;font-family:'M PLUS Rounded 1c',sans-serif;font-size:13px;font-weight:700;
   cursor:pointer;transition:background .18s;margin-top:4px;}
-.hint-btn:hover{background:#ffedd5;}
+.pass-btn:hover{background:#ffedd5;}
+.pass-btn:disabled{opacity:.4;cursor:not-allowed;}
+
+/* Hint */
+.hint-btn{padding:7px 20px;background:#fffbeb;border:1.5px solid #fde68a;border-radius:20px;
+  color:#92400e;font-family:'M PLUS Rounded 1c',sans-serif;font-size:12px;font-weight:700;
+  cursor:pointer;transition:background .18s;margin-top:4px;}
+.hint-btn:hover{background:#fef3c7;}
 .hint-btn:disabled{opacity:.4;cursor:not-allowed;}
 .hint-popup{display:none;background:#fffbeb;border:1.5px solid #fde68a;border-radius:12px;
   padding:10px 14px;font-size:13px;color:#92400e;margin-top:8px;text-align:left;line-height:1.7;}
 .hint-popup.visible{display:block;}
 .hint-popup .katex{color:#92400e;}
 
+/* Feedback */
 .feedback{text-align:center;font-size:17px;font-weight:800;min-height:24px;}
 .feedback.correct{color:var(--correct);}
 .feedback.wrong{color:var(--wrong);}
+.feedback.pass{color:var(--text-muted);}
 @keyframes pop{0%{transform:scale(.5);opacity:0;}70%{transform:scale(1.15);}100%{transform:scale(1);opacity:1;}}
 .celebrate{animation:pop .38s cubic-bezier(.175,.885,.32,1.275) forwards;}
 
+/* Explanation */
 .explanation{display:none;background:#f0fdf4;border-left:3px solid var(--correct);
   border-radius:0 12px 12px 0;padding:12px 16px;font-size:13px;color:#166534;
   line-height:1.9;margin-top:16px;text-align:left;}
@@ -151,6 +179,7 @@ header{width:100%;max-width:720px;display:flex;align-items:center;justify-conten
 .step-body{flex:1;font-size:12px;}
 .step-body .katex{font-size:1em;}
 
+/* Stats */
 .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;width:100%;max-width:720px;}
 .stat-card{background:var(--surface);border:1.5px solid var(--border);border-radius:14px;
   padding:12px 6px;text-align:center;box-shadow:0 2px 8px rgba(58,91,255,.05);}
@@ -161,7 +190,7 @@ header{width:100%;max-width:720px;display:flex;align-items:center;justify-conten
 .stat-val.t{color:var(--accent2);}
 .stat-name{font-size:10px;color:var(--text-muted);margin-top:2px;}
 
-/* ── 名前入力（毎回表示） ── */
+/* Name screen */
 .name-screen{text-align:center;padding:8px 0 4px;}
 .name-screen h2{font-size:18px;font-weight:800;margin-bottom:8px;}
 .name-screen p{font-size:12px;color:var(--text-muted);margin-bottom:14px;}
@@ -171,6 +200,7 @@ header{width:100%;max-width:720px;display:flex;align-items:center;justify-conten
   margin-bottom:14px;display:block;margin-left:auto;margin-right:auto;}
 .name-input:focus{border-color:var(--accent);}
 
+/* Start screen */
 .start-screen{text-align:center;padding:8px 0 4px;}
 .start-screen h2{font-size:19px;font-weight:800;margin-bottom:7px;color:var(--text);}
 .start-screen p{font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7;}
@@ -184,12 +214,14 @@ header{width:100%;max-width:720px;display:flex;align-items:center;justify-conten
 @keyframes flash-red{0%,100%{background:var(--surface);}50%{background:#fee2e2;}}
 .card.timeout-flash{animation:flash-red .35s ease 2;}
 
+/* Finish */
 .finish-rank{font-size:48px;font-weight:800;line-height:1;}
 .rank-S{color:#d97706;text-shadow:0 0 18px rgba(217,119,6,.4);}
 .rank-A{color:var(--accent);}
 .rank-B{color:var(--correct);}
 .rank-C{color:var(--text-muted);}
 
+/* Numpad */
 .numpad-wrap{width:100%;max-width:340px;margin:14px auto 0;}
 .numpad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
 .nk{height:56px;border:1.5px solid var(--border);border-radius:14px;background:var(--surface);
@@ -205,6 +237,7 @@ header{width:100%;max-width:720px;display:flex;align-items:center;justify-conten
   color:white;border:none;box-shadow:0 4px 12px rgba(58,91,255,.25);font-size:15px;}
 .nk.nk-enter:active{transform:scale(.96);box-shadow:none;}
 
+/* Log screen */
 .log-screen{padding:4px 0;}
 .log-tabs{display:flex;gap:6px;margin-bottom:12px;}
 .log-tab-btn{flex:1;padding:7px 4px;border:1.5px solid var(--border);border-radius:10px;
@@ -239,7 +272,6 @@ canvas.log-chart{width:100%!important;border-radius:12px;}
   border-radius:12px;padding:9px 6px;text-align:center;}
 .summary-val{font-size:19px;font-weight:800;color:var(--accent);}
 .summary-name{font-size:10px;color:var(--text-muted);margin-top:2px;}
-
 .weakness-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px;}
 .wk-card{background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;
   padding:8px 10px;display:flex;flex-direction:column;gap:3px;}
@@ -250,14 +282,18 @@ canvas.log-chart{width:100%!important;border-radius:12px;}
 .wk-bar.mid{background:var(--warning);}
 .wk-bar.bad{background:var(--wrong);}
 .wk-rate{font-size:11px;font-weight:800;}
+.mastery-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;}
+.mastery-badge{padding:4px 10px;border-radius:12px;font-size:11px;font-weight:700;border:1.5px solid;}
+.mastery-badge.gold{background:#fef3c7;color:#92400e;border-color:#fcd34d;}
+.mastery-badge.none{background:var(--surface2);color:var(--text-muted);border-color:var(--border);}
 
+/* qtype examples */
 .qtype-list{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0 18px;}
 .qtype-item{background:var(--surface2);border:1.5px solid var(--border);border-radius:12px;
   padding:10px 10px 8px;text-align:center;}
 .qtype-item strong{color:var(--accent);display:block;margin-bottom:6px;font-size:10px;
   font-weight:800;letter-spacing:.5px;text-transform:uppercase;text-align:left;}
 .qtype-item .ex-expr{min-height:38px;display:flex;align-items:center;justify-content:center;}
-.qtype-item .ex-expr .katex-display>.katex{font-size:1.4em;}
 .qtype-item .ex-expr .katex{font-size:1.2em;color:var(--text);}
 .qtype-item .ex-ans{font-size:10px;color:var(--text-muted);margin-top:4px;}
 .qtype-item .ex-ans .katex{font-size:1em;color:var(--accent2);}
@@ -268,19 +304,14 @@ canvas.log-chart{width:100%!important;border-radius:12px;}
 .qtype-item.diff-hard{border-color:rgba(139,92,246,.3);background:rgba(139,92,246,.05);}
 .qtype-item.diff-hard strong{color:var(--accent2);}
 
-.mastery-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;}
-.mastery-badge{padding:4px 10px;border-radius:12px;font-size:11px;font-weight:700;border:1.5px solid;}
-.mastery-badge.gold{background:#fef3c7;color:#92400e;border-color:#fcd34d;}
-.mastery-badge.silver{background:#f1f5f9;color:#475569;border-color:#cbd5e1;}
-.mastery-badge.none{background:var(--surface2);color:var(--text-muted);border-color:var(--border);}
-
+/* Missed review */
 .missed-toggle{width:100%;padding:13px 18px;background:linear-gradient(135deg,#fef2f2,#fff0f0);
   border:1.5px solid #fca5a5;border-radius:14px;color:var(--wrong);
   font-family:'M PLUS Rounded 1c',sans-serif;font-size:14px;font-weight:800;cursor:pointer;
   display:flex;justify-content:space-between;align-items:center;transition:background .18s;
   -webkit-tap-highlight-color:transparent;}
 .missed-toggle:hover{background:linear-gradient(135deg,#fee2e2,#fecaca);}
-.toggle-arrow{font-size:12px;transition:transform .2s;}
+.toggle-arrow{font-size:12px;}
 .missed-card{background:var(--surface);border:1.5px solid var(--border);border-radius:14px;padding:16px;margin-top:10px;}
 .missed-badge{display:flex;gap:6px;align-items:center;margin-bottom:10px;flex-wrap:wrap;}
 .missed-num{font-size:11px;font-weight:800;color:var(--wrong);}
@@ -291,15 +322,14 @@ canvas.log-chart{width:100%!important;border-radius:12px;}
 .missed-hint{background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:7px 12px;font-size:12px;color:#92400e;margin:6px 0;}
 .missed-answer{font-size:13px;font-weight:700;color:var(--correct);padding:6px 12px;background:#f0fdf4;border-radius:8px;border:1px solid #bbf7d0;margin:6px 0;text-align:center;}
 .missed-answer .katex{color:var(--correct);}
-.missed-steps{margin-top:8px;}
-.missed-steps-title{font-size:11px;font-weight:700;color:var(--text-muted);margin-bottom:6px;}
+.missed-steps-title{font-size:11px;font-weight:700;color:var(--text-muted);margin-bottom:6px;margin-top:8px;}
 
+/* Review panel */
 .review-panel{width:100%;max-width:720px;margin-top:14px;}
 .review-toggle{width:100%;padding:13px 18px;background:linear-gradient(135deg,#eff6ff,#e0e7ff);
   border:1.5px solid #93c5fd;border-radius:14px;color:#1d4ed8;
   font-family:'M PLUS Rounded 1c',sans-serif;font-size:14px;font-weight:800;cursor:pointer;
-  display:flex;justify-content:space-between;align-items:center;transition:background .18s;
-  -webkit-tap-highlight-color:transparent;}
+  display:flex;justify-content:space-between;align-items:center;transition:background .18s;}
 .review-toggle:hover{background:linear-gradient(135deg,#dbeafe,#c7d2fe);}
 .review-body{display:none;background:var(--surface);border:1.5px solid #bfdbfe;
   border-radius:0 0 14px 14px;border-top:none;padding:14px 16px;font-size:13px;}
@@ -308,12 +338,9 @@ canvas.log-chart{width:100%!important;border-radius:12px;}
 .review-no{background:#1d4ed8;color:white;font-size:11px;font-weight:800;padding:3px 9px;border-radius:10px;white-space:nowrap;flex-shrink:0;margin-top:1px;}
 .review-content{flex:1;line-height:1.7;}
 .review-content strong{color:var(--text);display:block;margin-bottom:2px;font-size:12px;}
-.review-content .katex{font-size:1em;color:var(--accent2);}
 .review-prnt{display:inline-block;background:#f0fdf4;border:1px solid #bbf7d0;color:#166534;font-size:11px;font-weight:700;padding:2px 8px;border-radius:8px;margin-top:4px;}
-.review-ok{background:rgba(22,163,74,.08);border-color:rgba(22,163,74,.25);}
-.review-ok .review-no{background:var(--correct);}
 
-/* ── クラス・出席番号 ── */
+/* Class / number inputs */
 .class-select{width:100%;max-width:260px;padding:10px 14px;font-size:15px;font-weight:700;
   border:2px solid var(--border);border-radius:12px;background:var(--surface2);color:var(--text);
   font-family:'M PLUS Rounded 1c',sans-serif;outline:none;margin-bottom:12px;
@@ -323,14 +350,13 @@ canvas.log-chart{width:100%!important;border-radius:12px;}
   border:none;border-radius:50px;color:white;font-family:'M PLUS Rounded 1c',sans-serif;
   font-size:15px;font-weight:800;cursor:pointer;box-shadow:0 4px 14px rgba(22,163,74,.3);
   transition:transform .15s,box-shadow .15s;display:block;margin:10px auto 0;}
-.send-btn:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(22,163,74,.35);}
+.send-btn:hover{transform:translateY(-2px);}
 .send-btn:active{transform:scale(.97);}
 .send-btn:disabled{opacity:.5;cursor:not-allowed;transform:none;}
 .send-status{text-align:center;font-size:13px;font-weight:700;min-height:20px;margin-top:8px;}
 .send-status.ok{color:var(--correct);}
 .send-status.err{color:var(--wrong);}
 .send-status.wait{color:var(--text-muted);}
-
 .number-input{width:100%;max-width:180px;padding:11px 16px;font-size:22px;font-weight:800;
   border:2px solid var(--border);border-radius:14px;background:var(--surface2);color:var(--text);
   outline:none;text-align:center;font-family:'M PLUS Rounded 1c',sans-serif;
@@ -356,9 +382,18 @@ canvas.log-chart{width:100%!important;border-radius:12px;}
   </div>
 </header>
 
-<div class="level-tabs">
-  <button class="tab-btn active" onclick="switchLevel(1)">Lv.1：根号を簡単に</button>
-  <button class="tab-btn"       onclick="switchLevel(2)">Lv.2：平方根の計算</button>
+<!-- ★ レベル選択カード型 -->
+<div class="level-selector" id="levelSelector">
+  <button class="lv-card active" id="lvCard1" onclick="switchLevel(1)">
+    <span class="lv-card-badge lv-badge-1">Lv.1</span>
+    <div class="lv-card-title">根号を簡単にする</div>
+    <div class="lv-card-desc">√の中を a√b の形に変形・整数部分・有理化</div>
+  </button>
+  <button class="lv-card" id="lvCard2" onclick="switchLevel(2)">
+    <span class="lv-card-badge lv-badge-2">Lv.2</span>
+    <div class="lv-card-title">平方根の計算</div>
+    <div class="lv-card-desc">加減・乗除・展開・式の値・共役有理化</div>
+  </button>
 </div>
 
 <div class="timer-row">
@@ -377,7 +412,7 @@ canvas.log-chart{width:100%!important;border-radius:12px;}
   </div>
   <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
 
-  <!-- ★毎回入力：クラス・出席番号・氏名 -->
+  <!-- 名前入力（毎回） -->
   <div class="name-screen" id="nameScreen">
     <h2>クラスと出席番号を入力</h2>
     <p>毎回入力してからスタートしましょう。</p>
@@ -408,9 +443,7 @@ canvas.log-chart{width:100%!important;border-radius:12px;}
       <button class="log-tab-btn" onclick="switchLogTab('weakness')">🎯 弱点分析</button>
     </div>
     <div id="logChartArea" class="chart-wrap"><canvas id="logCanvas" class="log-chart" height="220"></canvas></div>
-    <div id="logTableArea" style="display:none;">
-      <div class="log-table-wrap"><table class="log-table" id="logTable"></table></div>
-    </div>
+    <div id="logTableArea" style="display:none;"><div class="log-table-wrap"><table class="log-table" id="logTable"></table></div></div>
     <div id="logWeaknessArea" style="display:none;"></div>
     <div class="no-log" id="noLogMsg" style="display:none;">まだ記録がありません。<br>ゲームをプレイすると記録が残ります！</div>
   </div>
@@ -419,7 +452,7 @@ canvas.log-chart{width:100%!important;border-radius:12px;}
   <div class="start-screen" id="startScreen" style="display:none;">
     <h2>⏱ タイムトライアル</h2>
     <p id="playerInfo" style="font-size:13px;font-weight:700;color:var(--accent);margin-bottom:6px;"></p>
-    <p><strong>1分間・正解するたびに⏱+1秒！</strong><br>時間内に何問解けるか挑戦しよう！</p>
+    <p><strong>1分間・正解で⏱+1秒・一時停止！</strong><br>パスは1回3秒消費。時間内に何問解けるか挑戦しよう！</p>
     <div class="qtype-list" id="qtypeList"></div>
     <button class="start-btn" onclick="startGame()">スタート ▶</button>
   </div>
@@ -431,8 +464,9 @@ canvas.log-chart{width:100%!important;border-radius:12px;}
       <div id="questionExpr"></div>
     </div>
     <div class="answer-area" id="answerArea"></div>
-    <div style="text-align:center;margin-top:6px;">
-      <button class="hint-btn" id="hintBtn" onclick="showHint()">💡 ヒントを見る（-3秒）</button>
+    <div style="text-align:center;margin-top:6px;display:flex;flex-wrap:wrap;justify-content:center;gap:8px;">
+      <button class="hint-btn" id="hintBtn" onclick="showHint()">💡 ヒント（-3秒）</button>
+      <button class="pass-btn" id="passBtn" onclick="passQuestion()">⏭ パス（-3秒）</button>
     </div>
     <div class="hint-popup" id="hintPopup"></div>
     <div style="text-align:center;margin-top:14px;display:flex;flex-direction:column;align-items:center;gap:7px;">
@@ -468,27 +502,26 @@ canvas.log-chart{width:100%!important;border-radius:12px;}
 </div>
 
 <script>
-
 /* ══════════════════════════════════════════════════════
-   ★ 教員設定 ★
+   ★ 教員設定
    ══════════════════════════════════════════════════════ */
 const GAS_URL = 'https://script.google.com/macros/s/AKfycby0yZre9hLJwbcOWgXM0SCuPxCNAK0yP_rtUcgmRIeH54Gefpwmi6rO570m-62DgWAQ/exec';
 const CLASS_LIST = ['A','B','C','D'];
 
-/* ── KaTeX ── */
+/* KaTeX */
 function kt(tex,el,display){katex.render(tex,el,{throwOnError:false,displayMode:!!display});}
 function ktHTML(tex,display){return katex.renderToString(tex,{throwOnError:false,displayMode:!!display});}
 
-/* ── 定数 ── */
+/* 定数 */
 const TIME_LIMIT=60, WARN_SEC=20, DANGER_SEC=10;
 
-/* ── State ── */
-let level=1,qIndex=0,correct=0,wrong=0,streak=0,maxStreak=0;
-let currentQ=null,answered=false;
-let timerVal=TIME_LIMIT,timerInterval=null;
+/* State */
+let level=1, qIndex=0, correct=0, wrong=0, passed=0, streak=0, maxStreak=0;
+let currentQ=null, answered=false;
+let timerVal=TIME_LIMIT, timerInterval=null, timerPaused=false;
 let hintUsed=false;
 let missedQuestions=[];
-let playerName='',playerClass='',playerNumber='',studentName='';
+let playerName='', playerClass='', playerNumber='', studentName='';
 let logTabState='chart';
 let sessionQtypeLog={};
 
@@ -508,28 +541,28 @@ const L1_MED=[
   [507,13,3,'169\\times3'],[338,13,2,'169\\times2'],
 ];
 const L1_FRAC=[
-  {tex:'\\dfrac{2}{3}',ansa:6,fracDen:3,hint:'√(2/3) = √2/√3。分母に√3をかけて整数にしよう',steps:['\\sqrt{\\dfrac{2}{3}} = \\dfrac{\\sqrt{2}}{\\sqrt{3}}','\\dfrac{\\sqrt{2}}{\\sqrt{3}} \\times \\dfrac{\\sqrt{3}}{\\sqrt{3}} = \\dfrac{\\sqrt{6}}{3}']},
-  {tex:'\\dfrac{3}{5}',ansa:15,fracDen:5,hint:'分母の√5に√5をかけて5にしよう',steps:['\\sqrt{\\dfrac{3}{5}} = \\dfrac{\\sqrt{3}}{\\sqrt{5}}','\\dfrac{\\sqrt{3} \\times \\sqrt{5}}{5} = \\dfrac{\\sqrt{15}}{5}']},
-  {tex:'\\dfrac{5}{2}',ansa:10,fracDen:2,hint:'分母の√2に√2をかけて2にしよう',steps:['\\sqrt{\\dfrac{5}{2}} = \\dfrac{\\sqrt{5}}{\\sqrt{2}}','\\dfrac{\\sqrt{5} \\times \\sqrt{2}}{2} = \\dfrac{\\sqrt{10}}{2}']},
-  {tex:'\\dfrac{7}{3}',ansa:21,fracDen:3,hint:'分母の√3に√3をかけて3にしよう',steps:['\\sqrt{\\dfrac{7}{3}} = \\dfrac{\\sqrt{7}}{\\sqrt{3}}','\\dfrac{\\sqrt{7} \\times \\sqrt{3}}{3} = \\dfrac{\\sqrt{21}}{3}']},
-  {tex:'\\dfrac{5}{7}',ansa:35,fracDen:7,hint:'分母の√7に√7をかけて7にしよう',steps:['\\sqrt{\\dfrac{5}{7}} = \\dfrac{\\sqrt{5}}{\\sqrt{7}}','\\dfrac{\\sqrt{5} \\times \\sqrt{7}}{7} = \\dfrac{\\sqrt{35}}{7}']},
-  {tex:'\\dfrac{2}{5}',ansa:10,fracDen:5,hint:'分母の√5に√5をかけて5にしよう',steps:['\\sqrt{\\dfrac{2}{5}} = \\dfrac{\\sqrt{2}}{\\sqrt{5}}','\\dfrac{\\sqrt{2} \\times \\sqrt{5}}{5} = \\dfrac{\\sqrt{10}}{5}']},
-  {tex:'\\dfrac{3}{7}',ansa:21,fracDen:7,hint:'分母の√7に√7をかけて7にしよう',steps:['\\sqrt{\\dfrac{3}{7}} = \\dfrac{\\sqrt{3}}{\\sqrt{7}}','\\dfrac{\\sqrt{3} \\times \\sqrt{7}}{7} = \\dfrac{\\sqrt{21}}{7}']},
+  {tex:'\\dfrac{2}{3}',ansa:6,fracDen:3,hint:'√(2/3) = √2/√3。分母に√3をかけよう',steps:['\\sqrt{\\dfrac{2}{3}} = \\dfrac{\\sqrt{2}}{\\sqrt{3}}','\\times\\dfrac{\\sqrt{3}}{\\sqrt{3}} = \\dfrac{\\sqrt{6}}{3}']},
+  {tex:'\\dfrac{3}{5}',ansa:15,fracDen:5,hint:'分母の√5に√5をかけて5にしよう',steps:['\\dfrac{\\sqrt{3}}{\\sqrt{5}}\\times\\dfrac{\\sqrt{5}}{\\sqrt{5}} = \\dfrac{\\sqrt{15}}{5}']},
+  {tex:'\\dfrac{5}{2}',ansa:10,fracDen:2,hint:'分母の√2に√2をかけて2にしよう',steps:['\\dfrac{\\sqrt{5}}{\\sqrt{2}}\\times\\dfrac{\\sqrt{2}}{\\sqrt{2}} = \\dfrac{\\sqrt{10}}{2}']},
+  {tex:'\\dfrac{7}{3}',ansa:21,fracDen:3,hint:'分母の√3に√3をかけて3にしよう',steps:['\\dfrac{\\sqrt{7}}{\\sqrt{3}}\\times\\dfrac{\\sqrt{3}}{\\sqrt{3}} = \\dfrac{\\sqrt{21}}{3}']},
+  {tex:'\\dfrac{5}{7}',ansa:35,fracDen:7,hint:'分母の√7に√7をかけて7にしよう',steps:['\\dfrac{\\sqrt{5}}{\\sqrt{7}}\\times\\dfrac{\\sqrt{7}}{\\sqrt{7}} = \\dfrac{\\sqrt{35}}{7}']},
+  {tex:'\\dfrac{2}{5}',ansa:10,fracDen:5,hint:'分母の√5に√5をかけて5にしよう',steps:['\\dfrac{\\sqrt{2}}{\\sqrt{5}}\\times\\dfrac{\\sqrt{5}}{\\sqrt{5}} = \\dfrac{\\sqrt{10}}{5}']},
+  {tex:'\\dfrac{3}{7}',ansa:21,fracDen:7,hint:'分母の√7に√7をかけて7にしよう',steps:['\\dfrac{\\sqrt{3}}{\\sqrt{7}}\\times\\dfrac{\\sqrt{7}}{\\sqrt{7}} = \\dfrac{\\sqrt{21}}{7}']},
 ];
 const L1_INT_POOL=[
-  {tex:'\\sqrt{5}',ip:2,hint:'2²=4, 3²=9。5はどちらの間にある？',steps:['2^2 = 4 < 5 < 9 = 3^2','\\therefore\\; 2 < \\sqrt{5} < 3']},
-  {tex:'\\sqrt{7}',ip:2,hint:'2²=4, 3²=9。7はどちらの間にある？',steps:['2^2 = 4 < 7 < 9 = 3^2','\\therefore\\; 2 < \\sqrt{7} < 3']},
-  {tex:'\\sqrt{10}',ip:3,hint:'3²=9, 4²=16。10はどちらの間にある？',steps:['3^2 = 9 < 10 < 16 = 4^2','\\therefore\\; 3 < \\sqrt{10} < 4']},
-  {tex:'\\sqrt{15}',ip:3,hint:'3²=9, 4²=16。15はどちらの間にある？',steps:['3^2 = 9 < 15 < 16 = 4^2','\\therefore\\; 3 < \\sqrt{15} < 4']},
-  {tex:'\\sqrt{20}',ip:4,hint:'4²=16, 5²=25。20はどちらの間にある？',steps:['4^2 = 16 < 20 < 25 = 5^2','\\therefore\\; 4 < \\sqrt{20} < 5']},
-  {tex:'\\sqrt{26}',ip:5,hint:'5²=25, 6²=36。26はどちらの間にある？',steps:['5^2 = 25 < 26 < 36 = 6^2','\\therefore\\; 5 < \\sqrt{26} < 6']},
-  {tex:'\\sqrt{35}',ip:5,hint:'5²=25, 6²=36。35はどちらの間にある？',steps:['5^2 = 25 < 35 < 36 = 6^2','\\therefore\\; 5 < \\sqrt{35} < 6']},
-  {tex:'\\sqrt{50}',ip:7,hint:'7²=49, 8²=64。50はどちらの間にある？',steps:['7^2 = 49 < 50 < 64 = 8^2','\\therefore\\; 7 < \\sqrt{50} < 8']},
-  {tex:'\\sqrt{2}+1',ip:2,hint:'√2≈1.414。1.414+1=？整数部分は？',steps:['\\sqrt{2} \\approx 1.414','\\sqrt{2}+1 \\approx 2.414 \\quad \\therefore\\; \\text{整数部分} = 2']},
-  {tex:'\\sqrt{3}+1',ip:2,hint:'√3≈1.732。1.732+1=？整数部分は？',steps:['\\sqrt{3} \\approx 1.732','\\sqrt{3}+1 \\approx 2.732 \\quad \\therefore\\; \\text{整数部分} = 2']},
-  {tex:'\\sqrt{5}-1',ip:1,hint:'√5≈2.236。2.236-1=？整数部分は？',steps:['\\sqrt{5} \\approx 2.236','\\sqrt{5}-1 \\approx 1.236 \\quad \\therefore\\; \\text{整数部分} = 1']},
-  {tex:'2\\sqrt{3}',ip:3,hint:'2√3=√12。√9=3, √16=4, √12はどちらの間？',steps:['2\\sqrt{3} = \\sqrt{12}','3^2=9 < 12 < 16=4^2 \\quad \\therefore\\; \\text{整数部分} = 3']},
-  {tex:'3\\sqrt{2}',ip:4,hint:'3√2=√18。√16=4, √25=5, √18はどちらの間？',steps:['3\\sqrt{2} = \\sqrt{18}','4^2=16 < 18 < 25=5^2 \\quad \\therefore\\; \\text{整数部分} = 4']},
+  {tex:'\\sqrt{5}',ip:2,hint:'2²=4, 3²=9。5はどちらの間？',steps:['2^2=4<5<9=3^2','\\therefore 2<\\sqrt{5}<3']},
+  {tex:'\\sqrt{7}',ip:2,hint:'2²=4, 3²=9。7はどちらの間？',steps:['2^2=4<7<9=3^2','\\therefore 2<\\sqrt{7}<3']},
+  {tex:'\\sqrt{10}',ip:3,hint:'3²=9, 4²=16。10はどちらの間？',steps:['3^2=9<10<16=4^2','\\therefore 3<\\sqrt{10}<4']},
+  {tex:'\\sqrt{15}',ip:3,hint:'3²=9, 4²=16。15はどちらの間？',steps:['3^2=9<15<16=4^2','\\therefore 3<\\sqrt{15}<4']},
+  {tex:'\\sqrt{20}',ip:4,hint:'4²=16, 5²=25。20はどちらの間？',steps:['4^2=16<20<25=5^2','\\therefore 4<\\sqrt{20}<5']},
+  {tex:'\\sqrt{26}',ip:5,hint:'5²=25, 6²=36。26はどちらの間？',steps:['5^2=25<26<36=6^2','\\therefore 5<\\sqrt{26}<6']},
+  {tex:'\\sqrt{35}',ip:5,hint:'5²=25, 6²=36。35はどちらの間？',steps:['5^2=25<35<36=6^2','\\therefore 5<\\sqrt{35}<6']},
+  {tex:'\\sqrt{50}',ip:7,hint:'7²=49, 8²=64。50はどちらの間？',steps:['7^2=49<50<64=8^2','\\therefore 7<\\sqrt{50}<8']},
+  {tex:'\\sqrt{2}+1',ip:2,hint:'√2≈1.414。整数部分は？',steps:['\\sqrt{2}\\approx1.414','\\sqrt{2}+1\\approx2.414 \\Rightarrow \\text{整数部分}=2']},
+  {tex:'\\sqrt{3}+1',ip:2,hint:'√3≈1.732。整数部分は？',steps:['\\sqrt{3}\\approx1.732','\\sqrt{3}+1\\approx2.732 \\Rightarrow \\text{整数部分}=2']},
+  {tex:'\\sqrt{5}-1',ip:1,hint:'√5≈2.236。整数部分は？',steps:['\\sqrt{5}\\approx2.236','\\sqrt{5}-1\\approx1.236 \\Rightarrow \\text{整数部分}=1']},
+  {tex:'2\\sqrt{3}',ip:3,hint:'2√3=√12。√9=3, √16=4。√12はどちらの間？',steps:['2\\sqrt{3}=\\sqrt{12}','3^2=9<12<16=4^2 \\Rightarrow \\text{整数部分}=3']},
+  {tex:'3\\sqrt{2}',ip:4,hint:'3√2=√18。√16=4, √25=5。√18はどちらの間？',steps:['3\\sqrt{2}=\\sqrt{18}','4^2=16<18<25=5^2 \\Rightarrow \\text{整数部分}=4']},
 ];
 const L1_REV=[
   [2,2,8],[2,3,12],[3,2,18],[2,5,20],[2,6,24],[3,3,27],
@@ -538,166 +571,132 @@ const L1_REV=[
   [7,3,147],[9,2,162],[10,2,200],[9,3,243],[7,5,245],
 ];
 
-/* ══════════════════════════════════════════════════════
-   シャッフルキュー管理
-   各カテゴリのプールをシャッフルしてキューに入れ、
-   全問消化したら再シャッフルして循環させる
-   ══════════════════════════════════════════════════════ */
-const _queues = {};
-function pickFrom(key, pool) {
-  if (!_queues[key] || _queues[key].length === 0) {
-    const indices = pool.map((_,i) => i);
-    // Fisher-Yatesシャッフル
-    for (let i = indices.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [indices[i], indices[j]] = [indices[j], indices[i]];
-    }
-    _queues[key] = indices;
+/* ══ シャッフルキュー ══ */
+const _queues={};
+function pickFrom(key,pool){
+  if(!_queues[key]||_queues[key].length===0){
+    const idx=pool.map((_,i)=>i);
+    for(let i=idx.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[idx[i],idx[j]]=[idx[j],idx[i]];}
+    _queues[key]=idx;
   }
   return pool[_queues[key].shift()];
 }
-// ゲーム開始時にキューをリセット
-function resetQueues() {
-  Object.keys(_queues).forEach(k => delete _queues[k]);
-  // Lv1タイプ順序もリセット
-  _l1TypeQueue = [];
-}
+function resetQueues(){Object.keys(_queues).forEach(k=>delete _queues[k]);_l1TypeQueue=[];_l2TypeQueue=[];}
 
-/* Lv1：タイプ順序もシャッフルキューで管理（同じタイプ連続を防ぐ） */
-const L1_TYPES = ['簡略化','簡略化','逆変換','逆変換','整数部分','有理化']; // 比率調整
-let _l1TypeQueue = [];
-function nextL1Type() {
-  if (_l1TypeQueue.length === 0) {
-    _l1TypeQueue = [...L1_TYPES];
-    for (let i = _l1TypeQueue.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [_l1TypeQueue[i], _l1TypeQueue[j]] = [_l1TypeQueue[j], _l1TypeQueue[i]];
-    }
+const L1_TYPES=['簡略化','簡略化','逆変換','逆変換','整数部分','有理化'];
+let _l1TypeQueue=[];
+function nextL1Type(){
+  if(_l1TypeQueue.length===0){
+    _l1TypeQueue=[...L1_TYPES];
+    for(let i=_l1TypeQueue.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[_l1TypeQueue[i],_l1TypeQueue[j]]=[_l1TypeQueue[j],_l1TypeQueue[i]];}
   }
   return _l1TypeQueue.shift();
 }
 
-function genLevel1(){
-  const type = nextL1Type();
+function T(coeff,base){if(base===1)return`${coeff}`;if(coeff===1)return`\\sqrt{${base}}`;return`${coeff}\\sqrt{${base}}`;}
+function rnd(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
+function shuffle(arr){for(let i=arr.length-1;i>0;i--){const j=rnd(0,i);[arr[i],arr[j]]=[arr[j],arr[i]];}}
 
-  if(type === '簡略化'){
-    // 係数a≥2、根号内b≥2 のものだけ（√1にならない）
+function genLevel1(){
+  const type=nextL1Type();
+  if(type==='簡略化'){
     const all=[...L1_EASY,...L1_MED].filter(([,a,b])=>a>=2&&b>=2);
-    const [inside,a,b,steps]=pickFrom('l1_simplify', all);
+    const [inside,a,b,steps]=pickFrom('l1_simplify',all);
     const isEasy=L1_EASY.some(r=>r[0]===inside);
     return{diff:isEasy?1:2,qtype:'簡略化',
-      hint:isEasy?`${inside}の中から完全平方数を探そう。${inside}÷4, ÷9... と試してみよう`:`大きな完全平方数を探そう。√${inside}=√(□×${b}) の□は？`,
+      hint:isEasy?`${inside}÷4, ÷9... と試してみよう`:`√${inside}=√(□×${b}) の□を探そう`,
       displayTex:`\\sqrt{${inside}}`,answerA:a,answerB:b,
-      steps:[`\\sqrt{${inside}} = \\sqrt{${steps}}`,`= \\sqrt{${a*a}} \\times \\sqrt{${b}} = ${T(a,b)}`],
+      steps:[`\\sqrt{${inside}}=\\sqrt{${steps}}=\\sqrt{${a*a}}\\times\\sqrt{${b}}=${T(a,b)}`],
       correctTex:T(a,b)};
   }
-
-  if(type === '逆変換'){
-    // a≥2、b≥2 のもののみ（問題文に1√bや係数1が出ない）
-    const validRev = L1_REV.filter(([a,b])=>a>=2&&b>=2);
-    const [a,b,c]=pickFrom('l1_rev', validRev);
+  if(type==='逆変換'){
+    const validRev=L1_REV.filter(([a,b])=>a>=2&&b>=2);
+    const [a,b,c]=pickFrom('l1_rev',validRev);
     return{diff:1,qtype:'逆変換',hint:`${a}√${b} = √(${a}²×${b}) = √?`,
       displayTex:`${a}\\sqrt{${b}}`,ansMode:'single_sqrt',answerA:c,
-      steps:[`${a}\\sqrt{${b}} = \\sqrt{${a}^2 \\times ${b}} = \\sqrt{${c}}`],
+      steps:[`${a}\\sqrt{${b}}=\\sqrt{${a}^2\\times${b}}=\\sqrt{${c}}`],
       correctTex:`\\sqrt{${c}}`};
   }
-
-  if(type === '整数部分'){
-    const p=pickFrom('l1_int', L1_INT_POOL);
+  if(type==='整数部分'){
+    const p=pickFrom('l1_int',L1_INT_POOL);
     return{diff:3,qtype:'整数部分',hint:p.hint,
       displayTex:p.tex,ansMode:'single',inputLabel:'整数部分',
       answerA:p.ip,steps:p.steps,correctTex:`${p.ip}`};
   }
-
-  // 有理化
-  const p=pickFrom('l1_frac', L1_FRAC);
+  const p=pickFrom('l1_frac',L1_FRAC);
   return{diff:3,qtype:'有理化',hint:p.hint,
     displayTex:`\\sqrt{${p.tex}}`,answerA:p.ansa,fracDen:p.fracDen,ansMode:'frac',
     steps:p.steps,correctTex:`\\dfrac{\\sqrt{${p.ansa}}}{${p.fracDen}}`};
 }
 
 /* ══════════ Lv2 データ ══════════ */
-function T(coeff,base){if(base===1)return`${coeff}`;if(coeff===1)return`\\sqrt{${base}}`;return`${coeff}\\sqrt{${base}}`;}
-function rnd(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
-function shuffle(arr){for(let i=arr.length-1;i>0;i--){const j=rnd(0,i);[arr[i],arr[j]]=[arr[j],arr[i]];}}
-
 function genL2diff1(){
   const roots=[2,3,5,6,7];
   const base=roots[rnd(0,roots.length-1)];
-  // 係数はすべて2以上、答えも2以上になる組み合わせのみ生成
-  let a,b,c,patterns;
-  let tries=0;
-  do {
-    a=rnd(2,6); b=rnd(2,5); c=rnd(2,5);
-    // 同じ値が続かないように
-    if(b===a) b = b<5 ? b+1 : b-1;
-    if(c===a||c===b) c = c<5 ? c+1 : c-1;
-    function termTex2(coeff,base){if(Math.random()<0.5)return`\\sqrt{${coeff*coeff*base}}`;return T(coeff,base);}
-    const tA=termTex2(a,base),tB=termTex2(b,base),tC=termTex2(c,base);
+  let a,b,c,patterns,tries=0;
+  do{
+    a=rnd(2,6);b=rnd(2,5);c=rnd(2,5);
+    if(b===a)b=b<5?b+1:b-1;
+    if(c===a||c===b)c=c<5?c+1:c-1;
+    function tTex(coeff,base){if(Math.random()<0.5)return`\\sqrt{${coeff*coeff*base}}`;return T(coeff,base);}
+    const tA=tTex(a,base),tB=tTex(b,base),tC=tTex(c,base);
     patterns=[
-      {q:`${tA}+${tB}+${tC}`,ans:a+b+c,steps:[`\\text{各項を簡単にすると}：${T(a,base)},\\;${T(b,base)},\\;${T(c,base)}`,`(${a}+${b}+${c})\\sqrt{${base}} = ${T(a+b+c,base)}`]},
-      {q:`${tA}+${tB}-${tC}`,ans:a+b-c,steps:[`\\text{各項を簡単にすると}：${T(a,base)},\\;${T(b,base)},\\;${T(c,base)}`,`(${a}+${b}-${c})\\sqrt{${base}} = ${T(a+b-c,base)}`]},
-      {q:`${tA}-${tB}+${tC}`,ans:a-b+c,steps:[`\\text{各項を簡単にすると}：${T(a,base)},\\;${T(b,base)},\\;${T(c,base)}`,`(${a}-${b}+${c})\\sqrt{${base}} = ${T(a-b+c,base)}`]},
-    ].filter(p=>p.ans>=2); // 答えの係数も2以上
+      {q:`${tA}+${tB}+${tC}`,ans:a+b+c,steps:[`${T(a,base)}+${T(b,base)}+${T(c,base)}=(${a}+${b}+${c})\\sqrt{${base}}=${T(a+b+c,base)}`]},
+      {q:`${tA}+${tB}-${tC}`,ans:a+b-c,steps:[`${T(a,base)}+${T(b,base)}-${T(c,base)}=(${a}+${b}-${c})\\sqrt{${base}}=${T(a+b-c,base)}`]},
+      {q:`${tA}-${tB}+${tC}`,ans:a-b+c,steps:[`${T(a,base)}-${T(b,base)}+${T(c,base)}=(${a}-${b}+${c})\\sqrt{${base}}=${T(a-b+c,base)}`]},
+    ].filter(p=>p.ans>=2);
     tries++;
-  } while(patterns.length===0 && tries<20);
-  if(patterns.length===0){
-    // フォールバック：確実に成立する値
-    a=4;b=2;c=3;
-    const tA=T(a,base),tB=T(b,base),tC=T(c,base);
-    patterns=[{q:`${tA}+${tB}+${tC}`,ans:a+b+c,steps:[`(${a}+${b}+${c})\\sqrt{${base}} = ${T(a+b+c,base)}`]}];
-  }
+  }while(patterns.length===0&&tries<20);
+  if(patterns.length===0){a=4;b=2;c=3;patterns=[{q:`${T(a,base)}+${T(b,base)}+${T(c,base)}`,ans:a+b+c,steps:[`(${a}+${b}+${c})\\sqrt{${base}}=${T(a+b+c,base)}`]}];}
   const p=patterns[rnd(0,patterns.length-1)];
-  return{diff:1,qtype:'加減算',hint:`それぞれ √${base} の形に変形してから、係数（前の数）を計算しよう`,
+  return{diff:1,qtype:'加減算',hint:`それぞれ √${base} の形に変形してから係数を計算しよう`,
     displayTex:p.q,answerA:p.ans,answerB:base,steps:p.steps,correctTex:T(p.ans,base)};
 }
 
 const L2D2_POOL=[
   {q:'\\sqrt{12}+\\sqrt{3}+\\sqrt{27}',a:6,b:3,hint:'√12=2√3, √27=3√3 に変形してから足そう',steps:['\\sqrt{12}=2\\sqrt{3},\\;\\sqrt{27}=3\\sqrt{3}','2\\sqrt{3}+\\sqrt{3}+3\\sqrt{3}=6\\sqrt{3}']},
   {q:'\\sqrt{8}+\\sqrt{2}+\\sqrt{18}',a:6,b:2,hint:'√8=2√2, √18=3√2 に変形してから足そう',steps:['\\sqrt{8}=2\\sqrt{2},\\;\\sqrt{18}=3\\sqrt{2}','2\\sqrt{2}+\\sqrt{2}+3\\sqrt{2}=6\\sqrt{2}']},
-  {q:'\\sqrt{50}-\\sqrt{8}+\\sqrt{2}',a:4,b:2,hint:'√50=5√2, √8=2√2。係数を計算しよう',steps:['\\sqrt{50}=5\\sqrt{2},\\;\\sqrt{8}=2\\sqrt{2}','5\\sqrt{2}-2\\sqrt{2}+\\sqrt{2}=4\\sqrt{2}']},
-  {q:'\\sqrt{75}-\\sqrt{48}+\\sqrt{3}',a:2,b:3,hint:'√75=5√3, √48=4√3。係数を計算しよう',steps:['\\sqrt{75}=5\\sqrt{3},\\;\\sqrt{48}=4\\sqrt{3}','5\\sqrt{3}-4\\sqrt{3}+\\sqrt{3}=2\\sqrt{3}']},
-  {q:'\\sqrt{45}+\\sqrt{20}-\\sqrt{5}',a:4,b:5,hint:'√45=3√5, √20=2√5。係数を計算しよう',steps:['\\sqrt{45}=3\\sqrt{5},\\;\\sqrt{20}=2\\sqrt{5}','3\\sqrt{5}+2\\sqrt{5}-\\sqrt{5}=4\\sqrt{5}']},
-  {q:'3\\sqrt{2}+\\sqrt{18}-\\sqrt{8}',a:4,b:2,hint:'√18=3√2, √8=2√2 に変形しよう',steps:['\\sqrt{18}=3\\sqrt{2},\\;\\sqrt{8}=2\\sqrt{2}','3\\sqrt{2}+3\\sqrt{2}-2\\sqrt{2}=4\\sqrt{2}']},
-  {q:'2\\sqrt{3}+\\sqrt{27}-\\sqrt{12}',a:3,b:3,hint:'√27=3√3, √12=2√3 に変形しよう',steps:['\\sqrt{27}=3\\sqrt{3},\\;\\sqrt{12}=2\\sqrt{3}','2\\sqrt{3}+3\\sqrt{3}-2\\sqrt{3}=3\\sqrt{3}']},
-  {q:'\\sqrt{98}-\\sqrt{50}+\\sqrt{2}',a:3,b:2,hint:'√98=7√2, √50=5√2 に変形しよう',steps:['\\sqrt{98}=7\\sqrt{2},\\;\\sqrt{50}=5\\sqrt{2}','7\\sqrt{2}-5\\sqrt{2}+\\sqrt{2}=3\\sqrt{2}']},
-  {q:'\\sqrt{32}+\\sqrt{18}-\\sqrt{50}',a:1,b:2,hint:'√32=4√2, √18=3√2, √50=5√2',steps:['\\sqrt{32}=4\\sqrt{2},\\;\\sqrt{18}=3\\sqrt{2},\\;\\sqrt{50}=5\\sqrt{2}','4\\sqrt{2}+3\\sqrt{2}-5\\sqrt{2}=\\sqrt{2}']},
-  {q:'4\\sqrt{5}-\\sqrt{45}+\\sqrt{20}',a:3,b:5,hint:'√45=3√5, √20=2√5 に変形しよう',steps:['\\sqrt{45}=3\\sqrt{5},\\;\\sqrt{20}=2\\sqrt{5}','4\\sqrt{5}-3\\sqrt{5}+2\\sqrt{5}=3\\sqrt{5}']},
-  {q:'\\sqrt{2}\\times\\sqrt{6}+\\sqrt{3}',a:3,b:3,hint:'√2×√6=√12=2√3 を先に計算しよう',steps:['\\sqrt{2}\\times\\sqrt{6}=\\sqrt{12}=2\\sqrt{3}','2\\sqrt{3}+\\sqrt{3}=3\\sqrt{3}']},
-  {q:'\\sqrt{3}\\times\\sqrt{6}-\\sqrt{2}',a:2,b:2,hint:'√3×√6=√18=3√2 を先に計算しよう',steps:['\\sqrt{3}\\times\\sqrt{6}=\\sqrt{18}=3\\sqrt{2}','3\\sqrt{2}-\\sqrt{2}=2\\sqrt{2}']},
-  {q:'\\sqrt{5}\\times\\sqrt{10}+\\sqrt{2}',a:6,b:2,hint:'√5×√10=√50=5√2 を先に計算しよう',steps:['\\sqrt{5}\\times\\sqrt{10}=\\sqrt{50}=5\\sqrt{2}','5\\sqrt{2}+\\sqrt{2}=6\\sqrt{2}']},
-  {q:'\\sqrt{2}\\times\\sqrt{8}+\\sqrt{3}\\times\\sqrt{3}',a:7,b:1,hint:'それぞれの掛け算を先に計算しよう',steps:['\\sqrt{2}\\times\\sqrt{8}=\\sqrt{16}=4','\\sqrt{3}\\times\\sqrt{3}=3','4+3=7']},
-  {q:'\\sqrt{6}\\times\\sqrt{6}-\\sqrt{2}\\times\\sqrt{8}',a:2,b:1,hint:'それぞれの掛け算を先に計算しよう',steps:['\\sqrt{6}\\times\\sqrt{6}=6','\\sqrt{2}\\times\\sqrt{8}=\\sqrt{16}=4','6-4=2']},
-  {q:'\\dfrac{6}{\\sqrt{3}}+2\\sqrt{3}',a:4,b:3,hint:'6/√3 を有理化すると 2√3',steps:['\\dfrac{6}{\\sqrt{3}}=\\dfrac{6\\sqrt{3}}{3}=2\\sqrt{3}','2\\sqrt{3}+2\\sqrt{3}=4\\sqrt{3}']},
-  {q:'\\dfrac{10}{\\sqrt{2}}-3\\sqrt{2}',a:2,b:2,hint:'10/√2 を有理化すると 5√2',steps:['\\dfrac{10}{\\sqrt{2}}=\\dfrac{10\\sqrt{2}}{2}=5\\sqrt{2}','5\\sqrt{2}-3\\sqrt{2}=2\\sqrt{2}']},
-  {ansMode:'two_roots',q:'\\sqrt{2}+\\sqrt{3}+\\sqrt{8}',r1c:3,r1n:2,r2c:1,r2n:3,ct:'3\\sqrt{2}+\\sqrt{3}',hint:'√8=2√2 に変形。√2と√3の仲間を別々にまとめよう',steps:['\\sqrt{8}=2\\sqrt{2}','\\sqrt{2}+2\\sqrt{2}=3\\sqrt{2}','\\text{答え: }3\\sqrt{2}+\\sqrt{3}']},
-  {ansMode:'two_roots',q:'\\sqrt{3}+\\sqrt{12}+\\sqrt{2}',r1c:3,r1n:3,r2c:1,r2n:2,ct:'3\\sqrt{3}+\\sqrt{2}',hint:'√12=2√3 に変形。√3と√2の仲間を別々にまとめよう',steps:['\\sqrt{12}=2\\sqrt{3}','\\sqrt{3}+2\\sqrt{3}=3\\sqrt{3}','\\text{答え: }3\\sqrt{3}+\\sqrt{2}']},
-  {ansMode:'two_roots',q:'\\sqrt{18}+\\sqrt{5}-\\sqrt{2}',r1c:2,r1n:2,r2c:1,r2n:5,ct:'2\\sqrt{2}+\\sqrt{5}',hint:'√18=3√2 に変形。√2の係数を計算しよう',steps:['\\sqrt{18}=3\\sqrt{2}','3\\sqrt{2}-\\sqrt{2}=2\\sqrt{2}','\\text{答え: }2\\sqrt{2}+\\sqrt{5}']},
+  {q:'\\sqrt{50}-\\sqrt{8}+\\sqrt{2}',a:4,b:2,hint:'√50=5√2, √8=2√2',steps:['5\\sqrt{2}-2\\sqrt{2}+\\sqrt{2}=4\\sqrt{2}']},
+  {q:'\\sqrt{75}-\\sqrt{48}+\\sqrt{3}',a:2,b:3,hint:'√75=5√3, √48=4√3',steps:['5\\sqrt{3}-4\\sqrt{3}+\\sqrt{3}=2\\sqrt{3}']},
+  {q:'\\sqrt{45}+\\sqrt{20}-\\sqrt{5}',a:4,b:5,hint:'√45=3√5, √20=2√5',steps:['3\\sqrt{5}+2\\sqrt{5}-\\sqrt{5}=4\\sqrt{5}']},
+  {q:'3\\sqrt{2}+\\sqrt{18}-\\sqrt{8}',a:4,b:2,hint:'√18=3√2, √8=2√2',steps:['3\\sqrt{2}+3\\sqrt{2}-2\\sqrt{2}=4\\sqrt{2}']},
+  {q:'2\\sqrt{3}+\\sqrt{27}-\\sqrt{12}',a:3,b:3,hint:'√27=3√3, √12=2√3',steps:['2\\sqrt{3}+3\\sqrt{3}-2\\sqrt{3}=3\\sqrt{3}']},
+  {q:'\\sqrt{98}-\\sqrt{50}+\\sqrt{2}',a:3,b:2,hint:'√98=7√2, √50=5√2',steps:['7\\sqrt{2}-5\\sqrt{2}+\\sqrt{2}=3\\sqrt{2}']},
+  {q:'\\sqrt{32}+\\sqrt{18}-\\sqrt{50}',a:2,b:2,hint:'√32=4√2, √18=3√2, √50=5√2',steps:['4\\sqrt{2}+3\\sqrt{2}-5\\sqrt{2}=2\\sqrt{2}']},
+  {q:'4\\sqrt{5}-\\sqrt{45}+\\sqrt{20}',a:3,b:5,hint:'√45=3√5, √20=2√5',steps:['4\\sqrt{5}-3\\sqrt{5}+2\\sqrt{5}=3\\sqrt{5}']},
+  {q:'\\sqrt{2}\\times\\sqrt{6}+\\sqrt{3}',a:3,b:3,hint:'√2×√6=√12=2√3',steps:['\\sqrt{12}=2\\sqrt{3}','2\\sqrt{3}+\\sqrt{3}=3\\sqrt{3}']},
+  {q:'\\sqrt{3}\\times\\sqrt{6}-\\sqrt{2}',a:2,b:2,hint:'√3×√6=√18=3√2',steps:['\\sqrt{18}=3\\sqrt{2}','3\\sqrt{2}-\\sqrt{2}=2\\sqrt{2}']},
+  {q:'\\sqrt{5}\\times\\sqrt{10}+\\sqrt{2}',a:6,b:2,hint:'√5×√10=√50=5√2',steps:['\\sqrt{50}=5\\sqrt{2}','5\\sqrt{2}+\\sqrt{2}=6\\sqrt{2}']},
+  {q:'\\dfrac{6}{\\sqrt{3}}+2\\sqrt{3}',a:4,b:3,hint:'6/√3 を有理化すると 2√3',steps:['\\dfrac{6}{\\sqrt{3}}=2\\sqrt{3}','2\\sqrt{3}+2\\sqrt{3}=4\\sqrt{3}']},
+  {q:'\\dfrac{10}{\\sqrt{2}}-3\\sqrt{2}',a:2,b:2,hint:'10/√2 を有理化すると 5√2',steps:['\\dfrac{10}{\\sqrt{2}}=5\\sqrt{2}','5\\sqrt{2}-3\\sqrt{2}=2\\sqrt{2}']},
+  {ansMode:'two_roots',q:'\\sqrt{2}+\\sqrt{3}+\\sqrt{8}',r1c:3,r1n:2,r2c:2,r2n:3,ct:'3\\sqrt{2}+2\\sqrt{3}',hint:'√8=2√2 に変形。√2と√3を別々にまとめよう',steps:['\\sqrt{8}=2\\sqrt{2}','\\sqrt{2}+2\\sqrt{2}=3\\sqrt{2}','\\text{答え: }3\\sqrt{2}+2\\sqrt{3}（ただし√3の係数は1のため注意）']},
+  {ansMode:'two_roots',q:'\\sqrt{3}+\\sqrt{12}+2\\sqrt{2}',r1c:3,r1n:3,r2c:2,r2n:2,ct:'3\\sqrt{3}+2\\sqrt{2}',hint:'√12=2√3 に変形。√3と√2を別々にまとめよう',steps:['\\sqrt{12}=2\\sqrt{3}','\\sqrt{3}+2\\sqrt{3}=3\\sqrt{3}','\\text{答え: }3\\sqrt{3}+2\\sqrt{2}']},
+  {ansMode:'two_roots',q:'\\sqrt{18}+3\\sqrt{5}-\\sqrt{2}',r1c:2,r1n:2,r2c:3,r2n:5,ct:'2\\sqrt{2}+3\\sqrt{5}',hint:'√18=3√2 に変形。√2の係数を計算しよう',steps:['\\sqrt{18}=3\\sqrt{2}','3\\sqrt{2}-\\sqrt{2}=2\\sqrt{2}','\\text{答え: }2\\sqrt{2}+3\\sqrt{5}']},
 ];
 function genL2diff2(){
-  const p=pickFrom('l2d2', L2D2_POOL);
+  const p=pickFrom('l2d2',L2D2_POOL);
   if(p.ansMode==='two_roots')return{diff:2,qtype:'まとめ',hint:p.hint,displayTex:p.q,ansMode:'two_roots',r1c:p.r1c,r1n:p.r1n,r2c:p.r2c,r2n:p.r2n,answerA:p.r1c,answerB:p.r1n,steps:p.steps,correctTex:p.ct};
   return{diff:2,qtype:'計算',hint:p.hint,displayTex:p.q,answerA:p.a,answerB:p.b,steps:p.steps,correctTex:T(p.a,p.b)};
 }
 
 const L2D3_POOL=[
-  {ansMode:'expand',q:'(\\sqrt{3}+\\sqrt{2})^2',expandA:5,expandB:2,expandN:6,ct:'5+2\\sqrt{6}',hint:'(a+b)²=a²+2ab+b² で展開しよう',steps:['(\\sqrt{3})^2 + 2\\cdot\\sqrt{3}\\cdot\\sqrt{2} + (\\sqrt{2})^2','= 3 + 2\\sqrt{6} + 2 = 5+2\\sqrt{6}']},
-  {ansMode:'expand',q:'(\\sqrt{5}+\\sqrt{3})^2',expandA:8,expandB:2,expandN:15,ct:'8+2\\sqrt{15}',hint:'(a+b)²=a²+2ab+b² で展開しよう',steps:['5 + 2\\sqrt{15} + 3 = 8+2\\sqrt{15}']},
-  {ansMode:'expand',q:'(\\sqrt{6}+\\sqrt{2})^2',expandA:8,expandB:4,expandN:3,ct:'8+4\\sqrt{3}',hint:'中間項 2√6·√2=2√12=4√3 に注意！',steps:['6 + 2\\sqrt{12} + 2 = 8 + 2\\sqrt{12}','2\\sqrt{12}=4\\sqrt{3}','\\therefore\\; 8+4\\sqrt{3}']},
-  {ansMode:'expand',q:'(\\sqrt{7}+\\sqrt{3})^2',expandA:10,expandB:2,expandN:21,ct:'10+2\\sqrt{21}',hint:'(a+b)²=a²+2ab+b² で展開しよう',steps:['7 + 2\\sqrt{21} + 3 = 10+2\\sqrt{21}']},
-  {ansMode:'expand_minus',q:'(\\sqrt{7}-\\sqrt{2})^2',expandA:9,expandB:2,expandN:14,ct:'9-2\\sqrt{14}',hint:'(a-b)²=a²-2ab+b² で展開しよう',steps:['7 - 2\\sqrt{14} + 2 = 9-2\\sqrt{14}']},
-  {ansMode:'expand_minus',q:'(\\sqrt{5}-\\sqrt{3})^2',expandA:8,expandB:2,expandN:15,ct:'8-2\\sqrt{15}',hint:'(a-b)²=a²-2ab+b² で展開しよう',steps:['5 - 2\\sqrt{15} + 3 = 8-2\\sqrt{15}']},
-  {ansMode:'expand_minus',q:'(2\\sqrt{2}-\\sqrt{3})^2',expandA:11,expandB:4,expandN:6,ct:'11-4\\sqrt{6}',hint:'(2√2)²=8, 中間項2·2√2·√3=4√6',steps:['8 - 4\\sqrt{6} + 3 = 11-4\\sqrt{6}']},
-  {q:'(\\sqrt{5}+\\sqrt{3})(\\sqrt{5}-\\sqrt{3})',a:2,b:1,ct:'2',hint:'(a+b)(a-b)=a²-b² を使おう',steps:['5 - 3 = 2']},
-  {q:'(\\sqrt{7}+\\sqrt{2})(\\sqrt{7}-\\sqrt{2})',a:5,b:1,ct:'5',hint:'和と差の積の公式を使おう',steps:['7 - 2 = 5']},
-  {q:'(2\\sqrt{3}+1)(2\\sqrt{3}-1)',a:11,b:1,ct:'11',hint:'(2√3)²=12 に注意',steps:['(2\\sqrt{3})^2 - 1 = 12 - 1 = 11']},
-  {q:'\\sqrt{3}(\\sqrt{3}+\\sqrt{12})',a:9,b:1,ct:'9',hint:'分配法則でそれぞれかけてから整理しよう',steps:['3 + \\sqrt{36} = 3 + 6 = 9']},
-  {q:'\\sqrt{2}(\\sqrt{8}-\\sqrt{2})',a:2,b:1,ct:'2',hint:'分配法則を使おう',steps:['\\sqrt{16} - 2 = 4 - 2 = 2']},
-  {ansMode:'int_plus_sqrt',q:'\\dfrac{\\sqrt{12}}{\\sqrt{3}}+\\sqrt{5}',expandA:2,expandB:1,expandN:5,ct:'2+\\sqrt{5}',hint:'√12÷√3=√4=2',steps:['\\dfrac{\\sqrt{12}}{\\sqrt{3}} = \\sqrt{4} = 2','2 + \\sqrt{5}']},
-  {ansMode:'int_minus_sqrt',q:'\\dfrac{\\sqrt{50}}{\\sqrt{2}}-\\sqrt{3}',expandA:5,expandB:1,expandN:3,ct:'5-\\sqrt{3}',hint:'√50÷√2=√25=5',steps:['\\dfrac{\\sqrt{50}}{\\sqrt{2}} = \\sqrt{25} = 5','5 - \\sqrt{3}']},
+  {ansMode:'expand',q:'(\\sqrt{3}+\\sqrt{2})^2',expandA:5,expandB:2,expandN:6,ct:'5+2\\sqrt{6}',hint:'(a+b)²=a²+2ab+b²で展開しよう',steps:['3+2\\sqrt{6}+2=5+2\\sqrt{6}']},
+  {ansMode:'expand',q:'(\\sqrt{5}+\\sqrt{3})^2',expandA:8,expandB:2,expandN:15,ct:'8+2\\sqrt{15}',hint:'(a+b)²=a²+2ab+b²で展開しよう',steps:['5+2\\sqrt{15}+3=8+2\\sqrt{15}']},
+  {ansMode:'expand',q:'(\\sqrt{6}+\\sqrt{2})^2',expandA:8,expandB:4,expandN:3,ct:'8+4\\sqrt{3}',hint:'中間項 2√6·√2=2√12=4√3 に注意！',steps:['6+2\\sqrt{12}+2=8+2\\sqrt{12}','2\\sqrt{12}=4\\sqrt{3}','\\therefore 8+4\\sqrt{3}']},
+  {ansMode:'expand',q:'(\\sqrt{7}+\\sqrt{3})^2',expandA:10,expandB:2,expandN:21,ct:'10+2\\sqrt{21}',hint:'(a+b)²で展開しよう',steps:['7+2\\sqrt{21}+3=10+2\\sqrt{21}']},
+  {ansMode:'expand_minus',q:'(\\sqrt{7}-\\sqrt{2})^2',expandA:9,expandB:2,expandN:14,ct:'9-2\\sqrt{14}',hint:'(a-b)²=a²-2ab+b²で展開しよう',steps:['7-2\\sqrt{14}+2=9-2\\sqrt{14}']},
+  {ansMode:'expand_minus',q:'(\\sqrt{5}-\\sqrt{3})^2',expandA:8,expandB:2,expandN:15,ct:'8-2\\sqrt{15}',hint:'(a-b)²で展開しよう',steps:['5-2\\sqrt{15}+3=8-2\\sqrt{15}']},
+  {ansMode:'expand_minus',q:'(2\\sqrt{2}-\\sqrt{3})^2',expandA:11,expandB:4,expandN:6,ct:'11-4\\sqrt{6}',hint:'(2√2)²=8, 中間項4√6',steps:['8-4\\sqrt{6}+3=11-4\\sqrt{6}']},
+  {q:'(\\sqrt{5}+\\sqrt{3})(\\sqrt{5}-\\sqrt{3})',a:2,b:1,ct:'2',hint:'(a+b)(a-b)=a²-b²を使おう',steps:['5-3=2']},
+  {q:'(\\sqrt{7}+\\sqrt{2})(\\sqrt{7}-\\sqrt{2})',a:5,b:1,ct:'5',hint:'和と差の積の公式を使おう',steps:['7-2=5']},
+  {q:'(2\\sqrt{3}+1)(2\\sqrt{3}-1)',a:11,b:1,ct:'11',hint:'(2√3)²=12 に注意',steps:['12-1=11']},
+  {q:'\\sqrt{3}(\\sqrt{3}+\\sqrt{12})',a:9,b:1,ct:'9',hint:'分配法則でそれぞれかけて整理しよう',steps:['3+\\sqrt{36}=3+6=9']},
+  {q:'\\sqrt{2}(\\sqrt{8}-\\sqrt{2})',a:2,b:1,ct:'2',hint:'分配法則を使おう',steps:['\\sqrt{16}-2=4-2=2']},
+  {ansMode:'int_plus_sqrt',q:'\\dfrac{\\sqrt{12}}{\\sqrt{3}}+\\sqrt{5}',expandA:2,expandB:1,expandN:5,ct:'2+\\sqrt{5}',hint:'√12÷√3=√4=2',steps:['\\sqrt{4}=2','2+\\sqrt{5}']},
+  {ansMode:'int_minus_sqrt',q:'\\dfrac{\\sqrt{50}}{\\sqrt{2}}-\\sqrt{3}',expandA:5,expandB:1,expandN:3,ct:'5-\\sqrt{3}',hint:'√50÷√2=√25=5',steps:['\\sqrt{25}=5','5-\\sqrt{3}']},
 ];
 function genL2diff3_expand(){
-  const p=pickFrom('l2d3', L2D3_POOL);
+  const p=pickFrom('l2d3',L2D3_POOL);
   if(p.ansMode==='expand')return{diff:3,qtype:'展開',hint:p.hint,displayTex:p.q,ansMode:'expand',expandA:p.expandA,expandB:p.expandB,expandN:p.expandN,steps:p.steps,correctTex:p.ct};
   if(p.ansMode==='expand_minus')return{diff:3,qtype:'展開',hint:p.hint,displayTex:p.q,ansMode:'expand_minus',expandA:p.expandA,expandB:p.expandB,expandN:p.expandN,steps:p.steps,correctTex:p.ct};
   if(p.ansMode==='int_plus_sqrt')return{diff:3,qtype:'計算',hint:p.hint,displayTex:p.q,ansMode:'expand',expandA:p.expandA,expandB:p.expandB,expandN:p.expandN,steps:p.steps,correctTex:p.ct};
@@ -706,78 +705,71 @@ function genL2diff3_expand(){
 }
 
 const L2_EXPR_POOL=[
-  {hintTex:'x = \\sqrt{2}+1 \\text{ のとき}',exprTex:'x^2-2x',ans:1,hint:'x²を展開して√の項を消そう',steps:['(\\sqrt{2}+1)^2 - 2(\\sqrt{2}+1)','= 3+2\\sqrt{2} - 2\\sqrt{2} - 2 = 1']},
-  {hintTex:'x = \\sqrt{3}+1 \\text{ のとき}',exprTex:'x^2-2x',ans:2,hint:'展開して√の項をまとめよう',steps:['(\\sqrt{3}+1)^2 - 2(\\sqrt{3}+1)','= 4+2\\sqrt{3} - 2\\sqrt{3} - 2 = 2']},
-  {hintTex:'x = \\sqrt{5}+2 \\text{ のとき}',exprTex:'x^2-4x',ans:1,hint:'展開してから整理しよう',steps:['(\\sqrt{5}+2)^2 - 4(\\sqrt{5}+2)','= 9+4\\sqrt{5} - 4\\sqrt{5} - 8 = 1']},
-  {hintTex:'x = \\sqrt{7}+2 \\text{ のとき}',exprTex:'x^2-4x',ans:3,hint:'展開して√の項を消そう',steps:['(\\sqrt{7}+2)^2 - 4(\\sqrt{7}+2)','= 11+4\\sqrt{7} - 4\\sqrt{7} - 8 = 3']},
-  {hintTex:'x = \\sqrt{3}-1 \\text{ のとき}',exprTex:'x^2+2x',ans:2,hint:'(a-b)²=a²-2ab+b²を使おう',steps:['(\\sqrt{3}-1)^2 + 2(\\sqrt{3}-1)','= 4-2\\sqrt{3} + 2\\sqrt{3} - 2 = 2']},
-  {hintTex:'x=\\sqrt{2}+\\sqrt{3} \\text{ のとき}',exprTex:'x^2-2\\sqrt{6}',ans:5,hint:'(√2+√3)²を展開すると5+2√6',steps:['(\\sqrt{2}+\\sqrt{3})^2 = 5+2\\sqrt{6}','5+2\\sqrt{6}-2\\sqrt{6} = 5']},
-  {hintTex:'a=\\sqrt{5},\\ b=\\sqrt{3} \\text{ のとき}',exprTex:'(a+b)(a-b)',ans:2,hint:'(a+b)(a-b)=a²-b² に代入しよう',steps:['(\\sqrt{5})^2 - (\\sqrt{3})^2 = 5 - 3 = 2']},
+  {hintTex:'x=\\sqrt{2}+1 \\text{ のとき}',exprTex:'x^2-2x',ans:1,hint:'x²を展開して√の項を消そう',steps:['(\\sqrt{2}+1)^2-2(\\sqrt{2}+1)=3+2\\sqrt{2}-2\\sqrt{2}-2=1']},
+  {hintTex:'x=\\sqrt{3}+1 \\text{ のとき}',exprTex:'x^2-2x',ans:2,hint:'展開して√の項をまとめよう',steps:['(\\sqrt{3}+1)^2-2(\\sqrt{3}+1)=4+2\\sqrt{3}-2\\sqrt{3}-2=2']},
+  {hintTex:'x=\\sqrt{5}+2 \\text{ のとき}',exprTex:'x^2-4x',ans:1,hint:'展開してから整理しよう',steps:['(\\sqrt{5}+2)^2-4(\\sqrt{5}+2)=9+4\\sqrt{5}-4\\sqrt{5}-8=1']},
+  {hintTex:'x=\\sqrt{7}+2 \\text{ のとき}',exprTex:'x^2-4x',ans:3,hint:'展開して√の項を消そう',steps:['(\\sqrt{7}+2)^2-4(\\sqrt{7}+2)=11+4\\sqrt{7}-4\\sqrt{7}-8=3']},
+  {hintTex:'x=\\sqrt{3}-1 \\text{ のとき}',exprTex:'x^2+2x',ans:2,hint:'(a-b)²=a²-2ab+b²を使おう',steps:['(\\sqrt{3}-1)^2+2(\\sqrt{3}-1)=4-2\\sqrt{3}+2\\sqrt{3}-2=2']},
+  {hintTex:'x=\\sqrt{2}+\\sqrt{3} \\text{ のとき}',exprTex:'x^2-2\\sqrt{6}',ans:5,hint:'(√2+√3)²=5+2√6 を展開しよう',steps:['5+2\\sqrt{6}-2\\sqrt{6}=5']},
+  {hintTex:'a=\\sqrt{5},\\ b=\\sqrt{3} \\text{ のとき}',exprTex:'(a+b)(a-b)',ans:2,hint:'(a+b)(a-b)=a²-b²に代入しよう',steps:['5-3=2']},
 ];
 
 const L2_CONJ_POOL=[
-  {q:'\\dfrac{1}{\\sqrt{2}+1}',conjN:2,conjB:1,sign:'minus',ct:'\\sqrt{2}-1',hint:'分母の共役（√2−1）をかけよう',steps:['\\dfrac{\\sqrt{2}-1}{(\\sqrt{2})^2-1} = \\sqrt{2}-1']},
-  {q:'\\dfrac{1}{\\sqrt{5}+2}',conjN:5,conjB:2,sign:'minus',ct:'\\sqrt{5}-2',hint:'(√5+2)(√5-2)=1になることを使おう',steps:['\\dfrac{\\sqrt{5}-2}{5-4} = \\sqrt{5}-2']},
-  {q:'\\dfrac{1}{\\sqrt{2}-1}',conjN:2,conjB:1,sign:'plus',ct:'\\sqrt{2}+1',hint:'分母の共役（√2+1）をかけよう',steps:['\\dfrac{\\sqrt{2}+1}{2-1} = \\sqrt{2}+1']},
-  {q:'\\dfrac{1}{\\sqrt{5}-2}',conjN:5,conjB:2,sign:'plus',ct:'\\sqrt{5}+2',hint:'(√5-2)(√5+2)=1になることを使おう',steps:['\\dfrac{\\sqrt{5}+2}{5-4} = \\sqrt{5}+2']},
-  {q:'\\dfrac{2}{\\sqrt{3}+1}',conjN:3,conjB:1,sign:'minus',ct:'\\sqrt{3}-1',hint:'(√3+1)(√3-1)=2になることを使おう',steps:['\\dfrac{2(\\sqrt{3}-1)}{3-1} = \\sqrt{3}-1']},
-  {q:'\\dfrac{4}{\\sqrt{5}+1}',conjN:5,conjB:1,sign:'minus',ct:'\\sqrt{5}-1',hint:'(√5+1)(√5-1)=4になることを使おう',steps:['\\dfrac{4(\\sqrt{5}-1)}{4} = \\sqrt{5}-1']},
-  {q:'\\dfrac{1}{\\sqrt{10}-3}',conjN:10,conjB:3,sign:'plus',ct:'\\sqrt{10}+3',hint:'(√10-3)(√10+3)=1になることを使おう',steps:['\\dfrac{\\sqrt{10}+3}{10-9} = \\sqrt{10}+3']},
+  {q:'\\dfrac{1}{\\sqrt{2}+1}',conjN:2,conjB:1,sign:'minus',ct:'\\sqrt{2}-1',hint:'(√2+1)(√2-1)=1を使おう',steps:['\\dfrac{\\sqrt{2}-1}{2-1}=\\sqrt{2}-1']},
+  {q:'\\dfrac{1}{\\sqrt{5}+2}',conjN:5,conjB:2,sign:'minus',ct:'\\sqrt{5}-2',hint:'(√5+2)(√5-2)=1を使おう',steps:['\\dfrac{\\sqrt{5}-2}{5-4}=\\sqrt{5}-2']},
+  {q:'\\dfrac{1}{\\sqrt{2}-1}',conjN:2,conjB:1,sign:'plus',ct:'\\sqrt{2}+1',hint:'(√2-1)(√2+1)=1を使おう',steps:['\\dfrac{\\sqrt{2}+1}{2-1}=\\sqrt{2}+1']},
+  {q:'\\dfrac{1}{\\sqrt{5}-2}',conjN:5,conjB:2,sign:'plus',ct:'\\sqrt{5}+2',hint:'(√5-2)(√5+2)=1を使おう',steps:['\\dfrac{\\sqrt{5}+2}{5-4}=\\sqrt{5}+2']},
+  {q:'\\dfrac{2}{\\sqrt{3}+1}',conjN:3,conjB:1,sign:'minus',ct:'\\sqrt{3}-1',hint:'(√3+1)(√3-1)=2を使おう',steps:['\\dfrac{2(\\sqrt{3}-1)}{3-1}=\\sqrt{3}-1']},
+  {q:'\\dfrac{4}{\\sqrt{5}+1}',conjN:5,conjB:1,sign:'minus',ct:'\\sqrt{5}-1',hint:'(√5+1)(√5-1)=4を使おう',steps:['\\dfrac{4(\\sqrt{5}-1)}{4}=\\sqrt{5}-1']},
+  {q:'\\dfrac{1}{\\sqrt{10}-3}',conjN:10,conjB:3,sign:'plus',ct:'\\sqrt{10}+3',hint:'(√10-3)(√10+3)=1を使おう',steps:['\\dfrac{\\sqrt{10}+3}{10-9}=\\sqrt{10}+3']},
 ];
 
-/* Lv2：タイプ順序もシャッフルキューで管理 */
-const L2_TYPES = ['加減算','加減算','計算','計算','式の値','展開','展開','共役有理化'];
-let _l2TypeQueue = [];
-function nextL2Type() {
-  if (_l2TypeQueue.length === 0) {
-    _l2TypeQueue = [...L2_TYPES];
-    for (let i = _l2TypeQueue.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [_l2TypeQueue[i], _l2TypeQueue[j]] = [_l2TypeQueue[j], _l2TypeQueue[i]];
-    }
+const L2_TYPES=['加減算','加減算','計算','計算','式の値','展開','展開','共役有理化'];
+let _l2TypeQueue=[];
+function nextL2Type(){
+  if(_l2TypeQueue.length===0){
+    _l2TypeQueue=[...L2_TYPES];
+    for(let i=_l2TypeQueue.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[_l2TypeQueue[i],_l2TypeQueue[j]]=[_l2TypeQueue[j],_l2TypeQueue[i]];}
   }
   return _l2TypeQueue.shift();
 }
-
 function genLevel2(){
-  const type = nextL2Type();
-  if(type==='加減算') return genL2diff1();
-  if(type==='計算') return genL2diff2();
+  const type=nextL2Type();
+  if(type==='加減算')return genL2diff1();
+  if(type==='計算')return genL2diff2();
   if(type==='式の値'){
-    const p=pickFrom('l2_expr', L2_EXPR_POOL);
-    const diff=Math.random()<0.5?2:3;
-    return{diff,qtype:'式の値',hint:p.hint,hintMode:'katex',hintTex:p.hintTex,displayTex:p.exprTex,ansMode:'single',inputLabel:'式の値',answerA:p.ans,steps:p.steps,correctTex:String(p.ans)};
+    const p=pickFrom('l2_expr',L2_EXPR_POOL);
+    return{diff:2,qtype:'式の値',hint:p.hint,hintMode:'katex',hintTex:p.hintTex,displayTex:p.exprTex,ansMode:'single',inputLabel:'式の値',answerA:p.ans,steps:p.steps,correctTex:String(p.ans)};
   }
   if(type==='共役有理化'){
-    const p=pickFrom('l2_conj', L2_CONJ_POOL);
+    const p=pickFrom('l2_conj',L2_CONJ_POOL);
     return{diff:3,qtype:'共役有理化',hint:p.hint,displayTex:p.q,ansMode:p.sign==='minus'?'conj_minus':'conj_plus',conjN:p.conjN,conjB:p.conjB,steps:p.steps,correctTex:p.ct};
   }
-  // 展開
   return genL2diff3_expand();
 }
 
-/* ── Timer ── */
+/* ══ タイマー ══ */
 function startTimer(){
-  stopTimer();updateTimerUI();
+  stopTimer();timerPaused=false;updateTimerUI();
   timerInterval=setInterval(()=>{
+    if(timerPaused)return;
     timerVal--;updateTimerUI();
     if(timerVal<=0){stopTimer();timerVal=0;updateTimerUI();onGameTimeout();}
   },1000);
 }
 function stopTimer(){if(timerInterval){clearInterval(timerInterval);timerInterval=null;}}
+function pauseTimer(){timerPaused=true;updateTimerUI();}
+function resumeTimer(){timerPaused=false;updateTimerUI();}
 function updateTimerUI(){
   const el=document.getElementById('timerDisplay');
   const fill=document.getElementById('timerFill');
   const pct=(timerVal/TIME_LIMIT)*100;
   el.textContent=timerVal;
   fill.style.width=pct+'%';
+  if(timerPaused){el.className='timer-display paused';fill.className='timer-fill paused';return;}
   const cls=timerVal<=DANGER_SEC?'danger':timerVal<=WARN_SEC?'warn':'';
   el.className='timer-display '+cls;
   fill.className='timer-fill '+cls;
-}
-function addTime(sec){
-  timerVal=Math.min(timerVal+sec,TIME_LIMIT);
-  updateTimerUI();
 }
 function showBonusToast(msg){
   const t=document.getElementById('bonusToast');
@@ -785,30 +777,32 @@ function showBonusToast(msg){
   setTimeout(()=>t.className='bonus-toast hide',1200);
   setTimeout(()=>t.className='bonus-toast',1600);
 }
+
+/* ★ タイムアップ：未回答なら正解でも不正解でもない（カウントしない） */
 function onGameTimeout(){
-  if(!answered){wrong++;streak=0;updateStats();
+  if(!answered){
+    // タイムアップ時は正誤に含めない
     document.getElementById('mainCard').classList.add('timeout-flash');
-    setTimeout(()=>document.getElementById('mainCard').classList.remove('timeout-flash'),600);}
+    setTimeout(()=>document.getElementById('mainCard').classList.remove('timeout-flash'),600);
+  }
   setTimeout(()=>showFinish(true),700);
 }
 
-/* ── Game flow ── */
+/* ══ Game flow ══ */
 function startGame(){
   document.getElementById('startScreen').style.display='none';
   document.getElementById('gameScreen').style.display='block';
-  correct=0;wrong=0;streak=0;maxStreak=0;qIndex=0;
+  correct=0;wrong=0;passed=0;streak=0;maxStreak=0;qIndex=0;
   missedQuestions=[];
   timerVal=TIME_LIMIT;
   resetQueues();
-  _l2TypeQueue=[];
   updateStats();updateStreak();
   showNextQuestion();
   startTimer();
 }
 
-/* ★ 無制限出題：毎回新しい問題を生成 */
 function showNextQuestion(){
-  const q = level===1 ? genLevel1() : genLevel2();
+  const q=level===1?genLevel1():genLevel2();
   showQuestion(q);
 }
 
@@ -826,6 +820,8 @@ function showQuestion(q){
   document.getElementById('checkBtn').style.display='inline-block';
   const hintBtn=document.getElementById('hintBtn');
   hintBtn.disabled=false;hintBtn.style.display='inline-block';
+  const passBtn=document.getElementById('passBtn');
+  passBtn.disabled=false;passBtn.style.display='inline-block';
   document.getElementById('hintPopup').className='hint-popup';
   document.getElementById('hintPopup').innerHTML='';
   const db=document.getElementById('diffBadge');
@@ -834,10 +830,11 @@ function showQuestion(q){
   const qb=document.getElementById('qtypeBadge');
   if(q.qtype){qb.textContent=q.qtype;qb.style.display='inline-block';}else{qb.style.display='none';}
   buildAnswerUI(q);
-  // 問題数カウント表示
   qIndex++;
   document.getElementById('progressLabel').textContent=`${qIndex} 問目`;
   document.getElementById('progressFill').style.width='0%';
+  // タイマー再開
+  resumeTimer();
 }
 
 function showHint(){
@@ -849,9 +846,36 @@ function showHint(){
   const popup=document.getElementById('hintPopup');
   popup.innerHTML='<strong>💡 ヒント：</strong> '+currentQ.hint;
   popup.className='hint-popup visible';
-  if(currentQ.ansMode==='frac'){
-    popup.innerHTML+='<br><small style="color:#a16207;">📌 答えの形：√(□)/'+currentQ.fracDen+'</small>';
+  if(currentQ.ansMode==='frac')popup.innerHTML+='<br><small style="color:#a16207;">📌 √(□)/'+currentQ.fracDen+' の形で答えよう</small>';
+}
+
+/* ★ パス機能：-3秒で次の問題へ（正誤にカウントしない） */
+function passQuestion(){
+  if(answered)return;
+  answered=true;
+  passed++;
+  timerVal=Math.max(1,timerVal-3);updateTimerUI();
+  const fb=document.getElementById('feedback');
+  fb.textContent='⏭ パス（-3秒）　答えは → '+currentQ.correctTex;
+  fb.innerHTML='⏭ パス（-3秒）　答えは → '+katex.renderToString(currentQ.correctTex,{throwOnError:false,displayMode:false});
+  fb.className='feedback pass';
+  document.getElementById('hintBtn').style.display='none';
+  document.getElementById('passBtn').style.display='none';
+  document.getElementById('checkBtn').style.display='none';
+  document.getElementById('nextBtn').className='next-btn visible';
+  const nb=document.getElementById('nkEnterBtn');
+  if(nb){nb.textContent='次の問題 →';nb.onclick=()=>nextQuestion();}
+  // パス時は解説も表示
+  const expl=document.getElementById('explanation');
+  let html='<strong>解説</strong>';
+  if(currentQ.steps&&currentQ.steps.length>0){
+    html+='<div class="expl-steps">';
+    currentQ.steps.forEach((s,i)=>{
+      html+=`<div class="expl-step"><div class="step-num">${i+1}</div><div class="step-body">${ktHTML(s,false)}</div></div>`;
+    });
+    html+='</div>';
   }
+  expl.innerHTML=html;expl.className='explanation visible';
 }
 
 function nextQuestion(){
@@ -874,10 +898,9 @@ function updateStreak(){
   document.getElementById('streakBadge').className=streak>=3?'streak-badge visible':'streak-badge';
 }
 
-/* ── Answer UI ── */
+/* ══ Answer UI ══ */
 function buildAnswerUI(q){
-  const area=document.getElementById('answerArea');
-  area.innerHTML='';
+  const area=document.getElementById('answerArea');area.innerHTML='';
   if(q.ansMode==='single_sqrt'){
     area.innerHTML=`<div class="answer-row" style="align-items:flex-end;">
       <div style="font-size:28px;font-weight:800;color:var(--text-muted);padding-bottom:16px;">=</div>
@@ -969,7 +992,7 @@ function buildAnswerUI(q){
   initNkFocus(['inpA','inpB']);
 }
 
-/* ── Numpad ── */
+/* ══ Numpad ══ */
 let nkFocusId=null;
 function nkFocus(id){
   if(nkFocusId){const prev=document.getElementById(nkFocusId);if(prev)prev.classList.remove('focused');}
@@ -980,15 +1003,13 @@ function nkFocus(id){
 }
 function nkPress(n){
   if(!nkFocusId||answered)return;
-  const el=document.getElementById(nkFocusId);
-  if(!el)return;
+  const el=document.getElementById(nkFocusId);if(!el)return;
   if(el.value.length>=3)return;
   el.value=(el.value==='0'?'':el.value)+n;
 }
 function nkBS(){
   if(!nkFocusId||answered)return;
-  const el=document.getElementById(nkFocusId);
-  if(!el)return;
+  const el=document.getElementById(nkFocusId);if(!el)return;
   el.value=el.value.slice(0,-1);
 }
 function nkEnter(){
@@ -1001,11 +1022,10 @@ function nkEnter(){
 }
 function initNkFocus(ids){setTimeout(()=>{if(ids.length>0)nkFocus(ids[0]);},40);}
 
-/* ── Check answer ── */
+/* ══ Check answer ══ */
 function checkAnswer(){
   if(answered)return;
-  const q=currentQ;
-  let isCorrect=false;
+  const q=currentQ;let isCorrect=false;
   if(q.ansMode==='single_sqrt'||q.ansMode==='single'){
     const a=parseInt(document.getElementById('inpA').value);
     if(isNaN(a)){inputError();return;}
@@ -1041,12 +1061,14 @@ function checkAnswer(){
 
   answered=true;
   document.getElementById('hintBtn').style.display='none';
+  document.getElementById('passBtn').style.display='none';
 
   if(isCorrect){
     correct++;streak++;
     if(streak>maxStreak)maxStreak=streak;
+    // ★正解でタイマー一時停止＋+1秒
     timerVal=Math.min(timerVal+1,TIME_LIMIT);
-    updateTimerUI();
+    pauseTimer();
     if(streak>=3)showBonusToast(`🔥 ${streak}連続！ +1秒`);
     const fb=document.getElementById('feedback');
     fb.textContent=streak>=3?`正解！🎉 ${streak}連続！`:'正解！🎉';
@@ -1070,12 +1092,10 @@ function checkAnswer(){
     html+='</div>';
   }
   expl.innerHTML=html;expl.className='explanation visible';
-
   document.getElementById('checkBtn').style.display='none';
   document.getElementById('nextBtn').className='next-btn visible';
   const nb=document.getElementById('nkEnterBtn');
   if(nb){nb.textContent='次の問題 →';nb.onclick=()=>nextQuestion();}
-
   logQuestionResult(q.qtype||'その他',isCorrect);
 }
 
@@ -1083,18 +1103,15 @@ function inputError(){
   document.getElementById('feedback').textContent='すべての欄を入力してください。';
   document.getElementById('feedback').className='feedback wrong';
 }
-function markInputs(ids,ok){
-  ids.forEach(id=>{const el=document.getElementById(id);if(el)el.classList.add(ok?'correct':'wrong');});
-}
+function markInputs(ids,ok){ids.forEach(id=>{const el=document.getElementById(id);if(el)el.classList.add(ok?'correct':'wrong');});}
 
-/* ── 間違えた問題の解説 ── */
+/* ══ 間違えた問題の解説 ══ */
 function renderMissedReview(){
   const old=document.getElementById('missedReview');if(old)old.remove();
   if(!missedQuestions||missedQuestions.length===0)return;
   const wrap=document.createElement('div');
   wrap.id='missedReview';wrap.style.cssText='width:100%;max-width:720px;margin-top:14px;';
-  const hdr=document.createElement('button');
-  hdr.className='missed-toggle';
+  const hdr=document.createElement('button');hdr.className='missed-toggle';
   hdr.innerHTML=`<span>❌ 間違えた問題の解説（${missedQuestions.length}問）</span><span class="toggle-arrow">▼</span>`;
   hdr.onclick=()=>{
     const body=document.getElementById('missedBody');
@@ -1112,7 +1129,7 @@ function renderMissedReview(){
     try{katex.render(q.displayTex,qExpr,{throwOnError:false,displayMode:true});}catch(e){qExpr.textContent=q.displayTex;}
     const ansDiv=document.createElement('div');ansDiv.className='missed-answer';
     ansDiv.innerHTML='正解：'+ktHTML(q.correctTex,false);
-    const stepsDiv=document.createElement('div');stepsDiv.className='missed-steps';
+    const stepsDiv=document.createElement('div');
     if(q.steps&&q.steps.length>0){
       stepsDiv.innerHTML='<div class="missed-steps-title">解説ステップ</div>';
       q.steps.forEach((s,si)=>{
@@ -1130,14 +1147,14 @@ function renderMissedReview(){
   if(stats)stats.parentNode.insertBefore(wrap,stats);else document.body.appendChild(wrap);
 }
 
-/* ── 復習ガイド ── */
+/* ══ 復習ガイド ══ */
 const PRINT_MAP={
-  '簡略化':{title:'根号の簡単化（a√b の形に変形）',prints:['No.5 例105・練習112','No.6 左側'],hint:'√(a²×b)=a√b の変形。完全平方数を根号の外に出す練習をしよう。',drills:['練習112 (1)〜(8)','練習113 (1)〜(3)']},
+  '簡略化':{title:'根号の簡単化（a√b の形に変形）',prints:['No.5 例105・練習112','No.6 左側'],hint:'完全平方数を根号の外に出す練習をしよう。',drills:['練習112 (1)〜(8)','練習113 (1)〜(3)']},
   '有理化':{title:'分数の根号・分母の有理化',prints:['No.6 ◎分母の有理化・例106・練習115'],hint:'分母に同じ√をかけて整数にする練習。',drills:['練習115 (1)〜(3)']},
   '整数部分':{title:'平方根の大小・整数部分',prints:['No.4 ◎平方根の大小・練習106・練習107'],hint:'n²<a<(n+1)² となる n を見つける。',drills:['練習106 (1)〜(4)','練習107 (2)〜(5)']},
   '加減算':{title:'平方根の加法・減法',prints:['No.7 ◎平方根の和・練習116〜118'],hint:'係数が同じ根号だけ計算できる。',drills:['練習116 (1)〜(4)','練習117 (1)〜(4)']},
   '計算':{title:'平方根の乗除・混合計算',prints:['No.5 練習109・110','No.6 練習113・114'],hint:'√a×√b=√(ab) の公式を使いこなそう。',drills:['練習109 (1)〜(6)']},
-  'まとめ':{title:'根号を含む式のまとめ計算',prints:['No.7 練習117(3)(4)','No.8 練習119'],hint:'各根号を簡単にしてから同類項をまとめる。',drills:['練習117 (3)(4)','練習119 (1)〜(4)']},
+  'まとめ':{title:'根号を含む式のまとめ計算',prints:['No.7 練習117(3)(4)','No.8 練習119'],hint:'各根号を簡単にしてから同類項をまとめる。',drills:['練習119 (1)〜(4)']},
   '展開':{title:'乗法公式を使った展開',prints:['No.8 練習120・練習121'],hint:'(a+b)²、(a+b)(a-b) を根号に応用。',drills:['練習120 (1)〜(6)','練習121 (1)〜(3)']},
   '乗法':{title:'根号を含む乗法・分配法則',prints:['No.8 練習119(3)(4)'],hint:'分配法則を使おう。',drills:['練習119 (1)〜(4)']},
   '式の値':{title:'式の値（根号を含む式に代入）',prints:['No.10 練習123'],hint:'代入して展開。√の項が消えて整数が残る仕組みに注目。',drills:['練習123 ①②③']},
@@ -1162,9 +1179,8 @@ function renderReviewPanel(){
   const body=document.createElement('div');body.id='reviewBody';body.className='review-body';body.style.display='none';
   types.forEach(t=>{
     const info=PRINT_MAP[t];if(!info)return;
-    const n=typeCounts[t];
     const item=document.createElement('div');item.className='review-item';
-    item.innerHTML=`<div class="review-no">❌ ${n}問</div><div class="review-content"><strong>${info.title}</strong><div style="color:var(--text-muted);font-size:12px;margin-bottom:4px;">${info.hint}</div><div>${info.prints.map(p=>`<span class="review-prnt">📄 ${p}</span>`).join(' ')}</div><div style="margin-top:4px;font-size:11px;color:var(--text-muted);">練習問題：${info.drills.join('　')}</div></div>`;
+    item.innerHTML=`<div class="review-no">❌ ${typeCounts[t]}問</div><div class="review-content"><strong>${info.title}</strong><div style="color:var(--text-muted);font-size:12px;margin-bottom:4px;">${info.hint}</div><div>${info.prints.map(p=>`<span class="review-prnt">📄 ${p}</span>`).join(' ')}</div><div style="margin-top:4px;font-size:11px;color:var(--text-muted);">練習問題：${info.drills.join('　')}</div></div>`;
     body.appendChild(item);
   });
   wrap.appendChild(hdr);wrap.appendChild(body);
@@ -1172,29 +1188,50 @@ function renderReviewPanel(){
   if(stats)stats.parentNode.insertBefore(wrap,stats);else document.body.appendChild(wrap);
 }
 
-/* ── Finish ── */
+/* ══ ★ RANK：解いた問題数×正答率で総合評価 ══
+   スコア = 正解数 × (正答率/100)^0.5
+   S:20以上 A:12以上 B:6以上 C:それ未満
+*/
+function calcRank(correctCount, totalAnswered){
+  if(totalAnswered===0)return'C';
+  const rate=correctCount/totalAnswered;
+  const score=correctCount*Math.sqrt(rate);
+  if(score>=20)return'S';
+  if(score>=12)return'A';
+  if(score>=6)return'B';
+  return'C';
+}
+
+/* ══ Finish ══ */
 function showFinish(isTimeout=false){
   const usedTime=TIME_LIMIT-Math.max(timerVal,0);
-  saveLog(correct,correct+wrong||1,usedTime,isTimeout);
   stopTimer();
+  const total=correct+wrong;
+  const rate=total>0?Math.round(correct/total*100):0;
+  const rank=calcRank(correct,total);
+  saveLog(correct,total||1,usedTime,isTimeout,rank,passed);
   document.getElementById('numpadWrap').style.display='none';
   document.getElementById('hintBtn').style.display='none';
+  document.getElementById('passBtn').style.display='none';
   document.getElementById('timerDisplay').textContent='0';
   document.getElementById('timerFill').style.width='0%';
   document.getElementById('timerFill').className='timer-fill danger';
   document.getElementById('timerDisplay').className='timer-display danger';
-  const total=correct+wrong||1;
-  const rate=Math.round(correct/total*100);
-  const rank=rate===100?'S':rate>=80?'A':rate>=60?'B':'C';
   const rankMsg={S:'パーフェクト！！🏆',A:'すごい！よくできました⭐',B:'もう少し！練習を続けよう💪',C:'もう一度チャレンジしてみよう！'};
   const rankClass={S:'rank-S',A:'rank-A',B:'rank-B',C:'rank-C'};
-  document.getElementById('questionHint').textContent=`${qIndex}問中 ${correct}問正解　／　${usedTime}秒使用　／　最大${maxStreak}連続`;
+  const score=total>0?Math.round(correct*Math.sqrt(correct/total)*10)/10:0;
+  document.getElementById('questionHint').textContent=
+    `${qIndex}問中 ${correct}問正解 / 不正解${wrong}問 / パス${passed}問 / 最大${maxStreak}連続`;
   document.getElementById('questionExpr').innerHTML=`
     <div style="text-align:center;line-height:1.6;">
       <div class="finish-rank ${rankClass[rank]}">RANK ${rank}</div>
       <div style="font-size:14px;margin-top:6px;color:var(--text-muted);">${rankMsg[rank]}</div>
       <div style="font-size:38px;font-weight:800;color:var(--accent);margin-top:4px;">${rate}%</div>
-      <div style="font-size:13px;color:var(--text-muted);margin-top:4px;">解答数: ${qIndex}問 　正解: ${correct}問</div>
+      <div style="font-size:13px;color:var(--text-muted);margin-top:2px;">正解${correct}問 / ${total}問中　スコア: ${score}</div>
+      <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">
+        ※ RANKは正解数と正答率の両方で決まります<br>
+        S: スコア20以上 / A: 12以上 / B: 6以上 / C: 6未満
+      </div>
     </div>`;
   document.getElementById('answerArea').innerHTML=`
     <button class="start-btn" onclick="restartGame()" style="font-size:15px;padding:12px 38px;">もう一度 🔄</button>
@@ -1212,17 +1249,15 @@ function showFinish(isTimeout=false){
 function restartGame(){
   const mr=document.getElementById('missedReview');if(mr)mr.remove();
   const rp=document.getElementById('reviewPanel');if(rp)rp.remove();
-  correct=0;wrong=0;streak=0;maxStreak=0;qIndex=0;missedQuestions=[];
+  correct=0;wrong=0;passed=0;streak=0;maxStreak=0;qIndex=0;missedQuestions=[];
   timerVal=TIME_LIMIT;
   updateStats();updateStreak();resetTimerUI();
-  // ★毎回クラス・出席番号・氏名入力画面に戻る
   document.getElementById('gameScreen').style.display='none';
   document.getElementById('startScreen').style.display='none';
   document.getElementById('nameScreen').style.display='block';
   document.getElementById('progressFill').style.width='0%';
   document.getElementById('progressLabel').textContent='0 問目';
 }
-
 function resetTimerUI(){
   document.getElementById('timerDisplay').textContent=TIME_LIMIT;
   document.getElementById('timerFill').style.width='100%';
@@ -1232,10 +1267,11 @@ function resetTimerUI(){
 
 function switchLevel(l){
   level=l;
-  document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',i+1===l));
+  document.getElementById('lvCard1').classList.toggle('active',l===1);
+  document.getElementById('lvCard2').classList.toggle('active',l===2);
   document.getElementById('levelBadge').textContent=`Level ${l}`;
   stopTimer();
-  correct=0;wrong=0;streak=0;maxStreak=0;qIndex=0;timerVal=TIME_LIMIT;
+  correct=0;wrong=0;passed=0;streak=0;maxStreak=0;qIndex=0;timerVal=TIME_LIMIT;
   updateStats();updateStreak();resetTimerUI();
   document.getElementById('gameScreen').style.display='none';
   document.getElementById('startScreen').style.display='none';
@@ -1244,35 +1280,35 @@ function switchLevel(l){
   document.getElementById('progressLabel').textContent='0 問目';
 }
 
-/* ── スタート画面 例題リスト ── */
+/* ── スタート画面 例題 ── */
 function renderQtypeList(){
   const el=document.getElementById('qtypeList');if(!el)return;el.innerHTML='';
-  const lv1examples=[
+  const lv1ex=[
     ['diff-basic','基本','\\sqrt{48}','= 4\\sqrt{3}'],
     ['diff-mid','応用','\\sqrt{245}','= 7\\sqrt{5}'],
     ['diff-hard','発展','\\sqrt{\\dfrac{3}{5}}','= \\dfrac{\\sqrt{15}}{5}'],
     ['diff-hard','発展','\\sqrt{20}\\text{ の整数部分}','= 4'],
   ];
-  const lv2examples=[
+  const lv2ex=[
     ['diff-basic','基本','\\sqrt{18}+\\sqrt{2}-\\sqrt{8}','= 2\\sqrt{2}'],
     ['diff-mid','応用','\\dfrac{6}{\\sqrt{3}}+2\\sqrt{3}','= 4\\sqrt{3}'],
     ['diff-hard','発展','(\\sqrt{7}-\\sqrt{2})^2','= 9-2\\sqrt{14}'],
     ['diff-hard','発展','\\dfrac{1}{\\sqrt{5}+2}','= \\sqrt{5}-2'],
   ];
-  const examples=level===1?lv1examples:lv2examples;
+  const examples=level===1?lv1ex:lv2ex;
   examples.forEach(([cls,label,qTex,ansTex])=>{
     const card=document.createElement('div');card.className=`qtype-item ${cls}`;
     const lbl=document.createElement('strong');lbl.textContent=label;card.appendChild(lbl);
-    const exprWrap=document.createElement('div');exprWrap.className='ex-expr';
-    try{katex.render(qTex,exprWrap,{throwOnError:false,displayMode:false});}catch(e){exprWrap.textContent=qTex;}
-    card.appendChild(exprWrap);
-    const ansWrap=document.createElement('div');ansWrap.className='ex-ans';
-    try{ansWrap.innerHTML=katex.renderToString(ansTex,{throwOnError:false,displayMode:false});}catch(e){ansWrap.textContent=ansTex;}
-    card.appendChild(ansWrap);el.appendChild(card);
+    const ew=document.createElement('div');ew.className='ex-expr';
+    try{katex.render(qTex,ew,{throwOnError:false,displayMode:false});}catch(e){ew.textContent=qTex;}
+    card.appendChild(ew);
+    const aw=document.createElement('div');aw.className='ex-ans';
+    try{aw.innerHTML=katex.renderToString(ansTex,{throwOnError:false,displayMode:false});}catch(e){aw.textContent=ansTex;}
+    card.appendChild(aw);el.appendChild(card);
   });
 }
 
-/* ══════════ ログ / localStorage ══════════ */
+/* ══ ログ / localStorage ══ */
 const LOG_PREFIX='sqrt_log_';
 const QTYPE_KEY_PREFIX='sqrt_qtype_';
 
@@ -1292,26 +1328,19 @@ function saveQtypeLog(){
   localStorage.setItem(key,JSON.stringify(stored));
   sessionQtypeLog={};
 }
-function saveLog(correct,total,usedTime,isTimeout){
+function saveLog(c,total,usedTime,isTimeout,rank,passCount){
   saveQtypeLog();if(!playerName)return;
-  const rate=Math.round(correct/total*100);
-  const rank=rate===100?'S':rate>=80?'A':rate>=60?'B':'C';
+  const rate=Math.round(c/total*100);
   const now=new Date();
   const dateStr=`${now.getMonth()+1}/${now.getDate()} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
-  const entry={date:dateStr,level,correct,total,rate,rank,usedTime,timeout:isTimeout,maxStreak};
+  const entry={date:dateStr,level,correct:c,total,rate,rank,usedTime,timeout:isTimeout,maxStreak,passed:passCount||0};
   const key=LOG_PREFIX+playerName;
   let logs=[];try{logs=JSON.parse(localStorage.getItem(key)||'[]');}catch(e){}
   logs.push(entry);if(logs.length>100)logs=logs.slice(-100);
   localStorage.setItem(key,JSON.stringify(logs));
 }
-function getLogs(){
-  if(!playerName)return[];
-  try{return JSON.parse(localStorage.getItem(LOG_PREFIX+playerName)||'[]');}catch(e){return[];}
-}
-function getQtypeLogs(){
-  if(!playerName)return{};
-  try{return JSON.parse(localStorage.getItem(QTYPE_KEY_PREFIX+playerName)||'{}');}catch(e){return{};}
-}
+function getLogs(){if(!playerName)return[];try{return JSON.parse(localStorage.getItem(LOG_PREFIX+playerName)||'[]');}catch(e){return[];}}
+function getQtypeLogs(){if(!playerName)return{};try{return JSON.parse(localStorage.getItem(QTYPE_KEY_PREFIX+playerName)||'{}');}catch(e){return{};}}
 function clearLog(){
   if(!playerName)return;
   if(!confirm('記録をすべて削除しますか？'))return;
@@ -1325,31 +1354,25 @@ function initClassSelect(){
   const sel=document.getElementById('classSelect');if(!sel)return;
   sel.innerHTML='<option value="">▼ クラスを選択</option>';
   CLASS_LIST.forEach(c=>{
-    const opt=document.createElement('option');
-    opt.value=c;opt.textContent=c;sel.appendChild(opt);
+    const opt=document.createElement('option');opt.value=c;opt.textContent=c;sel.appendChild(opt);
   });
 }
 
-/* ★ 毎回入力：saveName で入力値を記録してスタート画面へ */
+/* ★ saveName */
 function saveName(){
   const cls=document.getElementById('classSelect').value;
-  if(!cls){alert('クラスを選んでください');return;}
+  if(!cls){alert('クラスを選択してください');return;}
   const num=document.getElementById('numberInput').value.trim();
   if(!num||isNaN(num)||Number(num)<1){alert('出席番号を入力してください');return;}
   const sname=document.getElementById('nameInput').value.trim();
   if(!sname){alert('名前を入力してください');return;}
-  playerNumber=num;
-  studentName=sname;
-  playerName=cls;
-  playerClass=cls;
-  // 入力欄はクリア（次回のために空にする）
+  playerNumber=num;studentName=sname;playerName=cls;playerClass=cls;
   document.getElementById('classSelect').value='';
   document.getElementById('numberInput').value='';
   document.getElementById('nameInput').value='';
   document.getElementById('nameScreen').style.display='none';
-  // プレイヤー情報をスタート画面に表示
   const pi=document.getElementById('playerInfo');
-  if(pi) pi.textContent=`${cls}クラス ${num}番 ${sname}`;
+  if(pi)pi.textContent=`${cls}クラス ${num}番 ${sname}`;
   document.getElementById('startScreen').style.display='block';
   updateLogBtn();renderQtypeList();
 }
@@ -1359,31 +1382,40 @@ function updateLogBtn(){
   if(btn)btn.textContent=(playerName&&playerNumber&&studentName)?`📊 ${playerName}クラス ${playerNumber}番`:'📊 記録';
 }
 
-/* ── 成績送信 ── */
+/* ★ 送信：no-corsモードでCORSエラーを回避しつつGASに届ける */
 function sendResult(btn){
   if(!GAS_URL||GAS_URL.includes('ここに')){alert('GAS URLが設定されていません。');return;}
   const logs=getLogs();if(logs.length===0){alert('送信する記録がありません');return;}
   const latest=logs[logs.length-1];
   const qtypeData=getQtypeLogs();
-  const weakness=Object.entries(qtypeData).map(([type,v])=>({type,miss:v.t-v.c})).filter(w=>w.miss>0).sort((a,b)=>b.miss-a.miss).slice(0,3).map(w=>`${w.type}(${w.miss}問)`).join(',');
+  const weakness=Object.entries(qtypeData)
+    .map(([type,v])=>({type,miss:v.t-v.c}))
+    .filter(w=>w.miss>0).sort((a,b)=>b.miss-a.miss).slice(0,3)
+    .map(w=>`${w.type}(${w.miss}問)`).join(',');
   const params=new URLSearchParams({
     className:playerClass,number:playerNumber,studentName:studentName,
     level:latest.level||'',correct:latest.correct??'',total:latest.total??qIndex,
     rate:latest.rate??'',usedTime:latest.usedTime??'',rank:latest.rank||'',
-    maxStreak:latest.maxStreak||0,timeout:latest.timeout?'true':'false',weakness:weakness,
+    maxStreak:latest.maxStreak||0,passed:latest.passed||0,
+    timeout:latest.timeout?'true':'false',weakness:weakness,
   });
   const url=GAS_URL+'?'+params.toString();
   const statusEl=document.getElementById('sendStatus');
   btn.disabled=true;
   if(statusEl){statusEl.textContent='送信中…';statusEl.className='send-status wait';}
-  fetch(url).then(r=>r.text()).then(()=>{
-    if(statusEl){statusEl.textContent='✅ 送信しました！';statusEl.className='send-status ok';}
-    btn.textContent='✅ 送信済み';
-  }).catch(()=>{
-    const img=new Image();img.src=url;
-    if(statusEl){statusEl.textContent='✅ 送信しました！';statusEl.className='send-status ok';}
-    btn.textContent='✅ 送信済み';
-  });
+
+  // ★ no-cors で送信（CORSエラーが出る環境でも届く）
+  fetch(url,{method:'GET',mode:'no-cors'})
+    .then(()=>{
+      if(statusEl){statusEl.textContent='✅ 送信しました！';statusEl.className='send-status ok';}
+      btn.textContent='✅ 送信済み';
+    })
+    .catch(()=>{
+      // no-cors でも失敗した場合は img タグでフォールバック
+      const img=new Image();img.src=url;
+      if(statusEl){statusEl.textContent='✅ 送信しました！';statusEl.className='send-status ok';}
+      btn.textContent='✅ 送信済み';
+    });
 }
 
 /* ── ログ画面 ── */
@@ -1430,7 +1462,6 @@ function renderLogScreen(){
   else if(logTabState==='table'){document.getElementById('logTableArea').style.display='block';buildTable(logs);}
   else if(logTabState==='weakness'){document.getElementById('logWeaknessArea').style.display='block';renderWeakness();}
 }
-
 function drawChart(){
   const logs=getLogs();const canvas=document.getElementById('logCanvas');if(!canvas)return;
   const ctx=canvas.getContext('2d');const dpr=window.devicePixelRatio||1;
@@ -1468,8 +1499,8 @@ function drawChart(){
 }
 function buildTable(logs){
   const t=document.getElementById('logTable');const rev=[...logs].reverse();
-  t.innerHTML=`<thead><tr><th>日時</th><th>Lv</th><th>正解</th><th>問題数</th><th>率</th><th>ランク</th></tr></thead>
-  <tbody>${rev.map(e=>`<tr><td>${e.date}</td><td>${e.level}</td><td>${e.correct}</td><td>${e.total}</td><td>${e.rate}%</td><td class="rank-cell ${e.rank}">${e.rank}</td></tr>`).join('')}</tbody>`;
+  t.innerHTML=`<thead><tr><th>日時</th><th>Lv</th><th>正解</th><th>問題数</th><th>率</th><th>パス</th><th>ランク</th></tr></thead>
+  <tbody>${rev.map(e=>`<tr><td>${e.date}</td><td>${e.level}</td><td>${e.correct}</td><td>${e.total}</td><td>${e.rate}%</td><td>${e.passed||0}</td><td class="rank-cell ${e.rank}">${e.rank}</td></tr>`).join('')}</tbody>`;
 }
 function renderWeakness(){
   const data=getQtypeLogs();const area=document.getElementById('logWeaknessArea');
@@ -1492,7 +1523,6 @@ function renderWeakness(){
 /* ── 初期化 ── */
 (function init(){
   initClassSelect();
-  // ★常に名前入力画面からスタート
   document.getElementById('nameScreen').style.display='block';
   document.getElementById('startScreen').style.display='none';
 })();
