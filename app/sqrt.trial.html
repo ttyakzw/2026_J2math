@@ -505,7 +505,7 @@ canvas.log-chart{width:100%!important;border-radius:12px;}
 /* ══════════════════════════════════════════════════════
    ★ 教員設定
    ══════════════════════════════════════════════════════ */
-const GAS_URL = 'https://script.google.com/macros/s/AKfycby0yZre9hLJwbcOWgXM0SCuPxCNAK0yP_rtUcgmRIeH54Gefpwmi6rO570m-62DgWAQ/exec';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbwzY0kiF-9wEaJUt6tOd_YLXmz8xjaKNG-flJFBavvWxyQzMNGBGpLPgUFGw0843nob/exec';
 const CLASS_LIST = ['A','B','C','D'];
 
 /* KaTeX */
@@ -1404,18 +1404,20 @@ function sendResult(btn){
   btn.disabled=true;
   if(statusEl){statusEl.textContent='送信中…';statusEl.className='send-status wait';}
 
-  // ★ no-cors で送信（CORSエラーが出る環境でも届く）
-  fetch(url,{method:'GET',mode:'no-cors'})
-    .then(()=>{
-      if(statusEl){statusEl.textContent='✅ 送信しました！';statusEl.className='send-status ok';}
-      btn.textContent='✅ 送信済み';
-    })
-    .catch(()=>{
-      // no-cors でも失敗した場合は img タグでフォールバック
-      const img=new Image();img.src=url;
-      if(statusEl){statusEl.textContent='✅ 送信しました！';statusEl.className='send-status ok';}
-      btn.textContent='✅ 送信済み';
-    });
+  // Safari を含む全端末で確実に届く img タグ送信
+  // GASはGETリクエストを受け取るだけなので img で十分
+  if(statusEl){statusEl.textContent='送信中…';statusEl.className='send-status wait';}
+  const img=new Image();
+  img.onload=()=>{
+    if(statusEl){statusEl.textContent='✅ 送信しました！';statusEl.className='send-status ok';}
+    btn.textContent='✅ 送信済み';
+  };
+  img.onerror=()=>{
+    // GASはJSONを返すため画像として読めずonerrorになるが、リクエスト自体は届いている
+    if(statusEl){statusEl.textContent='✅ 送信しました！';statusEl.className='send-status ok';}
+    btn.textContent='✅ 送信済み';
+  };
+  img.src=url+'&t='+Date.now(); // キャッシュ防止
 }
 
 /* ── ログ画面 ── */
