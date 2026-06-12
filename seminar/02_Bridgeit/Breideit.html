@@ -5,489 +5,530 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ブリッジイット</title>
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap');
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: system-ui, sans-serif; background: #f5f3ee; color: #1a1a1a; min-height: 100vh; padding: 1.5rem; }
-h1 { font-size: 22px; font-weight: 500; text-align: center; margin-bottom: 4px; }
-.subtitle { font-size: 13px; color: #777; text-align: center; margin-bottom: 1.2rem; }
-#game-container { display: flex; gap: 1.5rem; align-items: flex-start; flex-wrap: wrap; justify-content: center; }
-canvas { display: block; border-radius: 12px; border: 1px solid #ddd; background: #fff; cursor: pointer; }
-#side-panel { flex: 1 1 200px; min-width: 180px; max-width: 240px; display: flex; flex-direction: column; gap: 10px; }
-.card { background: #fff; border: 1px solid #e0ddd7; border-radius: 12px; padding: 14px 16px; }
-.turn-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
-.dot { width: 13px; height: 13px; border-radius: 50%; flex-shrink: 0; }
-.dot.red { background: #c0392b; }
-.dot.blue { background: #fff; border: 2.5px solid #2471a3; }
-.turn-label { font-size: 14px; font-weight: 500; }
-#status-msg { font-size: 12px; color: #666; line-height: 1.6; }
-.score-row { display: flex; justify-content: space-between; font-size: 13px; color: #666; margin-bottom: 6px; }
+body {
+  font-family: 'Noto Sans JP', system-ui, sans-serif;
+  background: #1a1f2e;
+  color: #e8eaf0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1.2rem 1rem 2rem;
+}
+
+/* ヘッダー */
+header {
+  width: 100%;
+  max-width: 820px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+.logo { font-size: 20px; font-weight: 700; letter-spacing: .04em; color: #fff; }
+.logo span { color: #e05a3a; }
+
+/* ターン表示バー */
+#turn-bar {
+  width: 100%;
+  max-width: 820px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #242a3d;
+  border-radius: 10px;
+  padding: 10px 16px;
+  margin-bottom: 1rem;
+  border: 1px solid #2e3550;
+}
+.turn-pip { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; transition: background .25s; }
+.turn-pip.red  { background: #e05a3a; box-shadow: 0 0 8px #e05a3a88; }
+.turn-pip.blue { background: #fff; border: 2.5px solid #3a8de0; box-shadow: 0 0 8px #3a8de088; }
+#turn-text { font-size: 14px; font-weight: 500; flex: 1; }
+#turn-count { font-size: 12px; color: #7a8099; margin-left: auto; }
+
+/* メインレイアウト */
+#main {
+  width: 100%;
+  max-width: 820px;
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+canvas {
+  display: block;
+  border-radius: 12px;
+  border: 1px solid #2e3550;
+  background: #0f1219;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+/* サイドパネル */
+#side {
+  flex: 1 1 170px;
+  min-width: 160px;
+  max-width: 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.panel {
+  background: #242a3d;
+  border: 1px solid #2e3550;
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+
+.panel-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: #5a6280;
+  margin-bottom: 8px;
+}
+
+/* スコア */
+.score-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  color: #8a90a8;
+  margin-bottom: 6px;
+}
 .score-row:last-child { margin-bottom: 0; }
-.score-val { font-weight: 500; color: #1a1a1a; }
-#win-banner { display: none; background: #f0f7f0; border: 1px solid #c3e6cb; border-radius: 10px; padding: 12px 14px; text-align: center; }
-.win-text { font-size: 15px; font-weight: 500; }
-.win-sub { font-size: 12px; color: #555; margin-top: 4px; }
-button { font-family: inherit; font-size: 13px; padding: 8px 14px; border-radius: 8px; border: 1px solid #ccc; background: #fff; color: #1a1a1a; cursor: pointer; width: 100%; transition: background 0.15s; }
-button:hover { background: #f0ede8; }
-button:active { transform: scale(0.98); }
-.rule-title { font-size: 13px; font-weight: 500; margin-bottom: 6px; }
-.rule-text { font-size: 12px; color: #555; line-height: 1.7; }
-.legend { display: flex; gap: 8px; align-items: flex-start; margin-top: 8px; flex-direction: column; }
-.legend-item { display: flex; align-items: center; gap: 5px; font-size: 12px; color: #555; }
-.legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
-.legend-dot.r { background: #c0392b; }
-.legend-dot.b { background: #fff; border: 2px solid #2471a3; }
-.legend-dot.bg { background: #2471a3; }
+.score-val { font-weight: 700; font-size: 18px; color: #e8eaf0; }
+.score-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 5px; }
+.score-dot.r { background: #e05a3a; }
+.score-dot.b { background: #3a8de0; }
+
+/* 凡例 */
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  color: #8a90a8;
+  margin-bottom: 5px;
+  line-height: 1.5;
+}
+.legend-item:last-child { margin-bottom: 0; }
+.leg-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.leg-dot.r  { background: #e05a3a; }
+.leg-dot.b  { background: #0f1219; border: 2px solid #3a8de0; }
+.leg-dot.bg { background: #3a8de0; }
+
+/* ボタン */
+btn-group { display: flex; flex-direction: column; gap: 6px; }
+button {
+  font-family: inherit;
+  font-size: 13px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid #3a405a;
+  background: #1a1f2e;
+  color: #c8cad8;
+  cursor: pointer;
+  width: 100%;
+  transition: background .15s, border-color .15s;
+  margin-bottom: 6px;
+}
+button:last-child { margin-bottom: 0; }
+button:hover { background: #2e3550; border-color: #4a5070; }
+button:active { transform: scale(.98); }
+
+/* 勝利バナー */
+#win-banner {
+  display: none;
+  background: linear-gradient(135deg, #1e3a1e, #243a24);
+  border: 1px solid #3a6a3a;
+  border-radius: 10px;
+  padding: 12px 14px;
+  text-align: center;
+}
+#win-banner .win-text { font-size: 16px; font-weight: 700; color: #7cda7c; }
+#win-banner .win-sub  { font-size: 11px; color: #5a8a5a; margin-top: 4px; }
+
+/* 記録欄 */
+#record-area {
+  width: 100%;
+  max-width: 820px;
+  margin-top: .8rem;
+  background: #242a3d;
+  border: 1px solid #2e3550;
+  border-radius: 10px;
+  padding: 12px 16px;
+}
+#record-area h3 { font-size: 12px; font-weight: 700; letter-spacing: .06em; color: #5a6280; text-transform: uppercase; margin-bottom: 8px; }
+#record-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+#record-table th { color: #5a6280; font-weight: 500; text-align: left; padding: 3px 8px; font-size: 11px; border-bottom: 1px solid #2e3550; }
+#record-table td { padding: 4px 8px; color: #a0a8c0; border-bottom: 1px solid #232840; }
+#record-table tr:last-child td { border-bottom: none; }
+.rec-win-red  { color: #e05a3a; font-weight: 700; }
+.rec-win-blue { color: #3a8de0; font-weight: 700; }
+#clear-rec { font-size: 11px; padding: 4px 10px; width: auto; margin-top: 8px; }
+
+/* 考察メモ */
+#memo-area {
+  width: 100%;
+  max-width: 820px;
+  margin-top: .6rem;
+}
+#memo-area label { font-size: 12px; color: #5a6280; display: block; margin-bottom: 4px; }
+#memo-area textarea {
+  width: 100%;
+  background: #242a3d;
+  border: 1px solid #2e3550;
+  border-radius: 8px;
+  color: #c8cad8;
+  font-family: inherit;
+  font-size: 13px;
+  padding: 10px 12px;
+  resize: vertical;
+  min-height: 70px;
+  outline: none;
+}
+#memo-area textarea:focus { border-color: #4a5070; }
 </style>
 </head>
 <body>
-<h1>ブリッジイット</h1>
-<p class="subtitle">●赤は上下　○青は左右をつなぐと勝ち</p>
 
-<div id="game-container">
-  <canvas id="board-canvas" width="560" height="480"></canvas>
-  <div id="side-panel">
-    <div class="card">
-      <div class="turn-row">
-        <div class="dot red" id="turn-dot"></div>
-        <span class="turn-label" id="turn-label">赤の番</span>
-      </div>
-      <div id="status-msg">赤の●どうしの間をクリックして橋を置こう</div>
-      <div class="legend">
-        <div class="legend-item"><div class="legend-dot r"></div>赤点●（縦横どちらも可・上下ゴール）</div>
-        <div class="legend-item"><div class="legend-dot b"></div>青点○（縦横どちらも可・左右ゴール）</div>
-        <div class="legend-item"><div class="legend-dot bg"></div>青のゴール点（塗り）</div>
-      </div>
-    </div>
+<header>
+  <div class="logo">Bridge<span>-it</span></div>
+  <div style="font-size:12px;color:#5a6280;">先手：赤　後手：青</div>
+</header>
 
-    <div class="card" id="win-banner">
+<!-- ターン表示 -->
+<div id="turn-bar">
+  <div class="turn-pip red" id="turn-pip"></div>
+  <span id="turn-text">赤の番　― 赤点どうしの間をクリック（縦・横どちらも可）</span>
+  <span id="turn-count">手数：0</span>
+</div>
+
+<!-- ゲーム本体 -->
+<div id="main">
+  <canvas id="board-canvas"></canvas>
+  <div id="side">
+
+    <div class="panel" id="win-banner">
       <div class="win-text" id="win-text"></div>
-      <div class="win-sub" id="win-sub"></div>
+      <div class="win-sub"  id="win-sub"></div>
     </div>
 
-    <div class="card">
-      <div class="score-row"><span>赤の橋</span><span class="score-val" id="s-red">0</span></div>
-      <div class="score-row"><span>青の橋</span><span class="score-val" id="s-blue">0</span></div>
-    </div>
-
-    <button id="undo-btn">一手戻す ↩</button>
-    <button id="reset-btn">リセット ↺</button>
-
-    <div class="card">
-      <div class="rule-title">ルール</div>
-      <div class="rule-text">
-        ●赤は縦・横どちらにも橋を架けられる<br>
-        　→ 上下のゴールをつなぐと勝ち<br>
-        ○青は縦・横どちらにも橋を架けられる<br>
-        　→ 左右のゴール（●塗り）をつなぐと勝ち<br><br>
-        ・同じ色の隣接する点の間にのみ橋を置ける<br>
-        ・赤と青の橋が<strong>交差する場所には置けない</strong>
+    <div class="panel">
+      <div class="panel-label">スコア</div>
+      <div class="score-row">
+        <span><span class="score-dot r"></span>赤の橋</span>
+        <span class="score-val" id="s-red">0</span>
       </div>
+      <div class="score-row">
+        <span><span class="score-dot b"></span>青の橋</span>
+        <span class="score-val" id="s-blue">0</span>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-label">凡例</div>
+      <div class="legend-item"><div class="leg-dot r"></div>赤点●（縦横可・上下ゴール）</div>
+      <div class="legend-item"><div class="leg-dot b"></div>青点○（縦横可）</div>
+      <div class="legend-item"><div class="leg-dot bg"></div>青のゴール点（塗り）</div>
+    </div>
+
+    <div class="panel" style="padding:10px 14px;">
+      <button id="undo-btn">↩ 一手戻す</button>
+      <button id="reset-btn">↺ リセット</button>
+      <button id="save-btn">📝 結果を記録</button>
+    </div>
+
+    <div class="panel" style="font-size:11px;color:#5a6280;line-height:1.7;">
+      <div class="panel-label">ルール</div>
+      ●赤は縦・横どちらにも橋を架け<br>
+      　<strong style="color:#e05a3a">上下のゴール</strong>をつなぐと勝ち<br>
+      ○青は縦・横どちらにも橋を架け<br>
+      　<strong style="color:#3a8de0">左右のゴール</strong>をつなぐと勝ち<br><br>
+      赤と青の橋は<strong>交差できない</strong>
     </div>
   </div>
 </div>
 
-<script>
-/*
- * ブリッジイット 正式盤面
- *
- * 赤点: N×N  rPos(ri,ci) = (PAD + ci*2*S,  PAD + ri*2*S)    ri,ci=0..N-1
- * 青点: (N-1)×N  bPos(ri,ci) = (BPAD + ci*2*S, PAD + (ri*2+1)*S)  ri=0..N-2, ci=0..N-1
- *   ci=0      → 青の左ゴール点（塗り）
- *   ci=N-1    → 青の右ゴール点（塗り）
- *   ci=1..N-2 → 通常の青点
- *
- * 赤のX軸基準: PAD（左端の赤点）
- * 青のX軸基準: BPAD = PAD - S（赤点より1STEP左から始まる）
- *   → 青点ci=0 は x = BPAD,  ci=N-1 は x = BPAD + (N-1)*2*S
- *   → 赤点ci=0 は x = PAD  = BPAD + S
- *   → 青のゴールが赤点より左・右に突き出す
- *
- * 橋スロット:
- *   赤縦橋 RV(ri,ci): rPos(ri,ci)↔rPos(ri+1,ci)   ri=0..N-2, ci=0..N-1
- *   赤横橋 RH(ri,ci): rPos(ri,ci)↔rPos(ri,ci+1)   ri=0..N-1, ci=0..N-2
- *   青縦橋 BV(ri,ci): bPos(ri,ci)↔bPos(ri+1,ci)   ri=0..N-3, ci=0..N-1
- *   青横橋 BH(ri,ci): bPos(ri,ci)↔bPos(ri,ci+1)   ri=0..N-2, ci=0..N-2
- *
- * 交差禁止（座標計算で厳密に導出）:
- *   赤点座標: x=PAD+2ci*S,    青点座標: x=BPAD+(2ci+1)*S = PAD+2ci*S = 赤点と同じx!?
- *   → BPAD = PAD - S にすれば
- *      青点ci: x = BPAD + 2ci*S = PAD - S + 2ci*S
- *      ci=0: x=PAD-S,  ci=1: x=PAD+S,  ci=2: x=PAD+3S ...
- *      赤点ci: x=PAD+2ci*S
- *      ci=0: x=PAD,  ci=1: x=PAD+2S ...
- *   青点はx=PAD-S, PAD+S, PAD+3S,... (奇数倍のS刻み、PAD基準)
- *   赤点はx=PAD,   PAD+2S, PAD+4S,... (偶数倍のS刻み、PAD基準)
- *   → 青点と赤点はS刻みで交互に並ぶ（x方向）
- *
- *   RV(ri,ci): x=PAD+2ci*S (赤点), y∈[PAD+2ri*S, PAD+(2ri+2)*S]
- *   BH(ri,ci): y=PAD+(2ri+1)*S (青点行), x∈[BPAD+(2ci+1)*S, BPAD+(2ci+3)*S]
- *            = x∈[PAD+2ci*S, PAD+(2ci+2)*S]
- *   交差: RV x=PAD+2ci*S ∈ (PAD+2ci*S, PAD+(2ci+2)*S) → 端点 → 交差しない!
- *
- *   別の交差を探す:
- *   RH(ri,ci): y=PAD+2ri*S, x∈[PAD+2ci*S, PAD+(2ci+2)*S]
- *   BV(ri,ci): x=BPAD+(2ci+1)*S=PAD+2ci*S, y∈[PAD+(2ri+1)*S, PAD+(2ri+3)*S]
- *   交差: BV x=PAD+2ci*S ∈ (PAD+2ci*S, PAD+(2ci+2)*S) → 端点 → 交差しない!
- *
- *   → この配置では赤橋と青橋が「端点で接する」のみで交差しない？
- *   → 青点を赤点からSTEPずらすのではなく、STEPの半分ずらすべき
- *
- * 正しい配置（STEP単位の格子座標）:
- *   赤点ci: gc = ci*2         (0, 2, 4, 6, 8, 10)  N=6
- *   青点ci: gc = ci*2 + 1     (-1?, 1, 3, 5, 7, 9, 11?)  N=6, ci=0..N-1
- *   青点ci=0 → gc=-1（盤外左）, ci=N-1 → gc=2N-1（盤外右）
- *
- *   この配置で:
- *   RV(ri,ci): gc=2ci,  gr∈[2ri, 2ri+2]  → 線分 x=2ci, y∈[2ri,2ri+2]
- *   BH(ri,ci): gr=2ri+1, gc∈[2ci-1, 2ci+1]  → 線分 y=2ri+1, x∈[2ci-1,2ci+1]
- *   交差: x=2ci ∈ (2ci-1, 2ci+1) ✓, y=2ri+1 ∈ (2ri, 2ri+2) ✓
- *   → RV(ri,ci) ↔ BH(ri, ci) が交差  ← ci が同じ！
- *
- *   RH(ri,ci): gr=2ri, gc∈[2ci, 2ci+2]
- *   BV(ri,ci): gc=2ci+1, gr∈[2ri-1, 2ri+1]  (青点 bPos(ri,ci).gr = 2ri+1... いや)
- *   青点 bPos(ri,ci): gr=2ri+1
- *   BV(ri,ci)=bPos(ri,ci)↔bPos(ri+1,ci): gr∈[2ri+1, 2ri+3]
- *   RH(ri,ci): gr=2ri, gc∈[2ci, 2ci+2]
- *   交差: gc=2ci+1 ∈ (2ci, 2ci+2) ✓, gr=2ri ∈ (2ri+1, 2ri+3)? → 2ri < 2ri+1 → ✗
- *
- *   RH(ri+1,ci): gr=2ri+2, gc∈[2ci, 2ci+2]
- *   BV(ri,ci): gc=2ci+1, gr∈[2ri+1, 2ri+3]
- *   交差: gc=2ci+1 ∈ (2ci, 2ci+2) ✓, gr=2ri+2 ∈ (2ri+1, 2ri+3) ✓
- *   → RH(ri+1,ci) ↔ BV(ri,ci) つまり RH(ri,ci) ↔ BV(ri-1,ci) (ri≥1)
- *
- * まとめ（青点ci=0..N-1, 青ゴールはci=0とci=N-1）:
- *   RV(ri,ci) ↔ BH(ri,ci)    が交差 (ri=0..N-2, ci=0..N-2)
- *   RH(ri,ci) ↔ BV(ri-1,ci)  が交差 (ri=1..N-1, ci=0..N-1)
- */
+<!-- 対戦記録 -->
+<div id="record-area">
+  <h3>対戦記録</h3>
+  <table id="record-table">
+    <thead><tr><th>#</th><th>勝者</th><th>手数</th><th>メモ</th></tr></thead>
+    <tbody id="record-body">
+      <tr><td colspan="4" style="color:#3a405a;font-size:12px;">まだ記録がありません</td></tr>
+    </tbody>
+  </table>
+  <button id="clear-rec">記録をクリア</button>
+</div>
 
+<!-- 考察メモ -->
+<div id="memo-area">
+  <label>📝 気づいたこと・作戦メモ（自由に書こう）</label>
+  <textarea id="memo" placeholder="例：相手のゴール付近に先回りすると強い　／　先手が有利かも？"></textarea>
+</div>
+
+<script>
+// ======================================================
+// ブリッジイット ゲームエンジン（生徒版）
+// ======================================================
 const N = 6;
-const CSIZE = 560;
-const RSIZE = 480;
-const PAD = 60;       // 赤点の左端マージン（青ゴール点のスペース確保）
-const S = (RSIZE - PAD * 2) / ((N - 1) * 2); // 1格子分のSTEP
+const CSIZE = 540;
+const RSIZE = 460;
+const PAD = 58;
+const YPAD = 36;
+const S = (RSIZE - YPAD * 2 - 40) / ((N - 1) * 2);
 
 const canvas = document.getElementById('board-canvas');
-canvas.width = CSIZE;
+canvas.width  = CSIZE;
 canvas.height = RSIZE;
 const ctx = canvas.getContext('2d');
 
-// 赤点 ri=0..N-1, ci=0..N-1
-// gc=ci*2 → x = PAD + ci*2*S
-// gr=ri*2 → y = PAD + ri*2*S  (ただしPADはy方向の余白)
-const YPAD = 40; // y方向の余白
-
-function rPos(ri, ci) {
-  return {
-    x: PAD + ci * 2 * S,
-    y: YPAD + ri * 2 * S
-  };
-}
-
-// 青点 ri=0..N-2, ci=0..N（N+1列）
-// ci=0: 左ゴール, ci=N: 右ゴール, ci=1..N-1: 通常点
-function bPos(ri, ci) {
-  return {
-    x: PAD + (2 * ci - 1) * S,
-    y: YPAD + (2 * ri + 1) * S
-  };
-}
-
-// 青ゴール点: ci=0（左端）, ci=N（右端）
+function rPos(ri, ci) { return { x: PAD + ci*2*S, y: YPAD + ri*2*S }; }
+function bPos(ri, ci) { return { x: PAD + (2*ci-1)*S, y: YPAD + (2*ri+1)*S }; }
 function isBlueGoal(ci) { return ci === 0 || ci === N; }
 
-const RV = (ri, ci) => `RV:${ri},${ci}`;
-const RH = (ri, ci) => `RH:${ri},${ci}`;
-const BV = (ri, ci) => `BV:${ri},${ci}`;
-const BH = (ri, ci) => `BH:${ri},${ci}`;
+const RV = (ri,ci)=>`RV:${ri},${ci}`;
+const RH = (ri,ci)=>`RH:${ri},${ci}`;
+const BV = (ri,ci)=>`BV:${ri},${ci}`;
+const BH = (ri,ci)=>`BH:${ri},${ci}`;
 
-let turn = 'red';
-let bridges = {};
-let moveHistory = [];
-let gameOver = false;
-let hoverEdge = null;
+let turn='red', bridges={}, moveHistory=[], gameOver=false, hoverEdge=null, moveCount=0;
 
-// 交差チェック
-// RV(ri,ci) ↔ BH(ri,ci): ciが同じ
-function rvBlocked(ri, ci) { return !!bridges[BH(ri, ci)]; }
-// RH(ri,ci) ↔ BV(ri-1,ci)
-function rhBlocked(ri, ci) { return ri >= 1 && !!bridges[BV(ri - 1, ci)]; }
-// BH(ri,ci) ↔ RV(ri,ci): ciが同じ
-function bhBlocked(ri, ci) { return !!bridges[RV(ri, ci)]; }
-// BV(ri,ci) ↔ RH(ri+1,ci)
-function bvBlocked(ri, ci) { return ri + 1 <= N - 1 && !!bridges[RH(ri + 1, ci)]; }
+function rvBlocked(ri,ci){ return !!bridges[BH(ri,ci)]; }
+function rhBlocked(ri,ci){ return ri>=1 && !!bridges[BV(ri-1,ci)]; }
+function bhBlocked(ri,ci){ return !!bridges[RV(ri,ci)]; }
+function bvBlocked(ri,ci){ return ri+1<=N-1 && !!bridges[RH(ri+1,ci)]; }
 
 // ---- 描画 ----
-
 function draw() {
-  ctx.clearRect(0, 0, CSIZE, RSIZE);
-  ctx.fillStyle = '#ffffff';
-  ctx.fillRect(0, 0, CSIZE, RSIZE);
-  drawGoalZones();
-  drawBridges();
-  drawHoverEdge();
-  drawDots();
-  drawGoalLabels();
+  ctx.clearRect(0,0,CSIZE,RSIZE);
+  ctx.fillStyle='#0f1219'; ctx.fillRect(0,0,CSIZE,RSIZE);
+  drawGoalZones(); drawBridges(); drawHoverEdge(); drawDots(); drawGoalLabels();
 }
 
 function drawGoalZones() {
-  // 赤ゴール帯（上下）
-  const tl = rPos(0, 0), tr = rPos(0, N - 1), bl = rPos(N - 1, 0);
-  const w = tr.x - tl.x;
-  ctx.fillStyle = 'rgba(192,57,43,0.12)';
-  ctx.fillRect(tl.x - 8, tl.y - 22, w + 16, 22);
-  ctx.fillRect(bl.x - 8, bl.y, w + 16, 22);
-
-  // 青ゴール帯（左右）: ci=0とci=Nの列
-  const bTL = bPos(0, 0), bBL = bPos(N - 2, 0);
-  const bTR = bPos(0, N), bBR = bPos(N - 2, N);
-  const hL = bBL.y - bTL.y;
-  const hR = bBR.y - bTR.y;
-  ctx.fillStyle = 'rgba(36,113,163,0.12)';
-  ctx.fillRect(bTL.x - 16, bTL.y - 8, 16, hL + 16);
-  ctx.fillRect(bTR.x, bTR.y - 8, 16, hR + 16);
+  const tl=rPos(0,0),tr=rPos(0,N-1),bl=rPos(N-1,0);
+  const w=tr.x-tl.x;
+  ctx.fillStyle='rgba(224,90,58,0.10)';
+  ctx.fillRect(tl.x-8,tl.y-20,w+16,20);
+  ctx.fillRect(bl.x-8,bl.y,w+16,20);
+  const bTL=bPos(0,0),bBL=bPos(N-2,0),bTR=bPos(0,N),bBR=bPos(N-2,N);
+  const hL=bBL.y-bTL.y, hR=bBR.y-bTR.y;
+  ctx.fillStyle='rgba(58,141,224,0.10)';
+  ctx.fillRect(bTL.x-14,bTL.y-8,14,hL+16);
+  ctx.fillRect(bTR.x,bTR.y-8,14,hR+16);
 }
 
 function drawGoalLabels() {
-  ctx.font = '10px system-ui, sans-serif';
-  ctx.textAlign = 'center';
-  const tl = rPos(0, 0), tr = rPos(0, N - 1), bl = rPos(N - 1, 0);
-  ctx.fillStyle = '#c0392b';
-  ctx.fillText('● 赤ゴール', (tl.x + tr.x) / 2, tl.y - 10);
-  ctx.fillText('● 赤ゴール', (tl.x + tr.x) / 2, bl.y + 26);
-
-  const bTL = bPos(0, 0), bBL = bPos(N - 2, 0);
-  const bTR = bPos(0, N), bBR = bPos(N - 2, N);
-  const midYL = (bTL.y + bBL.y) / 2;
-  const midYR = (bTR.y + bBR.y) / 2;
-  ctx.fillStyle = '#2471a3';
-  ctx.save(); ctx.translate(bTL.x - 10, midYL); ctx.rotate(-Math.PI / 2);
-  ctx.fillText('○ 青ゴール', 0, 0); ctx.restore();
-  ctx.save(); ctx.translate(bTR.x + 10, midYR); ctx.rotate(Math.PI / 2);
-  ctx.fillText('○ 青ゴール', 0, 0); ctx.restore();
+  ctx.font='10px system-ui,sans-serif'; ctx.textAlign='center';
+  const tl=rPos(0,0),tr=rPos(0,N-1),bl=rPos(N-1,0);
+  ctx.fillStyle='#e05a3a';
+  ctx.fillText('● 赤ゴール',(tl.x+tr.x)/2,tl.y-8);
+  ctx.fillText('● 赤ゴール',(tl.x+tr.x)/2,bl.y+26);
+  const bTL=bPos(0,0),bBL=bPos(N-2,0),bTR=bPos(0,N),bBR=bPos(N-2,N);
+  const mL=(bTL.y+bBL.y)/2, mR=(bTR.y+bBR.y)/2;
+  ctx.fillStyle='#3a8de0';
+  ctx.save();ctx.translate(bTL.x-10,mL);ctx.rotate(-Math.PI/2);ctx.fillText('○ 青ゴール',0,0);ctx.restore();
+  ctx.save();ctx.translate(bTR.x+10,mR);ctx.rotate(Math.PI/2);ctx.fillText('○ 青ゴール',0,0);ctx.restore();
 }
 
 function drawBridges() {
-  for (const key in bridges) {
-    const color = bridges[key];
-    const [type, coords] = key.split(':');
-    const [ri, ci] = coords.split(',').map(Number);
-    let p1, p2;
-    if      (type === 'RV') { p1 = rPos(ri, ci); p2 = rPos(ri + 1, ci); }
-    else if (type === 'RH') { p1 = rPos(ri, ci); p2 = rPos(ri, ci + 1); }
-    else if (type === 'BV') { p1 = bPos(ri, ci); p2 = bPos(ri + 1, ci); }
-    else                    { p1 = bPos(ri, ci); p2 = bPos(ri, ci + 1); }
-
-    ctx.strokeStyle = color === 'red' ? '#c0392b' : '#2471a3';
-    ctx.lineWidth = 6; ctx.lineCap = 'round';
-    ctx.beginPath(); ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y); ctx.stroke();
-    ctx.strokeStyle = 'rgba(255,255,255,0.35)'; ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y); ctx.stroke();
+  for(const key in bridges){
+    const color=bridges[key];
+    const [type,coords]=key.split(':');
+    const [ri,ci]=coords.split(',').map(Number);
+    let p1,p2;
+    if(type==='RV'){p1=rPos(ri,ci);p2=rPos(ri+1,ci);}
+    else if(type==='RH'){p1=rPos(ri,ci);p2=rPos(ri,ci+1);}
+    else if(type==='BV'){p1=bPos(ri,ci);p2=bPos(ri+1,ci);}
+    else{p1=bPos(ri,ci);p2=bPos(ri,ci+1);}
+    ctx.strokeStyle=color==='red'?'#e05a3a':'#3a8de0';
+    ctx.lineWidth=6;ctx.lineCap='round';
+    ctx.beginPath();ctx.moveTo(p1.x,p1.y);ctx.lineTo(p2.x,p2.y);ctx.stroke();
+    ctx.strokeStyle='rgba(255,255,255,0.18)';ctx.lineWidth=2;
+    ctx.beginPath();ctx.moveTo(p1.x,p1.y);ctx.lineTo(p2.x,p2.y);ctx.stroke();
   }
 }
 
 function drawHoverEdge() {
-  if (!hoverEdge || gameOver) return;
-  const { p1, p2 } = hoverEdge;
-  ctx.strokeStyle = turn === 'red' ? 'rgba(192,57,43,0.38)' : 'rgba(36,113,163,0.38)';
-  ctx.lineWidth = 6; ctx.lineCap = 'round';
-  ctx.setLineDash([5, 4]);
-  ctx.beginPath(); ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y); ctx.stroke();
+  if(!hoverEdge||gameOver)return;
+  const{p1,p2}=hoverEdge;
+  ctx.strokeStyle=turn==='red'?'rgba(224,90,58,0.45)':'rgba(58,141,224,0.45)';
+  ctx.lineWidth=6;ctx.lineCap='round';ctx.setLineDash([5,4]);
+  ctx.beginPath();ctx.moveTo(p1.x,p1.y);ctx.lineTo(p2.x,p2.y);ctx.stroke();
   ctx.setLineDash([]);
 }
 
 function drawDots() {
-  // 赤点● N×N
-  for (let ri = 0; ri < N; ri++) {
-    for (let ci = 0; ci < N; ci++) {
-      const p = rPos(ri, ci);
-      ctx.fillStyle = '#c0392b';
-      ctx.beginPath(); ctx.arc(p.x, p.y, 6, 0, Math.PI * 2); ctx.fill();
-    }
+  for(let ri=0;ri<N;ri++)for(let ci=0;ci<N;ci++){
+    const p=rPos(ri,ci);
+    ctx.fillStyle='#e05a3a';
+    ctx.beginPath();ctx.arc(p.x,p.y,6,0,Math.PI*2);ctx.fill();
   }
-  // 青点○ (N-1)×(N+1)
-  for (let ri = 0; ri < N - 1; ri++) {
-    for (let ci = 0; ci <= N; ci++) {
-      const p = bPos(ri, ci);
-      const goal = isBlueGoal(ci);
-      if (goal) {
-        // ゴール点：塗り
-        ctx.fillStyle = '#2471a3';
-        ctx.beginPath(); ctx.arc(p.x, p.y, 6, 0, Math.PI * 2); ctx.fill();
-      } else {
-        // 通常青点：白抜き
-        ctx.fillStyle = '#ffffff';
-        ctx.strokeStyle = '#2471a3';
-        ctx.lineWidth = 2.5;
-        ctx.beginPath(); ctx.arc(p.x, p.y, 5.5, 0, Math.PI * 2);
-        ctx.fill(); ctx.stroke();
-      }
+  for(let ri=0;ri<N-1;ri++)for(let ci=0;ci<=N;ci++){
+    const p=bPos(ri,ci);
+    if(isBlueGoal(ci)){
+      ctx.fillStyle='#3a8de0';
+      ctx.beginPath();ctx.arc(p.x,p.y,6,0,Math.PI*2);ctx.fill();
+    } else {
+      ctx.fillStyle='#0f1219';ctx.strokeStyle='#3a8de0';ctx.lineWidth=2.5;
+      ctx.beginPath();ctx.arc(p.x,p.y,5.5,0,Math.PI*2);ctx.fill();ctx.stroke();
     }
   }
 }
 
 // ---- 入力 ----
-
-function nearMid(mx, my, p1, p2, thr) {
-  const cx = (p1.x + p2.x) / 2, cy = (p1.y + p2.y) / 2;
-  return Math.hypot(mx - cx, my - cy) < thr;
+function nearMid(mx,my,p1,p2,thr){
+  const cx=(p1.x+p2.x)/2,cy=(p1.y+p2.y)/2;
+  return Math.hypot(mx-cx,my-cy)<thr;
 }
 
-function getEdgeAt(mx, my) {
-  const thr = S * 0.55;
-
-  if (turn === 'red') {
-    // 赤縦橋 RV: ri=0..N-2, ci=0..N-1
-    for (let ri = 0; ri < N - 1; ri++)
-      for (let ci = 0; ci < N; ci++) {
-        const key = RV(ri, ci);
-        if (bridges[key] || rvBlocked(ri, ci)) continue;
-        const p1 = rPos(ri, ci), p2 = rPos(ri + 1, ci);
-        if (nearMid(mx, my, p1, p2, thr)) return { key, p1, p2 };
-      }
-    // 赤横橋 RH: ri=0..N-1, ci=0..N-2
-    for (let ri = 0; ri < N; ri++)
-      for (let ci = 0; ci < N - 1; ci++) {
-        const key = RH(ri, ci);
-        if (bridges[key] || rhBlocked(ri, ci)) continue;
-        const p1 = rPos(ri, ci), p2 = rPos(ri, ci + 1);
-        if (nearMid(mx, my, p1, p2, thr)) return { key, p1, p2 };
-      }
+function getEdgeAt(mx,my){
+  const thr=S*0.55;
+  if(turn==='red'){
+    for(let ri=0;ri<N-1;ri++)for(let ci=0;ci<N;ci++){
+      const key=RV(ri,ci);if(bridges[key]||rvBlocked(ri,ci))continue;
+      const p1=rPos(ri,ci),p2=rPos(ri+1,ci);if(nearMid(mx,my,p1,p2,thr))return{key,p1,p2};
+    }
+    for(let ri=0;ri<N;ri++)for(let ci=0;ci<N-1;ci++){
+      const key=RH(ri,ci);if(bridges[key]||rhBlocked(ri,ci))continue;
+      const p1=rPos(ri,ci),p2=rPos(ri,ci+1);if(nearMid(mx,my,p1,p2,thr))return{key,p1,p2};
+    }
   } else {
-    // 青縦橋 BV: ri=0..N-3, ci=0..N
-    for (let ri = 0; ri < N - 2; ri++)
-      for (let ci = 0; ci <= N; ci++) {
-        const key = BV(ri, ci);
-        if (bridges[key] || bvBlocked(ri, ci)) continue;
-        const p1 = bPos(ri, ci), p2 = bPos(ri + 1, ci);
-        if (nearMid(mx, my, p1, p2, thr)) return { key, p1, p2 };
-      }
-    // 青横橋 BH: ri=0..N-2, ci=0..N-1
-    for (let ri = 0; ri < N - 1; ri++)
-      for (let ci = 0; ci < N; ci++) {
-        const key = BH(ri, ci);
-        if (bridges[key] || bhBlocked(ri, ci)) continue;
-        const p1 = bPos(ri, ci), p2 = bPos(ri, ci + 1);
-        if (nearMid(mx, my, p1, p2, thr)) return { key, p1, p2 };
-      }
+    for(let ri=0;ri<N-2;ri++)for(let ci=0;ci<=N;ci++){
+      const key=BV(ri,ci);if(bridges[key]||bvBlocked(ri,ci))continue;
+      const p1=bPos(ri,ci),p2=bPos(ri+1,ci);if(nearMid(mx,my,p1,p2,thr))return{key,p1,p2};
+    }
+    for(let ri=0;ri<N-1;ri++)for(let ci=0;ci<N;ci++){
+      const key=BH(ri,ci);if(bridges[key]||bhBlocked(ri,ci))continue;
+      const p1=bPos(ri,ci),p2=bPos(ri,ci+1);if(nearMid(mx,my,p1,p2,thr))return{key,p1,p2};
+    }
   }
   return null;
 }
 
-canvas.addEventListener('mousemove', e => {
-  const rect = canvas.getBoundingClientRect();
-  const sx = CSIZE / rect.width, sy = RSIZE / rect.height;
-  hoverEdge = getEdgeAt((e.clientX - rect.left) * sx, (e.clientY - rect.top) * sy);
-  canvas.style.cursor = hoverEdge ? 'pointer' : 'default';
-  draw();
+canvas.addEventListener('mousemove',e=>{
+  const rect=canvas.getBoundingClientRect();
+  const sx=CSIZE/rect.width,sy=RSIZE/rect.height;
+  hoverEdge=getEdgeAt((e.clientX-rect.left)*sx,(e.clientY-rect.top)*sy);
+  canvas.style.cursor=hoverEdge?'pointer':'default';draw();
 });
-canvas.addEventListener('mouseleave', () => { hoverEdge = null; draw(); });
-canvas.addEventListener('click', e => {
-  if (gameOver) return;
-  const rect = canvas.getBoundingClientRect();
-  const sx = CSIZE / rect.width, sy = RSIZE / rect.height;
-  const edge = getEdgeAt((e.clientX - rect.left) * sx, (e.clientY - rect.top) * sy);
-  if (!edge) return;
-  bridges[edge.key] = turn;
-  moveHistory.push({ key: edge.key, color: turn });
-  hoverEdge = null;
+canvas.addEventListener('mouseleave',()=>{hoverEdge=null;draw();});
+canvas.addEventListener('click',e=>{
+  if(gameOver)return;
+  const rect=canvas.getBoundingClientRect();
+  const sx=CSIZE/rect.width,sy=RSIZE/rect.height;
+  const edge=getEdgeAt((e.clientX-rect.left)*sx,(e.clientY-rect.top)*sy);
+  if(!edge)return;
+  bridges[edge.key]=turn;
+  moveHistory.push({key:edge.key,color:turn});
+  hoverEdge=null; moveCount++;
   updateScores();
-  if (checkWin(turn)) { gameOver = true; showWin(turn); draw(); return; }
-  turn = turn === 'red' ? 'blue' : 'red';
-  updateTurnUI(); draw();
+  if(checkWin(turn)){gameOver=true;showWin(turn);draw();return;}
+  turn=turn==='red'?'blue':'red';
+  updateTurnUI();draw();
 });
 
-// ---- UI 更新 ----
-
-function updateTurnUI() {
-  document.getElementById('turn-dot').className = 'dot ' + turn;
-  document.getElementById('turn-label').textContent = turn === 'red' ? '赤の番' : '青の番';
-  document.getElementById('status-msg').textContent = turn === 'red'
-    ? '赤の●どうしの間をクリック（縦・横どちらも可）'
-    : '青の○どうしの間をクリック（縦・横どちらも可）';
+function updateTurnUI(){
+  const pip=document.getElementById('turn-pip');
+  pip.className='turn-pip '+turn;
+  document.getElementById('turn-text').textContent=turn==='red'
+    ?'赤の番　― 赤点どうしの間をクリック（縦・横どちらも可）'
+    :'青の番　― 青点どうしの間をクリック（縦・横どちらも可）';
+  document.getElementById('turn-count').textContent='手数：'+moveCount;
 }
 
-function updateScores() {
-  let r = 0, b = 0;
-  for (const k in bridges) { if (bridges[k] === 'red') r++; else b++; }
-  document.getElementById('s-red').textContent = r;
-  document.getElementById('s-blue').textContent = b;
+function updateScores(){
+  let r=0,b=0;for(const k in bridges){if(bridges[k]==='red')r++;else b++;}
+  document.getElementById('s-red').textContent=r;
+  document.getElementById('s-blue').textContent=b;
+  document.getElementById('turn-count').textContent='手数：'+moveCount;
 }
 
-// ---- 勝利判定 (BFS) ----
-
-function checkWin(player) {
-  if (player === 'red') {
-    // 赤: ri=0 の全赤点 → ri=N-1 の全赤点
-    const visited = new Set();
-    const queue = [];
-    for (let ci = 0; ci < N; ci++) {
-      const k = `${0},${ci}`;
-      visited.add(k); queue.push([0, ci]);
-    }
-    while (queue.length) {
-      const [ri, ci] = queue.shift();
-      if (ri === N - 1) return true;
-      pushR(queue, visited, ri + 1, ci, bridges[RV(ri,   ci)] === 'red');
-      pushR(queue, visited, ri - 1, ci, ri > 0 && bridges[RV(ri - 1, ci)] === 'red');
-      pushR(queue, visited, ri, ci + 1, ci < N-1 && bridges[RH(ri, ci)] === 'red');
-      pushR(queue, visited, ri, ci - 1, ci > 0 && bridges[RH(ri, ci - 1)] === 'red');
-    }
-    return false;
+// ---- 勝利判定 ----
+function checkWin(player){
+  if(player==='red'){
+    const visited=new Set(),queue=[];
+    for(let ci=0;ci<N;ci++){const k=`0,${ci}`;visited.add(k);queue.push([0,ci]);}
+    while(queue.length){
+      const[ri,ci]=queue.shift();if(ri===N-1)return true;
+      pR(queue,visited,ri+1,ci,bridges[RV(ri,ci)]==='red');
+      pR(queue,visited,ri-1,ci,ri>0&&bridges[RV(ri-1,ci)]==='red');
+      pR(queue,visited,ri,ci+1,ci<N-1&&bridges[RH(ri,ci)]==='red');
+      pR(queue,visited,ri,ci-1,ci>0&&bridges[RH(ri,ci-1)]==='red');
+    }return false;
   } else {
-    // 青: ci=0 の全青点 → ci=N の全青点
-    const visited = new Set();
-    const queue = [];
-    for (let ri = 0; ri < N - 1; ri++) {
-      const k = `${ri},${0}`;
-      visited.add(k); queue.push([ri, 0]);
-    }
-    while (queue.length) {
-      const [ri, ci] = queue.shift();
-      if (ci === N) return true;
-      pushB(queue, visited, ri, ci + 1, ci < N   && bridges[BH(ri, ci)] === 'blue');
-      pushB(queue, visited, ri, ci - 1, ci > 0   && bridges[BH(ri, ci - 1)] === 'blue');
-      pushB(queue, visited, ri + 1, ci, ri < N-2 && bridges[BV(ri, ci)] === 'blue');
-      pushB(queue, visited, ri - 1, ci, ri > 0   && bridges[BV(ri - 1, ci)] === 'blue');
-    }
-    return false;
+    const visited=new Set(),queue=[];
+    for(let ri=0;ri<N-1;ri++){const k=`${ri},0`;visited.add(k);queue.push([ri,0]);}
+    while(queue.length){
+      const[ri,ci]=queue.shift();if(ci===N)return true;
+      pB(queue,visited,ri,ci+1,ci<N&&bridges[BH(ri,ci)]==='blue');
+      pB(queue,visited,ri,ci-1,ci>0&&bridges[BH(ri,ci-1)]==='blue');
+      pB(queue,visited,ri+1,ci,ri<N-2&&bridges[BV(ri,ci)]==='blue');
+      pB(queue,visited,ri-1,ci,ri>0&&bridges[BV(ri-1,ci)]==='blue');
+    }return false;
   }
 }
+function pR(q,v,ri,ci,c){if(!c||ri<0||ri>=N||ci<0||ci>=N)return;const k=`${ri},${ci}`;if(!v.has(k)){v.add(k);q.push([ri,ci]);}}
+function pB(q,v,ri,ci,c){if(!c||ri<0||ri>=N-1||ci<0||ci>N)return;const k=`${ri},${ci}`;if(!v.has(k)){v.add(k);q.push([ri,ci]);}}
 
-function pushR(queue, visited, ri, ci, cond) {
-  if (!cond || ri < 0 || ri >= N || ci < 0 || ci >= N) return;
-  const k = `${ri},${ci}`;
-  if (!visited.has(k)) { visited.add(k); queue.push([ri, ci]); }
+function showWin(player){
+  const banner=document.getElementById('win-banner');
+  banner.style.display='';
+  document.getElementById('win-text').textContent=player==='red'?'🔴 赤の勝ち！':'🔵 青の勝ち！';
+  document.getElementById('win-sub').textContent=player==='red'?'上下ゴールを完成！':'左右ゴールを完成！';
+  document.getElementById('turn-text').textContent='ゲーム終了！記録して再戦しよう。';
 }
 
-function pushB(queue, visited, ri, ci, cond) {
-  if (!cond || ri < 0 || ri >= N - 1 || ci < 0 || ci > N) return;
-  const k = `${ri},${ci}`;
-  if (!visited.has(k)) { visited.add(k); queue.push([ri, ci]); }
-}
-
-function showWin(player) {
-  document.getElementById('win-banner').style.display = '';
-  document.getElementById('win-text').textContent = player === 'red' ? '●赤の勝ち！' : '○青の勝ち！';
-  document.getElementById('win-sub').textContent = player === 'red'
-    ? '上下のゴールをつなぐルートが完成！'
-    : '左右のゴールをつなぐルートが完成！';
-  document.getElementById('status-msg').textContent = 'ゲーム終了！リセットして再戦しよう。';
-}
-
-// ---- ボタン ----
-
-document.getElementById('reset-btn').addEventListener('click', () => {
-  bridges = {}; moveHistory = []; turn = 'red'; gameOver = false; hoverEdge = null;
-  document.getElementById('win-banner').style.display = 'none';
-  updateScores(); updateTurnUI(); draw();
+// ---- 記録機能 ----
+let records=[];
+document.getElementById('save-btn').addEventListener('click',()=>{
+  if(!gameOver){alert('ゲームが終わっていません！');return;}
+  const winner=document.getElementById('win-text').textContent;
+  const memo=document.getElementById('memo').value;
+  records.push({n:records.length+1, winner, moves:moveCount, memo});
+  renderRecords();
+  resetGame();
 });
 
-document.getElementById('undo-btn').addEventListener('click', () => {
-  if (!moveHistory.length || gameOver) return;
-  const last = moveHistory.pop();
-  delete bridges[last.key];
-  turn = last.color; gameOver = false; hoverEdge = null;
-  document.getElementById('win-banner').style.display = 'none';
-  updateScores(); updateTurnUI(); draw();
+function renderRecords(){
+  const tbody=document.getElementById('record-body');
+  if(records.length===0){tbody.innerHTML='<tr><td colspan="4" style="color:#3a405a;font-size:12px;">まだ記録がありません</td></tr>';return;}
+  tbody.innerHTML=records.map(r=>{
+    const cls=r.winner.includes('赤')?'rec-win-red':'rec-win-blue';
+    const m=r.memo?r.memo.slice(0,20)+(r.memo.length>20?'…':''):'-';
+    return `<tr><td>${r.n}</td><td class="${cls}">${r.winner}</td><td>${r.moves}</td><td title="${r.memo}">${m}</td></tr>`;
+  }).join('');
+}
+
+document.getElementById('clear-rec').addEventListener('click',()=>{
+  if(confirm('記録をすべて消しますか？')){records=[];renderRecords();}
+});
+
+function resetGame(){
+  bridges={};moveHistory=[];turn='red';gameOver=false;hoverEdge=null;moveCount=0;
+  document.getElementById('win-banner').style.display='none';
+  document.getElementById('memo').value='';
+  updateScores();updateTurnUI();draw();
+}
+
+document.getElementById('reset-btn').addEventListener('click',resetGame);
+document.getElementById('undo-btn').addEventListener('click',()=>{
+  if(!moveHistory.length||gameOver)return;
+  const last=moveHistory.pop();delete bridges[last.key];
+  turn=last.color;gameOver=false;hoverEdge=null;moveCount=Math.max(0,moveCount-1);
+  document.getElementById('win-banner').style.display='none';
+  updateScores();updateTurnUI();draw();
 });
 
 draw();
