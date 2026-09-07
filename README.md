@@ -2,6 +2,7 @@
 ### 中学数学
 - [因数分解トライアル](https://ttyakzw.github.io/2026_J2math/factorization_game)
 - [平方根トライアル](https://ttyakzw.github.io/2026_J2math/app/sqrt.trial)
+- [2次方程式トライアル](https://ttyakzw.github.io/2026_J2math/app/quadratic%20timetrial.html)
 ### 基礎ゼミ
 - [Wythoff](https://ttyakzw.github.io/2026_J2math/seminar/01_Wythoff/Wythoff_game.html)
 - [Bridgeit](https://ttyakzw.github.io/2026_J2math/seminar/02_Bridgeit/Breideit.html)
