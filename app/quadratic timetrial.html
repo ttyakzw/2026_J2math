@@ -1,0 +1,979 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>二次方程式タイムトライアル</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<style>
+  html{ font-size:16px; }
+  /* 数式(KaTeX)のフォントを、専用の数式書体ではなくアプリ本体と同じ書体・立体に統一する */
+  .katex, .katex *{ font-family:'Noto Sans JP','Zen Maru Gothic',sans-serif !important; font-style:normal !important; }
+  :root{
+    --bg:#f4f6fb; --bg-soft:#e8ebf6; --card:#ffffff; --line:#c9cee6;
+    --text:#171a33; --dim:#4d5278;
+    --factor:#00875f; --factor-dim:#d8f3ea;
+    --sqrt:#0072b2; --sqrt-dim:#dcedfa;
+    --formula:#a8690a; --formula-dim:#fbe9cf;
+    /* 正誤の表現は「緑・赤」ではなく「青・朱色」に統一（Okabe-Ito配色：色覚のタイプによらず区別しやすい）
+       また色だけに頼らず、必ず記号や文言も併記する */
+    --good:#0072b2; --good-dim:#dcedfa;
+    --bad:#b34700; --bad-dim:#fbe4d5;
+    --accent:#0072b2; --btn-text:#ffffff;
+    --hint:#6b4fbb; --hint-dim:#ece6fa;
+  }
+  body.theme-dark{
+    --bg:#12142a; --bg-soft:#1b1e3c; --card:#232752; --line:#3d4280;
+    --text:#f4f5fc; --dim:#b8bce3;
+    --factor:#009e73; --factor-dim:#0f3b30;
+    --sqrt:#56b4e9; --sqrt-dim:#1c3a4d;
+    --formula:#e69f00; --formula-dim:#4a3a10;
+    --good:#3ea0e0; --good-dim:#122a40;
+    --bad:#d55e00; --bad-dim:#3f2210;
+    --accent:#56b4e9; --btn-text:#0b2536;
+    --hint:#b39ddb; --hint-dim:#33294d;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  button, .chip, .microbtn, .backbtn{ -webkit-touch-callout:none; -webkit-user-select:none; user-select:none; touch-action:manipulation; }
+  a:focus-visible, button:focus-visible, .chip:focus-visible, .microbtn:focus-visible, input:focus-visible{
+    outline:3px solid #ffe066; outline-offset:2px;
+  }
+  body{
+    margin:0; background:var(--bg);
+    color:var(--text); font-family:'Noto Sans JP',sans-serif; display:flex; justify-content:center;
+  }
+  #app{ width:100%; max-width:640px; padding:18px 16px 50px; display:flex; flex-direction:column; gap:16px; }
+  h1,h2,h3{ font-family:'Zen Maru Gothic',sans-serif; margin:0; }
+  h1{ font-size:1.25rem; font-weight:900; line-height:1.5; }
+  .settingsbar{ display:flex; gap:8px; }
+  .segwrap{ display:flex; background:var(--bg-soft); border:1px solid var(--line); border-radius:12px; padding:3px; flex:1; }
+  .segwrap button{ flex:1; background:none; border:none; color:var(--dim); font-size:0.75rem; font-family:'Noto Sans JP'; padding:8px 4px; border-radius:9px; cursor:pointer; min-height:36px; }
+  .segwrap button.active{ background:var(--card); color:var(--text); font-weight:700; box-shadow:0 1px 3px rgba(0,0,0,0.15); }
+
+  .eyebrow{ font-size:0.75rem; color:var(--dim); }
+  .netwarn{ display:none; background:var(--bad-dim); border:1px solid var(--bad); color:var(--text); border-radius:12px; padding:10px 14px; font-size:0.8125rem; line-height:1.7; }
+  .netwarn.show{ display:block; }
+  .screen{ display:none; flex-direction:column; gap:16px; animation:fadein .25s ease; }
+  .screen.active{ display:flex; }
+  @keyframes fadein{ from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);} }
+
+  .legend{ background:var(--card); border:1px solid var(--line); border-radius:16px; padding:14px 16px; font-size:0.7812rem; color:var(--dim); line-height:1.9;}
+  .legend b{ color:var(--text); }
+  .legend .lf{ color:var(--factor); } .legend .ls{ color:var(--sqrt); } .legend .lg{ color:var(--formula); }
+
+  .card{ background:var(--card); border:1.5px solid var(--line); border-radius:18px; padding:16px; display:flex; flex-direction:column; gap:12px; }
+  .card h3{ font-size:0.9062rem; }
+
+  .techchips{ display:flex; flex-wrap:wrap; gap:8px; }
+  .chip{ background:var(--bg-soft); border:1.5px solid var(--line); color:var(--dim); border-radius:99px; padding:10px 15px; font-size:0.8125rem; font-family:inherit; cursor:pointer; min-height:40px; display:inline-flex; align-items:center; appearance:none; -webkit-appearance:none; }
+  .chip.picked{ background:var(--text); color:var(--card); border-color:var(--text); font-weight:700; }
+  .chip.picked::before{ content:"✓ "; }
+  .techhint{ font-size:0.75rem; color:var(--dim); }
+
+  .answerblock{ display:flex; flex-direction:column; gap:6px; }
+  .exhint{ font-size:0.8125rem; color:var(--dim); }
+  .answerrow{ display:flex; align-items:center; gap:10px; font-size:0.9375rem; flex-wrap:wrap; }
+
+  .numbox{
+    width:64px; min-height:44px; text-align:center; font-size:1.0625rem; font-family:'Noto Sans JP',sans-serif;
+    background:var(--bg-soft); border:1.5px solid var(--line); border-radius:9px; color:var(--text); padding:8px 4px;
+    cursor:pointer; -webkit-appearance:none; appearance:none;
+  }
+  .numbox.active{ border-color:var(--sqrt); border-width:2px; background:var(--card); }
+  .numbox:empty::before{ content:attr(data-placeholder); color:var(--dim); opacity:.6; }
+
+  .radicalhint{ font-size:0.8125rem; color:var(--dim); margin-bottom:10px; line-height:1.6; }
+  .radicalrow{ display:flex; align-items:flex-end; justify-content:center; gap:8px; flex-wrap:wrap; }
+  .radicalrow .rk{ padding-bottom:14px; }
+  .rgroup{ display:flex; flex-direction:column; align-items:center; gap:4px; }
+  .rgroup .numbox{ width:60px; }
+  .rlabel{ font-size:0.6875rem; color:var(--dim); }
+  .radicalpreview{ text-align:center; margin-top:14px; font-size:1.1rem; color:var(--dim); }
+  .radicalpreview .katex{ color:var(--text); }
+
+  .numpad{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px; max-width:260px; margin:14px auto 0; }
+  .numpad button{
+    background:var(--card); border:1px solid var(--line); border-radius:12px; color:var(--text);
+    font-family:'Zen Maru Gothic'; font-size:1.125rem; font-weight:700; padding:14px 0; cursor:pointer; min-height:48px;
+    -webkit-appearance:none; appearance:none;
+  }
+  .numpad button:active{ background:var(--bg-soft); }
+  .numpad button.wide{ font-size:0.9375rem; color:var(--dim); }
+
+  .btn{ border:none; border-radius:11px; padding:12px 16px; font-size:0.875rem; font-weight:700; font-family:'Zen Maru Gothic'; cursor:pointer; }
+  .btn.primary{ background:var(--accent); color:var(--btn-text); }
+  .btn.ghost{ background:transparent; color:var(--dim); border:1px solid var(--line); }
+  .btn.hint{ background:var(--hint-dim); color:var(--hint); border:1px solid var(--hint); }
+  .btn:disabled{ opacity:.4; cursor:not-allowed; }
+  .attemptbtns{ display:flex; gap:10px; flex-wrap:wrap; }
+  .backbtn{ background:none; border:none; color:var(--dim); font-size:0.875rem; cursor:pointer; padding:4px 0; align-self:flex-start; }
+  .backbtn:hover{ color:var(--text); }
+
+  .hud{ display:flex; gap:8px; }
+  .hstat{ flex:1; background:var(--card); border:1px solid var(--line); border-radius:14px; padding:10px 6px; text-align:center; }
+  .hstat .n{ font-family:'Zen Maru Gothic'; font-size:1.375rem; font-weight:900; }
+  .hstat .l{ font-size:0.6562rem; color:var(--dim); margin-top:1px; }
+  #hudTime{ color:var(--formula); }
+
+  .eqcard{
+    background:var(--card);
+    border:1.5px solid var(--line); border-radius:22px; padding:26px 18px; text-align:center;
+    transition:border-color .2s;
+  }
+  .eqcard .lbl{ font-size:0.75rem; color:var(--dim); margin-bottom:8px;}
+  .eqcard .eq{ font-size:1.625rem; }
+  .eqcard .eq .katex{ font-size:1.25em; }
+  .eqcard.flash-correct{ border-color:var(--good); }
+  .eqcard.flash-wrong{ border-color:var(--bad); }
+
+  .attemptresult{ font-size:0.8125rem; line-height:1.8; padding:10px 12px; border-radius:12px; display:none; }
+  .attemptresult.show{ display:block; }
+  .attemptresult.match{ background:var(--good-dim); border:1px solid var(--good); color:var(--text); }
+  .attemptresult.diff{ background:var(--bg-soft); border:1px solid var(--line); color:var(--text); }
+  .attemptresult.hint{ background:var(--hint-dim); border:1px solid var(--hint); color:var(--text); }
+
+  .panel{ background:var(--card); border:1px solid var(--line); border-radius:18px; overflow:hidden; }
+  .panelhead{ display:flex; align-items:center; gap:12px; padding:14px 16px; cursor:pointer; }
+  .panelhead .picon{ width:36px; height:36px; border-radius:11px; display:flex; align-items:center; justify-content:center; font-size:1.125rem; flex:none; }
+  .panelhead .ptext .pname{ font-weight:700; font-size:0.9062rem; }
+  .panelhead .ptext .psub{ font-size:0.7188rem; color:var(--dim); margin-top:1px; }
+  .panelhead .chev{ margin-left:auto; color:var(--dim); font-size:0.8125rem; transition:transform .2s; }
+  .panel.open .chev{ transform:rotate(180deg); }
+  .panel.factor .picon{ background:var(--factor-dim); color:var(--factor);}
+  .panel.sqrtp .picon{ background:var(--sqrt-dim); color:var(--sqrt);}
+  .panel.formula .picon{ background:var(--formula-dim); color:var(--formula);}
+  .panelbody{ display:none; padding:0 16px 16px; }
+  .panel.open .panelbody{ display:block; }
+
+  table.ftable{ width:100%; border-collapse:collapse; font-size:0.875rem; margin-top:6px; }
+  table.ftable th, table.ftable td{ padding:7px 6px; text-align:center; border-bottom:1px solid var(--line); }
+  table.ftable th{ color:var(--dim); font-weight:500; font-size:0.7188rem; }
+  table.ftable tr.match td{ color:var(--good); font-weight:700; background:rgba(0,114,178,0.12); }
+  .fnote{ font-size:0.7812rem; color:var(--dim); margin-top:10px; line-height:1.7; }
+
+  .steplines{ display:flex; flex-direction:column; gap:10px; margin-top:6px; }
+  .stepline{ font-size:0.9688rem; opacity:0; transform:translateY(4px); transition:opacity .25s, transform .25s; }
+  .stepline.show{ opacity:1; transform:translateY(0); }
+  .stepline .tag{ font-family:'Noto Sans JP'; font-size:0.6875rem; color:var(--dim); display:block; margin-bottom:2px; }
+  .steprow{ display:flex; gap:10px; margin-top:12px; }
+  .microbtn{ background:var(--bg-soft); border:1px solid var(--line); color:var(--text); border-radius:10px; padding:10px 14px; font-size:0.8125rem; cursor:pointer; min-height:40px; }
+
+  .comparebar{ background:var(--card); border:1px solid var(--line); border-radius:18px; padding:14px 16px; }
+  .comparebar h3{ font-size:0.8438rem; margin-bottom:8px; }
+  .compareRow{ display:flex; flex-direction:column; gap:6px; font-size:0.8125rem; }
+  .compareRow .ci{ display:flex; justify-content:space-between; align-items:center; background:var(--bg-soft); border-radius:10px; padding:8px 10px; gap:8px;}
+  .compareRow .ci .k{ color:var(--dim); }
+  .empty{ font-size:0.7812rem; color:var(--dim); }
+
+  .scorecard{ background:var(--card); border:1px solid var(--line); border-radius:20px; padding:20px; text-align:center; }
+  .scorecard .big{ font-family:'Zen Maru Gothic'; font-size:2.125rem; font-weight:900; }
+  .scorecard .lab{ font-size:0.7812rem; color:var(--dim); margin-top:2px; }
+  .tworow{ display:flex; gap:12px; margin-top:14px; }
+  .tworow > div{ flex:1; background:var(--bg-soft); border-radius:14px; padding:12px; }
+  .tworow .n{ font-size:1.375rem; font-weight:900; font-family:'Zen Maru Gothic'; }
+  .tworow .l{ font-size:0.6875rem; color:var(--dim); margin-top:2px; }
+
+  .qlist{ display:flex; flex-direction:column; gap:8px; }
+  .qitem{ display:flex; align-items:center; gap:8px; background:var(--card); border:1px solid var(--line); border-radius:12px; padding:9px 11px; font-size:0.8125rem; flex-wrap:wrap; }
+  .qitem .qmath{ flex:none; }
+  .qitem .qans{ color:var(--dim); font-size:0.7812rem; }
+  .badge{ font-size:0.7188rem; padding:2px 8px; border-radius:99px; font-weight:700; }
+  .badge.ok{ background:var(--good-dim); color:var(--good); }
+  .badge.bad{ background:var(--bad-dim); color:var(--bad); }
+  .badge.skip{ background:var(--bg-soft); color:var(--dim); }
+  .badge.tech{ margin-left:auto; }
+  .badge.techok{ background:var(--good-dim); color:var(--good); }
+  .badge.techbad{ background:var(--bad-dim); color:var(--bad); }
+  .badge.techhint{ background:var(--hint-dim); color:var(--hint); }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="eyebrow">二次方程式タイムトライアル</div>
+  <div class="netwarn" id="netWarn">⚠ 数式表示に必要なファイルの読み込みに失敗しました。ネットワーク環境（Wi-Fiやフィルタリング設定）をご確認のうえ、再読み込みしてください。</div>
+  <h1>時間内に、自分で解いて確かめよう</h1>
+
+  <div class="settingsbar">
+    <div class="segwrap" id="themeSeg">
+      <button data-theme="light" class="active" onclick="setTheme('light')">☀️ 明るい画面</button>
+      <button data-theme="dark" onclick="setTheme('dark')">🌙 暗い画面</button>
+    </div>
+    <div class="segwrap" id="sizeSeg">
+      <button data-size="0" class="active" onclick="setTextSize(0)">標準</button>
+      <button data-size="1" onclick="setTextSize(1)">大きめ</button>
+      <button data-size="2" onclick="setTextSize(2)">最大</button>
+    </div>
+  </div>
+
+  <div class="legend">
+    <span class="lf">⚔️ 因数分解</span>：すぐ試せるが、いつも見つかるとは限らない<br>
+    <span class="ls">🛡️ 平方完成・平方根</span>：手間はかかるが、どんな式でも必ず使える<br>
+    <span class="lg">⚡ 解の公式</span>：平方完成を毎回書くのが大変だから、先に一般化しておいた近道<br>
+    <b>答える前に、まず技を選ぼう。</b>選んだ技が式に合っていたかも別に記録します。
+  </div>
+
+  <!-- ============ SCREEN: スタート（時間選択） ============ -->
+  <div class="screen active" id="screen-start">
+    <div class="card">
+      <h3>制限時間を選ぼう</h3>
+      <div class="techchips" id="timeChips">
+        <button type="button" class="chip" data-sec="30" onclick="pickTime(30)">30秒</button>
+        <button type="button" class="chip picked" data-sec="60" onclick="pickTime(60)">60秒</button>
+        <button type="button" class="chip" data-sec="90" onclick="pickTime(90)">90秒</button>
+        <button type="button" class="chip" data-sec="120" onclick="pickTime(120)">120秒</button>
+      </div>
+      <div class="answerrow">
+        <span>自由に入力：</span>
+        <input type="text" inputmode="numeric" id="customTime" min="10" max="600" placeholder="秒" oninput="onCustomTime()" onkeydown="if(event.key==='Enter')startTrial();">
+        <span>秒</span>
+      </div>
+      <button class="btn primary" onclick="startTrial()">この時間でスタート</button>
+    </div>
+  </div>
+
+  <!-- ============ SCREEN: トライアル中 ============ -->
+  <div class="screen" id="screen-trial">
+    <div class="hud">
+      <div class="hstat"><div class="n" id="hudTime">60</div><div class="l">残り秒</div></div>
+      <div class="hstat"><div class="n" id="hudCorrect">0</div><div class="l">正解</div></div>
+      <div class="hstat"><div class="n" id="hudWrong">0</div><div class="l">不正解</div></div>
+      <div class="hstat"><div class="n" id="hudCombo">0</div><div class="l">コンボ</div></div>
+    </div>
+
+    <div class="eqcard" id="trialEqCard">
+      <div class="lbl">この方程式を解いてみよう</div>
+      <div class="eq" id="trialEqDisplay">$x^2 = 0$</div>
+    </div>
+
+    <div class="techchips" id="trialTechChips">
+      <button type="button" class="chip" data-t="factor" onclick="pickChip('factor')">⚔️ 因数分解</button>
+      <button type="button" class="chip" data-t="sqrt" onclick="pickChip('sqrt')">🛡️ 平方完成・平方根</button>
+      <button type="button" class="chip" data-t="formula" onclick="pickChip('formula')">⚡ 解の公式</button>
+    </div>
+    <div class="techhint">↑ まずどの技を使うか選んでから、答えを入力しよう</div>
+
+    <div class="answerblock" id="plainAnswerBlock">
+      <div class="exhint">記入例：$x = 3,\ 2$</div>
+      <div class="answerrow">
+        <span id="trialXLabel">$x=$</span>
+        <button type="button" class="numbox" id="trialAns1" data-placeholder="3" onclick="focusField('trialAns1')"></button>
+        <span>,</span>
+        <button type="button" class="numbox" id="trialAns2" data-placeholder="2" onclick="focusField('trialAns2')"></button>
+      </div>
+    </div>
+
+    <div id="radicalAnswerBlock" style="display:none;">
+      <div class="radicalhint">この式の答えは根号(√)を含む形になるよ。分子・√の中・分母を分けて入力しよう。</div>
+      <div class="exhint">記入例：$x = \dfrac{-3 \pm \sqrt{5}}{2}$</div>
+      <div class="radicalrow">
+        <span class="rk">$x=($</span>
+        <div class="rgroup"><button type="button" class="numbox" id="rNum" data-placeholder="-3" onclick="focusField('rNum')"></button><div class="rlabel">分子</div></div>
+        <span class="rk">$\pm\sqrt{\phantom{0}}$</span>
+        <div class="rgroup"><button type="button" class="numbox" id="rRad" data-placeholder="5" onclick="focusField('rRad')"></button><div class="rlabel">√の中</div></div>
+        <span class="rk">$)/$</span>
+        <div class="rgroup"><button type="button" class="numbox" id="rDen" data-placeholder="2" onclick="focusField('rDen')"></button><div class="rlabel">分母</div></div>
+      </div>
+      <div class="radicalpreview" id="radicalPreview">$x = \Box$</div>
+    </div>
+
+    <div class="numpad">
+      <button type="button" onclick="keypadPress('7')">7</button>
+      <button type="button" onclick="keypadPress('8')">8</button>
+      <button type="button" onclick="keypadPress('9')">9</button>
+      <button type="button" onclick="keypadPress('4')">4</button>
+      <button type="button" onclick="keypadPress('5')">5</button>
+      <button type="button" onclick="keypadPress('6')">6</button>
+      <button type="button" onclick="keypadPress('1')">1</button>
+      <button type="button" onclick="keypadPress('2')">2</button>
+      <button type="button" onclick="keypadPress('3')">3</button>
+      <button type="button" class="wide" onclick="keypadPress('±')">±</button>
+      <button type="button" onclick="keypadPress('0')">0</button>
+      <button type="button" class="wide" onclick="keypadPress('⌫')">⌫</button>
+    </div>
+
+    <div class="attemptbtns">
+      <button class="btn primary" id="submitBtn" onclick="submitTrial()">決定</button>
+      <button class="btn ghost" onclick="skipTrial()">スキップ</button>
+      <button class="btn hint" onclick="showHint()">💡 ヒント</button>
+    </div>
+    <div class="attemptresult" id="trialFeedback" aria-live="polite"></div>
+  </div>
+
+  <!-- ============ SCREEN: 結果 ============ -->
+  <div class="screen" id="screen-result">
+    <h1>タイムアップ！</h1>
+    <div class="scorecard">
+      <div class="big" id="resultPct">0%</div>
+      <div class="lab">計算の正答率</div>
+      <div class="tworow">
+        <div><div class="n" id="resultCorrect">0</div><div class="l">正解</div></div>
+        <div><div class="n" id="resultTotal">0</div><div class="l">出題数</div></div>
+        <div><div class="n" id="resultTechPct">0%</div><div class="l">技の見極め正解率</div></div>
+      </div>
+    </div>
+    <div class="exhint" id="pendingNote" style="display:none; text-align:center;">※ 時間切れの瞬間に表示されていた問題は、まだ答えていなかったため集計に含まれていません。</div>
+    <div class="qlist" id="qlist"></div>
+    <div class="attemptbtns">
+      <button class="btn primary" onclick="restartSameTime()">もう一度（同じ時間で）</button>
+      <button class="btn ghost" onclick="backToStart()">時間を選び直す</button>
+    </div>
+  </div>
+
+  <!-- ============ SCREEN: 振り返り（パネルで見比べる） ============ -->
+  <div class="screen" id="screen-review">
+    <button class="backbtn" onclick="backToResult()">← 結果一覧へ戻る</button>
+    <div class="eqcard">
+      <div class="lbl">振り返り：この方程式</div>
+      <div class="eq" id="reviewEqDisplay">$x^2 = 0$</div>
+    </div>
+    <div class="attemptresult show" id="reviewAnswerBox"></div>
+
+    <div class="panel factor" id="panel-factor">
+      <div class="panelhead" onclick="togglePanel('panel-factor')">
+        <div class="picon">⚔️</div>
+        <div class="ptext"><div class="pname">因数分解を見る</div><div class="psub">積と$c$、和と$b$が一致する整数の組を探す</div></div>
+        <div class="chev">▾</div>
+      </div>
+      <div class="panelbody" id="body-factor"></div>
+    </div>
+
+    <div class="panel sqrtp" id="panel-sqrt">
+      <div class="panelhead" onclick="togglePanel('panel-sqrt')">
+        <div class="picon">🛡️</div>
+        <div class="ptext"><div class="pname">平方完成・平方根を見る</div><div class="psub">$(x+\square)^2=$数 の形に持ち込む、いつでも使える方法</div></div>
+        <div class="chev">▾</div>
+      </div>
+      <div class="panelbody" id="body-sqrt"></div>
+    </div>
+
+    <div class="panel formula" id="panel-formula">
+      <div class="panelhead" onclick="togglePanel('panel-formula')">
+        <div class="picon">⚡</div>
+        <div class="ptext"><div class="pname">解の公式を見る</div><div class="psub">$a, b, c$ を当てはめるだけの近道</div></div>
+        <div class="chev">▾</div>
+      </div>
+      <div class="panelbody" id="body-formula"></div>
+    </div>
+
+    <div class="comparebar">
+      <h3>見比べてみよう</h3>
+      <div class="compareRow" id="compareRow"><div class="empty">パネルを開いてみよう。</div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   数式まわりの数学ヘルパー
+========================================================= */
+function randInt(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
+function isPerfectSquare(n){ const r=Math.round(Math.sqrt(n)); return r*r===n; }
+function gcdInt(a,b){ a=Math.abs(a); b=Math.abs(b); while(b){ [a,b]=[b,a%b]; } return a; }
+function simplifySqrt(n){
+  if(n===0) return {coef:0, rest:1};
+  let coef=1, rest=n;
+  for(let i=2;i*i<=rest;i++){
+    while(rest % (i*i) === 0){ rest/=i*i; coef*=i; }
+  }
+  return {coef, rest};
+}
+function fmtNum(x){
+  return (Math.abs(x-Math.round(x))<1e-9) ? String(Math.round(x)) : (Math.round(x*100)/100).toString();
+}
+function bTerm(b){
+  if(b===0) return '';
+  const mag=Math.abs(b);
+  return (b>0?' + ':' - ') + (mag===1?'':mag) + 'x';
+}
+function cTerm(c){
+  if(c===0) return '';
+  return (c>0?' + '+c:' - '+Math.abs(c));
+}
+function eqLatex(a,b,c){
+  return 'x^2'+bTerm(b)+cTerm(c)+' = 0';
+}
+function integerFactorPairs(c){
+  const pairs=[];
+  const absC=Math.abs(c);
+  if(absC===0) return [[0,0]];
+  for(let i=1;i<=absC;i++){
+    if(absC%i===0){
+      const j=absC/i;
+      if(c>=0){ pairs.push([i,j]); pairs.push([-i,-j]); }
+      else { pairs.push([i,-j]); pairs.push([-i,j]); }
+    }
+  }
+  return pairs;
+}
+function fmtFactor(p,q){
+  const t = n => (n>=0? '+ '+n : '- '+Math.abs(n));
+  if(p===q) return '(x '+t(p)+')^2 = 0';
+  return '(x '+t(p)+')(x '+t(q)+') = 0';
+}
+function idealTechOf(d){
+  const D = d.b*d.b - 4*d.a*d.c;
+  const sq = Math.sqrt(D);
+  if(Math.abs(sq - Math.round(sq)) > 1e-9) return 'formula';
+  if(d.b===0) return 'sqrt';
+  return 'factor';
+}
+// 「技の見極め」の正解は本来1つに決めきれない場合がある。
+// 例：x^2-9=0（b=0）は平方根でも因数分解（差の平方）でも正しく解けるため、両方を許容する。
+function acceptableTechsOf(d){
+  const ideal = idealTechOf(d);
+  if(ideal==='sqrt') return ['sqrt','factor'];
+  return [ideal];
+}
+function trueRoots(d){
+  const D = d.b*d.b - 4*d.a*d.c;
+  const sq = Math.sqrt(D);
+  return [(-d.b+sq)/(2*d.a), (-d.b-sq)/(2*d.a)];
+}
+function isIrrational(d){
+  const D = d.b*d.b - 4*d.a*d.c;
+  const sq = Math.sqrt(D);
+  return Math.abs(sq - Math.round(sq)) > 1e-9;
+}
+
+// (-b ± coef√rest)/2 を可能なら約分して返す（a=1前提）
+function formatPMForm(b, coef, rest){
+  if(b % 2 === 0 && coef % 2 === 0){
+    const nb = -b/2, ncoef = coef/2;
+    if(rest===1) return 'x = '+fmtNum(nb+ncoef)+',\\ '+fmtNum(nb-ncoef);
+    const sqrtStr = ncoef===1 ? '\\sqrt{'+rest+'}' : ncoef+'\\sqrt{'+rest+'}';
+    return 'x = '+fmtNum(nb)+' \\pm '+sqrtStr;
+  }
+  if(rest===1){
+    const r1=(-b+coef)/2, r2=(-b-coef)/2;
+    return 'x = '+fmtNum(r1)+',\\ '+fmtNum(r2);
+  }
+  const sqrtStr = coef===1 ? '\\sqrt{'+rest+'}' : coef+'\\sqrt{'+rest+'}';
+  return 'x = \\dfrac{'+(-b)+' \\pm '+sqrtStr+'}{2}';
+}
+
+function buildCompleteSteps(a,b,c){
+  const D = b*b-4*a*c;
+  if(b===0){
+    const rhs=-c;
+    const {coef,rest}=simplifySqrt(rhs);
+    const line = rest===1 ? ('x = \\pm '+coef) : ('x = \\pm '+(coef===1?'':coef)+'\\sqrt{'+rest+'}');
+    return [
+      {tag:'着目：$x$の項がもともと無い', line:'x^2 = '+rhs},
+      {tag:'Step: 両辺の平方根をとる', line, final:true}
+    ];
+  }
+  const half=b/2, halfSq=half*half, rhs2=halfSq-c;
+  const steps=[];
+  steps.push({tag:'Step1: 定数項を右辺へ', line:'x^2'+bTerm(b)+' = '+(-c)});
+  steps.push({tag:'Step2: 両辺に $\\left(\\dfrac{'+b+'}{2}\\right)^2 = '+fmtNum(halfSq)+'$ を加える',
+              line:'x^2'+bTerm(b)+' + '+fmtNum(halfSq)+' = '+fmtNum(rhs2)});
+  const halfTerm = half>=0 ? ('+ '+fmtNum(half)) : ('- '+fmtNum(Math.abs(half)));
+  steps.push({tag:'Step3: 左辺を $(x'+(half>=0?'+':'-')+'\\Box)^2$ の形にする', line:'(x '+halfTerm+')^2 = '+fmtNum(rhs2)});
+
+  const {coef,rest}=simplifySqrt(D);
+  if(rest===1){
+    steps.push({tag:'Step4: 両辺の平方根をとる', line:'x '+halfTerm+' = \\pm '+fmtNum(Math.sqrt(rhs2))});
+  } else {
+    const sqrtDStr = coef===1?'\\sqrt{'+rest+'}':coef+'\\sqrt{'+rest+'}';
+    steps.push({tag:'Step4: 両辺の平方根をとる', line:'x '+halfTerm+' = \\pm\\dfrac{'+sqrtDStr+'}{2}'});
+  }
+  steps.push({tag:'Step5: $x$について解く', line: formatPMForm(b, coef, rest), final:true});
+  return steps;
+}
+
+function buildFormulaSteps(a,b,c){
+  const D = b*b-4*a*c;
+  const {coef,rest} = simplifySqrt(D);
+  const bSq = (b<0? '('+b+')':b) + '^2';
+  const steps=[];
+  steps.push({tag:'Step1: $a, b, c$ を確認', line:'a='+a+',\\ b='+b+',\\ c='+c});
+  steps.push({tag:'Step2: 判別式 $D = b^2-4ac$', line:'D = '+bSq+' - 4('+a+')('+c+') = '+D});
+  if(rest===1){
+    steps.push({tag:'Step3: $\\sqrt{D}$ を計算', line:'\\sqrt{'+D+'} = '+coef});
+  } else if(coef===1){
+    steps.push({tag:'Step3: $\\sqrt{D}$ を計算', line:'\\sqrt{'+D+'}\\ (\\text{これ以上簡単にならない})'});
+  } else {
+    steps.push({tag:'Step3: $\\sqrt{D}$ を計算', line:'\\sqrt{'+D+'} = '+coef+'\\sqrt{'+rest+'}'});
+  }
+  steps.push({tag:'Step4: 公式に当てはめる', line: formatPMForm(b, coef, rest), final:true});
+  return steps;
+}
+
+/* =========================================================
+   問題の自動生成（因数分解型・平方根型・解の公式型を毎回ランダムに出題）
+========================================================= */
+function genFactor(){
+  let p,q,tries=0;
+  do { p=randInt(-6,6); q=randInt(-6,6); tries++; }
+  while((p===0 && q===0) || (p+q)===0 || tries>100);
+  return {a:1, b:-(p+q), c:p*q};
+}
+function genSqrt(){
+  const squares=[1,4,9,16,25,36,49,64,81];
+  const k=squares[randInt(0,squares.length-1)];
+  return {a:1,b:0,c:-k};
+}
+function genFormula(){
+  let b,c,D,tries=0;
+  do{ b=randInt(-6,6); c=randInt(-6,6); D=b*b-4*c; tries++; }
+  while((D<=0 || D>40 || isPerfectSquare(D) || b===0) && tries<300);
+  if(tries>=300){ b=3; c=1; }
+  return {a:1,b,c};
+}
+function generateProblem(){
+  const roll=Math.random();
+  let base;
+  if(roll<0.38) base=genFactor();
+  else if(roll<0.66) base=genSqrt();
+  else base=genFormula();
+  const d = {
+    a:base.a, b:base.b, c:base.c,
+    eq: eqLatex(base.a, base.b, base.c),
+    pairs: integerFactorPairs(base.c),
+    complete: buildCompleteSteps(base.a, base.b, base.c),
+    formula: buildFormulaSteps(base.a, base.b, base.c)
+  };
+  d.idealTech = idealTechOf(d);
+  return d;
+}
+
+/* =========================================================
+   状態管理
+========================================================= */
+let state = {
+  phase:'start', timeLimit:60, timeLeft:60, timerId:null,
+  score:{correct:0,total:0}, techScore:{correct:0,total:0}, combo:0, log:[],
+  currentProblem:null, hintUsedThisQ:false, locked:false, lastEqKey:null, pendingUnanswered:false
+};
+let pickedTech = null;
+let activeEq = null;   // 振り返り画面で使う「今表示している式」
+let progress = {};
+
+let fieldValues = { trialAns1:'', trialAns2:'', rNum:'', rRad:'', rDen:'' };
+let activeField = null;
+
+const FIELD_LABEL = { trialAns1:'1つ目の解', trialAns2:'2つ目の解', rNum:'分子', rRad:'√の中', rDen:'分母' };
+
+function renderField(id){
+  const el = document.getElementById(id);
+  const val = fieldValues[id];
+  el.textContent = val || '';
+  el.setAttribute('aria-label', FIELD_LABEL[id] + (val ? '、入力値 ' + val : '、未入力'));
+}
+
+function focusField(id){
+  activeField = id;
+  document.querySelectorAll('.numbox').forEach(b=>b.classList.toggle('active', b.id===id));
+}
+
+function keypadPress(ch){
+  if(!activeField) return;
+  let val = fieldValues[activeField] || '';
+  if(ch==='⌫'){ val = val.slice(0,-1); }
+  else if(ch==='±'){ val = val.startsWith('-') ? val.slice(1) : ('-'+val); }
+  else if(val.length<4){ val += ch; }
+  fieldValues[activeField] = val;
+  renderField(activeField);
+  if(activeField==='rNum' || activeField==='rRad' || activeField==='rDen') updateRadicalPreview();
+}
+
+function eqData(){ return activeEq; }
+
+function setTheme(mode){
+  document.body.classList.toggle('theme-dark', mode==='dark');
+  document.querySelectorAll('#themeSeg button').forEach(b=>b.classList.toggle('active', b.dataset.theme===mode));
+}
+
+function setTextSize(step){
+  const sizes = ['16px','18px','20px'];
+  document.documentElement.style.fontSize = sizes[step];
+  document.querySelectorAll('#sizeSeg button').forEach(b=>b.classList.toggle('active', +b.dataset.size===step));
+}
+
+function toHalfWidth(str){
+  return String(str)
+    .replace(/[０-９]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0xFEE0))
+    .replace(/[－ー−]/g, '-')
+    .replace(/[＋]/g, '+')
+    .replace(/[．]/g, '.')
+    .trim();
+}
+
+function typesetAll(){
+  if(window.renderMathInElement){
+    renderMathInElement(document.getElementById('app'), {
+      throwOnError:false,
+      delimiters:[
+        {left:'$$', right:'$$', display:true},
+        {left:'$', right:'$', display:false}
+      ]
+    });
+  }
+}
+
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function pickChip(t){
+  pickedTech = (pickedTech===t) ? null : t;
+  document.querySelectorAll('#trialTechChips .chip').forEach(c=>c.classList.toggle('picked', c.dataset.t===pickedTech));
+  document.getElementById('submitBtn').disabled = !pickedTech;
+}
+
+function pickTime(sec){
+  state.timeLimit = sec;
+  document.getElementById('customTime').value = '';
+  document.querySelectorAll('[data-sec]').forEach(c=>c.classList.toggle('picked', +c.dataset.sec===sec));
+}
+
+function onCustomTime(){
+  document.querySelectorAll('[data-sec]').forEach(c=>c.classList.remove('picked'));
+}
+
+/* ---------------------------------------------------------
+   トライアル本体
+--------------------------------------------------------- */
+function startTrial(){
+  const custom = parseInt(toHalfWidth(document.getElementById('customTime').value), 10);
+  if(!isNaN(custom) && custom>0) state.timeLimit = custom;
+
+  state.phase = 'trial';
+  state.timeLeft = state.timeLimit;
+  state.score = {correct:0, total:0};
+  state.techScore = {correct:0, total:0};
+  state.combo = 0;
+  state.log = [];
+
+  showScreen('screen-trial');
+  loadTrialQuestion();
+  updateHud();
+  clearInterval(state.timerId);
+  state.timerId = setInterval(tick, 1000);
+}
+
+function tick(){
+  state.timeLeft--;
+  updateHud();
+  if(state.timeLeft<=0) endTrial();
+}
+
+function updateHud(){
+  document.getElementById('hudTime').textContent = Math.max(0, state.timeLeft);
+  document.getElementById('hudCorrect').textContent = state.score.correct;
+  document.getElementById('hudWrong').textContent = state.score.total - state.score.correct;
+  document.getElementById('hudCombo').textContent = state.combo;
+}
+
+function loadTrialQuestion(){
+  state.locked = false;
+  state.pendingUnanswered = true;
+  let d;
+  let tries = 0;
+  do { d = generateProblem(); tries++; }
+  while(state.lastEqKey === (d.a+'_'+d.b+'_'+d.c) && tries < 10);
+  state.lastEqKey = d.a+'_'+d.b+'_'+d.c;
+  state.currentProblem = d;
+  state.hintUsedThisQ = false;
+  document.getElementById('trialEqDisplay').innerHTML = '$' + d.eq + '$';
+
+  const radical = isIrrational(d);
+  document.getElementById('plainAnswerBlock').style.display = radical ? 'none' : 'flex';
+  document.getElementById('radicalAnswerBlock').style.display = radical ? 'block' : 'none';
+
+  fieldValues = { trialAns1:'', trialAns2:'', rNum:'', rRad:'', rDen:'' };
+  ['trialAns1','trialAns2','rNum','rRad','rDen'].forEach(renderField);
+  updateRadicalPreview();
+
+  document.getElementById('trialFeedback').className = 'attemptresult';
+  pickedTech = null;
+  document.querySelectorAll('#trialTechChips .chip').forEach(c=>c.classList.remove('picked'));
+  document.getElementById('submitBtn').disabled = true;
+  document.querySelectorAll('.attemptbtns .btn.ghost, .attemptbtns .btn.hint').forEach(b=>b.disabled=false);
+  document.getElementById('trialEqCard').classList.remove('flash-correct','flash-wrong');
+  typesetAll();
+  focusField(radical ? 'rNum' : 'trialAns1');
+}
+
+function updateRadicalPreview(){
+  const num = fieldValues.rNum || '\\Box';
+  const rad = fieldValues.rRad || '\\Box';
+  const den = fieldValues.rDen || '\\Box';
+  const tex = 'x = \\dfrac{' + num + ' \\pm \\sqrt{' + rad + '}}{' + den + '}';
+  const el = document.getElementById('radicalPreview');
+  if(window.katex){
+    try{ katex.render(tex, el, {throwOnError:false}); }
+    catch(e){ el.textContent = 'x = ?'; }
+  }
+}
+
+function parseRadicalAnswer(){
+  const num = parseFloat(fieldValues.rNum);
+  const rad = parseFloat(fieldValues.rRad);
+  const den = parseFloat(fieldValues.rDen);
+  if(isNaN(num) || isNaN(rad) || isNaN(den) || rad<0 || den===0) return null;
+  const s = Math.sqrt(rad);
+  return { num, rad, den, roots:[(num+s)/den, (num-s)/den] };
+}
+
+function showHint(){
+  if(state.phase!=='trial' || state.locked) return;
+  state.hintUsedThisQ = true;
+  const d = state.currentProblem;
+  const msgs = {
+    factor:'積と和がぴったり合う整数の組が見つかりそうな式だよ。因数分解を試してみよう。',
+    sqrt:'1次の項(x)が無い形。平方根の考え、または差の平方とみた因数分解、どちらでも解けそうだよ。',
+    formula:'因数分解や平方根では難しそう。解の公式の出番かもしれない。'
+  };
+  const fb = document.getElementById('trialFeedback');
+  fb.className = 'attemptresult show hint';
+  fb.textContent = '💡 ' + (msgs[d.idealTech]||'') + '（ヒントを見たので、この問題は「技の見極め」の集計には含めません）';
+}
+
+function submitTrial(){
+  if(state.phase!=='trial' || state.locked) return;
+  if(!pickedTech){
+    const fb = document.getElementById('trialFeedback');
+    fb.className = 'attemptresult show diff';
+    fb.textContent = '先にどの技を使うか選んでね。';
+    return;
+  }
+  const d = state.currentProblem;
+  const target = trueRoots(d).sort((a,b)=>a-b);
+
+  if(isIrrational(d)){
+    const parsed = parseRadicalAnswer();
+    if(!parsed){
+      registerAnswer(d, false, null, false, 'radical');
+      return;
+    }
+    const given = [...parsed.roots].sort((a,b)=>a-b);
+    const correct = Math.abs(given[0]-target[0])<0.01 && Math.abs(given[1]-target[1])<0.01;
+    registerAnswer(d, correct, {num:parsed.num, rad:parsed.rad, den:parsed.den}, false, 'radical');
+  } else {
+    const v1 = parseFloat(fieldValues.trialAns1);
+    const v2 = parseFloat(fieldValues.trialAns2);
+    const given = [v1,v2].filter(v=>!isNaN(v)).sort((a,b)=>a-b);
+    const correct = given.length===2 && Math.abs(given[0]-target[0])<0.05 && Math.abs(given[1]-target[1])<0.05;
+    registerAnswer(d, correct, given.length===2 ? [fieldValues.trialAns1, fieldValues.trialAns2] : null, false, 'plain');
+  }
+}
+
+function skipTrial(){
+  if(state.phase!=='trial' || state.locked) return;
+  const d = state.currentProblem;
+  registerAnswer(d, false, null, true, isIrrational(d) ? 'radical' : 'plain');
+}
+
+function registerAnswer(d, correct, ansVals, skipped, kind){
+  state.pendingUnanswered = false;
+  state.locked = true;
+  document.getElementById('submitBtn').disabled = true;
+  document.querySelectorAll('.attemptbtns .btn.ghost, .attemptbtns .btn.hint').forEach(b=>b.disabled=true);
+
+  state.score.total++;
+  if(correct){ state.combo++; state.score.correct++; } else { state.combo = 0; }
+
+  let techCorrect = null;
+  if(!skipped && !state.hintUsedThisQ){
+    state.techScore.total++;
+    techCorrect = acceptableTechsOf(d).includes(pickedTech);
+    if(techCorrect) state.techScore.correct++;
+  }
+
+  state.log.push({ problem:d, ans:ansVals, kind, tech:pickedTech, correct, skipped, techCorrect, hintUsed:state.hintUsedThisQ });
+  updateHud();
+
+  const card = document.getElementById('trialEqCard');
+  card.classList.add(correct ? 'flash-correct' : 'flash-wrong');
+  const fb = document.getElementById('trialFeedback');
+  fb.className = 'attemptresult show ' + (correct ? 'match' : 'diff');
+  fb.textContent = skipped ? '⏭ スキップしました。次の問題へ。' : (correct ? '✓ 正解！次の問題へ。' : '✗ う〜ん、違ったみたい。次の問題へ。');
+
+  setTimeout(()=>{ if(state.phase==='trial') loadTrialQuestion(); }, 700);
+}
+
+function ansToTex(entry){
+  if(entry.skipped || !entry.ans) return null;
+  if(entry.kind==='radical'){
+    return 'x = \\dfrac{' + entry.ans.num + ' \\pm \\sqrt{' + entry.ans.rad + '}}{' + entry.ans.den + '}';
+  }
+  return 'x = ' + entry.ans[0] + ',\\ ' + entry.ans[1];
+}
+
+function endTrial(){
+  clearInterval(state.timerId);
+  state.phase = 'result';
+  renderResult();
+  showScreen('screen-result');
+}
+
+const TECH_LABEL = {factor:'⚔️ 因数分解', sqrt:'🛡️ 平方完成・平方根', formula:'⚡ 解の公式'};
+
+function renderResult(){
+  document.getElementById('pendingNote').style.display = state.pendingUnanswered ? 'block' : 'none';
+  const pct = state.score.total ? Math.round(100*state.score.correct/state.score.total) : 0;
+  const techPct = state.techScore.total ? Math.round(100*state.techScore.correct/state.techScore.total) : 0;
+  document.getElementById('resultPct').textContent = pct + '%';
+  document.getElementById('resultCorrect').textContent = state.score.correct;
+  document.getElementById('resultTotal').textContent = state.score.total;
+  document.getElementById('resultTechPct').textContent = state.techScore.total ? (techPct + '%') : '—';
+
+  const list = document.getElementById('qlist');
+  list.innerHTML = state.log.map((entry, i)=>{
+    const d = entry.problem;
+    const badge = entry.skipped ? '<span class="badge skip">⏭ スキップ</span>'
+                : entry.correct ? '<span class="badge ok">✓ 正解</span>'
+                : '<span class="badge bad">✗ 不正解</span>';
+    let techBadge;
+    if(entry.hintUsed) techBadge = '<span class="badge tech techhint">💡 ヒント使用</span>';
+    else if(entry.skipped) techBadge = '';
+    else techBadge = entry.techCorrect
+        ? '<span class="badge tech techok">技の見極め ✓</span>'
+        : '<span class="badge tech techbad">技の見極め ✗</span>';
+    const tex = ansToTex(entry);
+    const ansText = tex ? `<span class="qans">$${tex}$</span>` : '';
+    return `<div class="qitem"><div class="qmath">$${d.eq}$</div>${ansText}${badge}${techBadge}<button class="microbtn" onclick="openReview(${i})">振り返る</button></div>`;
+  }).join('');
+  typesetAll();
+}
+
+function restartSameTime(){ startTrial(); }
+function backToStart(){ state.phase='start'; showScreen('screen-start'); }
+function backToResult(){ showScreen('screen-result'); }
+
+/* ---------------------------------------------------------
+   振り返り画面（因数分解／平方完成／解の公式パネル）
+--------------------------------------------------------- */
+function openReview(logIdx){
+  const entry = state.log[logIdx];
+  const d = entry.problem;
+  activeEq = d;
+
+  document.getElementById('reviewEqDisplay').innerHTML = '$' + d.eq + '$';
+
+  const box = document.getElementById('reviewAnswerBox');
+  const tex = ansToTex(entry);
+  if(entry.skipped || !tex){
+    box.className = 'attemptresult show diff';
+    box.textContent = '⏭ この問題はスキップしていました。下のパネルで確認してみよう。';
+  } else {
+    let note = entry.correct ? '（一致）' : '（パネルと見比べてみよう）';
+    if(!entry.hintUsed){
+      if(entry.techCorrect){
+        note += '　技の見極め：✓';
+      } else {
+        const accepted = acceptableTechsOf(d).map(t=>TECH_LABEL[t]||t).join(' または ');
+        note += '　技の見極め：✗（正解は' + accepted + '）';
+      }
+    }
+    box.className = 'attemptresult show ' + (entry.correct ? 'match' : 'diff');
+    box.innerHTML = (entry.correct ? '✓ ' : '✗ ') + 'あなたの答え：$' + tex + '$' + note;
+  }
+
+  progress = {
+    userAnswer: tex,
+    userTech: entry.tech,
+    userMatch: entry.correct
+  };
+
+  renderFactor();
+  renderSteps('sqrt', d.complete, 'body-sqrt');
+  renderSteps('formula', d.formula, 'body-formula');
+  updateCompare();
+  typesetAll();
+  showScreen('screen-review');
+}
+
+function togglePanel(id){
+  document.getElementById(id).classList.toggle('open');
+}
+
+function renderFactor(){
+  const d = eqData();
+  const uniq = [];
+  const seen = new Set();
+  d.pairs.forEach(([p,q])=>{
+    const key = [p,q].sort((x,y)=>x-y).join(',');
+    if(!seen.has(key)){ seen.add(key); uniq.push([p,q]); }
+  });
+  let anyMatch = false;
+  let matchPair = null;
+  let rows = uniq.map(([p,q])=>{
+    const sum = p+q, prod = p*q;
+    const match = sum===d.b;
+    if(match){ anyMatch=true; matchPair=[p,q]; }
+    return `<tr class="${match?'match':''}"><td>${p}</td><td>${q}</td><td>${prod}</td><td>${sum}</td></tr>`;
+  }).join('');
+  let html = `
+    <div class="fnote">目標：積 = $${d.c}$（定数項）、和 = $${d.b}$（$x$の係数）になる整数の組を探す</div>
+    <table class="ftable">
+      <tr><th>数1</th><th>数2</th><th>積</th><th>和</th></tr>
+      ${rows}
+    </table>
+    <div class="fnote">${anyMatch ? `✓ 条件に合う組が見つかりました（表の色つきの行）。式にすると $${fmtFactor(matchPair[0],matchPair[1])}$` : '✗ この整数の組の中には、条件に合うものが見つかりませんでした。'}</div>
+  `;
+  document.getElementById('body-factor').innerHTML = html;
+  progress.factorFound = anyMatch;
+  progress.factorMatch = anyMatch ? matchPair : null;
+}
+
+function renderSteps(kind, steps, targetId){
+  let shown = 0;
+  function draw(){
+    let html = `<div class="steplines">`;
+    steps.forEach((s,i)=>{
+      html += `<div class="stepline ${i<shown?'show':''}"><span class="tag">${s.tag}</span>$${s.line}$</div>`;
+    });
+    html += `</div>`;
+    if(shown < steps.length){
+      html += `<div class="steprow"><button class="microbtn" onclick="advance('${kind}')">次のステップ →</button></div>`;
+    } else {
+      html += `<div class="steprow"><button class="microbtn" onclick="resetSteps('${kind}')">はじめから見直す</button></div>`;
+    }
+    document.getElementById(targetId).innerHTML = html;
+    typesetAll();
+  }
+  window['advance_'+kind] = ()=>{ shown = Math.min(steps.length, shown+1); draw(); if(shown===steps.length){ progress[kind+'Done']=true; progress[kind+'Final']=steps[steps.length-1].line; updateCompare(); } };
+  window['reset_'+kind] = ()=>{ shown=0; draw(); progress[kind+'Done']=false; updateCompare(); };
+  draw();
+}
+function advance(kind){ window['advance_'+kind](); }
+function resetSteps(kind){ window['reset_'+kind](); }
+
+function updateCompare(){
+  const rows = [];
+  if(progress.userAnswer){
+    const techLabel = {factor:'⚔️ 因数分解を使った', sqrt:'🛡️ 平方完成を使った', formula:'⚡ 解の公式を使った'}[progress.userTech] || '自分で解いた';
+    rows.push(`<div class="ci"><span class="k">🙋 ${techLabel}</span><span class="v">$${progress.userAnswer}$${progress.userMatch?' ✓':' ✗'}</span></div>`);
+  }
+  if(progress.factorFound!==undefined){
+    if(progress.factorFound){
+      const [p,q] = progress.factorMatch;
+      rows.push(`<div class="ci"><span class="k">⚔️ 因数分解</span><span class="v">$x = ${-p},\\ ${-q}$</span></div>`);
+    } else {
+      rows.push(`<div class="ci"><span class="k">⚔️ 因数分解</span><span class="v">見つからず</span></div>`);
+    }
+  }
+  if(progress.sqrtDone){ rows.push(`<div class="ci"><span class="k">🛡️ 平方完成</span><span class="v">$${progress.sqrtFinal}$</span></div>`); }
+  if(progress.formulaDone){ rows.push(`<div class="ci"><span class="k">⚡ 解の公式</span><span class="v">$${progress.formulaFinal}$</span></div>`); }
+
+  const box = document.getElementById('compareRow');
+  box.innerHTML = rows.length ? rows.join('') : `<div class="empty">パネルを開いてみよう。</div>`;
+  typesetAll();
+}
+
+typesetAll();
+setTimeout(()=>{
+  if(!window.katex || !window.renderMathInElement){
+    document.getElementById('netWarn').classList.add('show');
+  }
+}, 3000);
+</script>
+</body>
+</html>
