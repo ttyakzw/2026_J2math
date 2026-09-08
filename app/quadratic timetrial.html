@@ -256,7 +256,7 @@
       <button type="button" class="chip" data-t="sqrt" onclick="pickChip('sqrt')">🛡️ 平方完成・平方根</button>
       <button type="button" class="chip" data-t="formula" onclick="pickChip('formula')">⚡ 解の公式</button>
     </div>
-    <div class="techhint">↑ まずどの技を使うか選んでから、答えを入力しよう</div>
+    <div class="techhint">↑ どの技を使ったか選んでおくと、見極めが合っていたかも記録されるよ（任意）</div>
 
     <div class="answerblock" id="plainAnswerBlock">
       <div class="exhint">記入例：$x = 3,\ 2$</div>
@@ -627,7 +627,6 @@ function showScreen(id){
 function pickChip(t){
   pickedTech = (pickedTech===t) ? null : t;
   document.querySelectorAll('#trialTechChips .chip').forEach(c=>c.classList.toggle('picked', c.dataset.t===pickedTech));
-  document.getElementById('submitBtn').disabled = !pickedTech;
 }
 
 function pickTime(sec){
@@ -697,7 +696,7 @@ function loadTrialQuestion(){
   document.getElementById('trialFeedback').className = 'attemptresult';
   pickedTech = null;
   document.querySelectorAll('#trialTechChips .chip').forEach(c=>c.classList.remove('picked'));
-  document.getElementById('submitBtn').disabled = true;
+  document.getElementById('submitBtn').disabled = false;
   document.querySelectorAll('.attemptbtns .btn.ghost, .attemptbtns .btn.hint').forEach(b=>b.disabled=false);
   document.getElementById('trialEqCard').classList.remove('flash-correct','flash-wrong');
   typesetAll();
@@ -741,12 +740,6 @@ function showHint(){
 
 function submitTrial(){
   if(state.phase!=='trial' || state.locked) return;
-  if(!pickedTech){
-    const fb = document.getElementById('trialFeedback');
-    fb.className = 'attemptresult show diff';
-    fb.textContent = '先にどの技を使うか選んでね。';
-    return;
-  }
   const d = state.currentProblem;
   const target = trueRoots(d).sort((a,b)=>a-b);
 
@@ -784,7 +777,7 @@ function registerAnswer(d, correct, ansVals, skipped, kind){
   if(correct){ state.combo++; state.score.correct++; } else { state.combo = 0; }
 
   let techCorrect = null;
-  if(!skipped && !state.hintUsedThisQ){
+  if(!skipped && !state.hintUsedThisQ && pickedTech){
     state.techScore.total++;
     techCorrect = acceptableTechsOf(d).includes(pickedTech);
     if(techCorrect) state.techScore.correct++;
@@ -837,6 +830,7 @@ function renderResult(){
     let techBadge;
     if(entry.hintUsed) techBadge = '<span class="badge tech techhint">💡 ヒント使用</span>';
     else if(entry.skipped) techBadge = '';
+    else if(!entry.tech) techBadge = '<span class="badge tech skip">技：未選択</span>';
     else techBadge = entry.techCorrect
         ? '<span class="badge tech techok">技の見極め ✓</span>'
         : '<span class="badge tech techbad">技の見極め ✗</span>';
@@ -869,7 +863,9 @@ function openReview(logIdx){
   } else {
     let note = entry.correct ? '（一致）' : '（パネルと見比べてみよう）';
     if(!entry.hintUsed){
-      if(entry.techCorrect){
+      if(!entry.tech){
+        note += '　技：未選択';
+      } else if(entry.techCorrect){
         note += '　技の見極め：✓';
       } else {
         const accepted = acceptableTechsOf(d).map(t=>TECH_LABEL[t]||t).join(' または ');
