@@ -204,6 +204,10 @@
   .ox.idk{ color:var(--dim); background:var(--bg-soft); border-color:var(--line); }
   .ox .u{ font-size:0.7rem; font-weight:500; opacity:.85; }
   .oxlegend{ font-size:0.75rem; color:var(--dim); }
+  .unitcard:disabled{ opacity:.35; cursor:not-allowed; }
+  .chtag{ color:var(--c1); font-weight:900; }
+  .ox .star{ color:var(--c1); }
+  .offer{ border:3px solid var(--c1); }
   .qlist{ display:flex; flex-direction:column; gap:8px; }
   .qitem{ display:flex; align-items:center; gap:8px; background:var(--card); border:1px solid var(--line); border-radius:12px; padding:10px 12px; font-size:0.88rem; flex-wrap:wrap; }
   .qitem .qn{ font-weight:700; }
@@ -251,6 +255,12 @@
         <button class="chip" data-n="5" onclick="pickCount(5)">5問</button>
         <button class="chip" data-n="10" onclick="pickCount(10)">10問</button>
       </div>
+      <h3>難しさ</h3>
+      <div class="chips" id="diffChips">
+        <button class="chip picked" data-d="0" onclick="pickDiff(false)">ふつう</button>
+        <button class="chip" data-d="1" onclick="pickDiff(true)">★チャレンジ問題だけ（②⑤）</button>
+      </div>
+      <div class="note" style="margin-top:-4px">②⑤（証明）では、最後に★チャレンジ問題に挑戦できます（問題数を決めたときは最後の1問が自動でチャレンジ問題）。</div>
       <h3>② ポイント（公式・考え方）を問題といっしょに表示する？</h3>
       <div class="chips" id="pointChips">
         <button class="chip picked" data-p="1" onclick="pickPoint(true)">表示する</button>
@@ -299,6 +309,18 @@
       <button class="btn primary big" id="nextBtn" onclick="goNext()" style="flex-basis:100%">次の問題へ ▶</button>
     </div>
     <button class="btn ghost endbtn" onclick="quitQuiz()">■ 終了して記録を表示</button>
+  </div>
+
+  <!-- ============ チャレンジ確認 ============ -->
+  <div class="screen" id="screen-offer">
+    <div class="card offer">
+      <h1>★ 最後にチャレンジ問題に挑戦する？</h1>
+      <div class="note">少し難しい証明問題が1問出ます。まちがえても大丈夫。挑戦しないときは、そのまま記録を表示します。<br>（答えている途中の問題は、記録に入りません）</div>
+      <div class="btnrow">
+        <button class="btn primary big" onclick="startFinalCh()">★ 挑戦する</button>
+        <button class="btn ghost big" onclick="showResult()">挑戦しないで記録を表示</button>
+      </div>
+    </div>
   </div>
 
   <!-- ============ 結果 ============ -->
@@ -562,7 +584,7 @@ function u2sss(){
     proof:['△ABC と △QRP において',`AB : QR ＝ ${ab} : ${QR} ＝ ${r} …①`,`BC : RP ＝ ${bc} : ${RP} ＝ ${r} …②`,`CA : PQ ＝ ${ca} : ${PQ} ＝ ${r} …③`,'①、②、③より、3組の辺の比がすべて等しいので　<b>△ABC ∽ △QRP</b>'],
     reasonOpts:REASONS });
 }
-function genU2(){ return pick([u2par,u2bow,u2sas,u2alt,u2sss])(); }
+function genU2(){ return pick([u2par,u2bow,u2sas,u2alt,u2sss,u2com,u2two,u2pg,u2trap,u2sas2])(); }
 
 /* =========================================================
    ③ 対応する辺の比・長さ
@@ -750,7 +772,7 @@ function genU4(){ return pick([u4tri,u4tri,u4per,u4trap,u4trap,u4quad])(); }
 ========================================================= */
 function flowProb(o){
   const blanks={}; for(const k in o.blanks){ blanks[k]={opts:shuffle(o.blanks[k][0]),ans:o.blanks[k][1]}; }
-  return { unit:5, text:o.text, fig:o.fig, ans:{type:'flow',flow:{rows:o.rows,blanks,groups:o.groups||[]}}, ansHtml:o.ansHtml, hints:o.hints, steps:o.proof };
+  return { unit:o.unit||5, text:o.text, fig:o.fig, ans:{type:'flow',flow:{rows:o.rows,blanks,groups:o.groups||[]}}, ansHtml:o.ansHtml, hints:o.hints, steps:o.proof };
 }
 const TH=['中点連結定理','平行線と線分の比','対頂角は等しい','共通な角'];
 function quadFig(diags){
@@ -818,7 +840,7 @@ function u5dbfe(){
     hints:['D と E はどちらも中点。中点どうしを結んだ DE について何が言える？','DE も BF も「BC の半分」だね。'],
     proof:['△ABC で D, E は AB, AC の中点なので、中点連結定理より　DE∥BC、DE ＝ ½BC','F は BC の中点なので　BF ＝ ½BC','DE∥BF、DE ＝ BF','1組の対辺が平行でその長さが等しいので、<b>四角形 DBFE は平行四辺形</b>'] });
 }
-function genU5(){ return pick([u5para,u5rh,u5conv,u5dbfe])(); }
+function genU5(){ return pick([u5para,u5rh,u5conv,u5dbfe,u5rect,u5rhrect,u5rectrh,u5half,u5iso,u5bis])(); }
 
 /* =========================================================
    ⑥ 角の二等分線と比
@@ -915,14 +937,337 @@ function u7ao(){
 function genU7(){ return pick([u7ceva,u7ceva,u7men,u7ao])(); }
 
 /* =========================================================
+   ②⑤ 追加テンプレート・チャレンジ問題
+========================================================= */
+const foot=(P,X,Y)=>{ const d=sub(Y,X); const t=((P.x-X.x)*d.x+(P.y-X.y)*d.y)/(d.x*d.x+d.y*d.y); return lerp(X,Y,t); };
+const fit1=(t,pad=30)=>fit([{pts:t,box:[30,0,330,250]}],pad)[0];
+
+/* ---- ② 通常（追加5種） ---- */
+function comFig(lens,mark=true){
+  const [a,b,c,AD]=lens; const t=triSides(a,b,c); t.D=lerp(t.A,t.C,AD/b);
+  const g=fit1(t); const F=new Fig(); const cc=cen([g.A,g.B,g.C]);
+  F.pg([g.A,g.B,g.C]); F.ln(g.B,g.D); if(mark){ F.ang(g.B,g.A,g.D,1,22); F.ang(g.C,g.A,g.B,1,22); }
+  ['A','B','C','D'].forEach(v=>F.vl(g[v],v,cc)); return {F,g,cc};
+}
+function u2com(){
+  const [a,b,c]=pick([[7,8,6],[8,9,6],[6,8,5],[7,9,6]]);
+  const {F}=comFig([a,b,c,c*c/b]);
+  return simFlow({ text:'△ABC の辺 AC 上に点 D があり、∠ABD ＝ ∠ACB です（同じ印の角）。<br>△ABD と △ABC が相似であることを、フローチャートで証明しよう。',
+    fig:F.svg('三角形ABC。辺AC上に点D。角ABDと角ACBに同じ印。'),
+    premises:[{fact:'∠ABD ＝ ∠ACB',reason:'仮定'},{fact:'∠BAD ＝ ∠CAB',reason:'共通な角'}],
+    factOpts:['∠ABD ＝ ∠ACB','∠BAD ＝ ∠CAB','∠ABD ＝ ∠ABC','∠BDA ＝ ∠BCA'],
+    cond:CONDS[2], conclOpts:['△ABD ∽ △ACB','△ABD ∽ △ABC','△ABD ∽ △BCA'], concl:'△ABD ∽ △ACB',
+    hints:['印のついた角 ∠ABD と ∠ACB は、問題文で等しいと言っている（仮定）。','∠A は2つの三角形に共通。','印の角の頂点 B↔C、共通の A↔A、残り D↔B。'],
+    proof:['△ABD と △ACB において','仮定より　∠ABD ＝ ∠ACB …①','共通な角なので　∠BAD ＝ ∠CAB …②','①、②より、2組の角がそれぞれ等しいので　<b>△ABD ∽ △ACB</b>','⚠ 「△ABD ∽ △ABC」と書くと、頂点の対応がずれてしまう。'] });
+}
+function u2two(){
+  const t=triSides(...pick(TRIS)); t.D=foot(t.B,t.A,t.C); t.E=foot(t.C,t.A,t.B);
+  const g=fit1(t); const F=new Fig(); const cc=cen([g.A,g.B,g.C]);
+  F.pg([g.A,g.B,g.C]); F.ln(g.B,g.D); F.ln(g.C,g.E); F.rt(g.D,g.A,g.B,10); F.rt(g.E,g.A,g.C,10);
+  ['A','B','C','D','E'].forEach(v=>F.vl(g[v],v,cc));
+  return simFlow({ text:'△ABC で、頂点 B から辺 AC に垂線 BD、頂点 C から辺 AB に垂線 CE を引きます。<br>△ABD と △ACE が相似であることを、フローチャートで証明しよう。',
+    fig:F.svg('三角形ABC。BからACへ垂線BD、CからABへ垂線CE。'),
+    premises:[{fact:'∠ADB ＝ ∠AEC（＝90°）',reason:'仮定'},{fact:'∠BAD ＝ ∠CAE',reason:'共通な角'}],
+    factOpts:['∠ADB ＝ ∠AEC（＝90°）','∠BAD ＝ ∠CAE','∠ABD ＝ ∠AEC','∠ADB ＝ ∠ACE'],
+    cond:CONDS[2], conclOpts:['△ABD ∽ △ACE','△ABD ∽ △AEC','△ABD ∽ △CAE'], concl:'△ABD ∽ △ACE',
+    hints:['垂線なので、D と E のところの角は 90°。','∠A は2つの三角形に共通。','直角の頂点 D↔E、共通の A↔A、残り B↔C。'],
+    proof:['△ABD と △ACE において','仮定より　∠ADB ＝ ∠AEC ＝ 90° …①','共通な角なので　∠BAD ＝ ∠CAE …②','①、②より、2組の角がそれぞれ等しいので　<b>△ABD ∽ △ACE</b>'] });
+}
+function u2pg(){
+  const sh=rnd(15,35)/10, w=7.5, h=5;
+  const t={A:V(sh,0),D:V(sh+w,0),B:V(0,h),C:V(w,h)}; t.E=lerp(t.A,t.D,pick([.4,.5,.6])); t.F=inter(t.B,t.E,t.A,t.C);
+  const g=fit1(t); const F=new Fig(); const cc=cen([g.A,g.B,g.C,g.D]);
+  F.pg([g.A,g.B,g.C,g.D]); F.ln(g.A,g.C); F.ln(g.B,g.E); F.pa(g.A,g.D); F.pa(g.B,g.C);
+  ['A','B','C','D','E'].forEach(v=>F.vl(g[v],v,cc)); F.vl(g.F,'F',V(g.F.x+8,g.F.y-40),15);
+  return simFlow({ text:'平行四辺形 ABCD の辺 AD 上に点 E をとり、BE と対角線 AC の交点を F とします。<br>△FAE と △FCB が相似であることを、フローチャートで証明しよう。',
+    fig:F.svg('平行四辺形ABCD。辺AD上の点E。BEとACの交点F。'),
+    premises:[{fact:'∠FAE ＝ ∠FCB',reason:'平行線の錯角は等しい'},{fact:'∠AFE ＝ ∠CFB',reason:'対頂角は等しい'}],
+    factOpts:['∠FAE ＝ ∠FCB','∠FAE ＝ ∠FBC','∠AFE ＝ ∠CFB','∠AFE ＝ ∠AFB'],
+    cond:CONDS[2], conclOpts:['△FAE ∽ △FCB','△FAE ∽ △FBC','△FAE ∽ △CFB'], concl:'△FAE ∽ △FCB',
+    hints:['平行四辺形なので AD∥BC。直線 AC を横切る線とみると錯角が等しい。','F で向かい合う角は対頂角。','∠FAE＝∠FCB だから A↔C、E↔B。'],
+    proof:['△FAE と △FCB において','AD∥BC より、平行線の錯角は等しいので　∠FAE ＝ ∠FCB …①','対頂角は等しいので　∠AFE ＝ ∠CFB …②','①、②より、2組の角がそれぞれ等しいので　<b>△FAE ∽ △FCB</b>'] });
+}
+function u2trap(){
+  const a=rnd(3,5), b=a+rnd(3,5), off=(b-a)/2+(Math.random()-.5), h=b*.55;
+  const t={A:V(off,0),D:V(off+a,0),B:V(0,h),C:V(b,h)}; t.O=inter(t.A,t.C,t.B,t.D);
+  const g=fit1(t); const F=new Fig(); const cc=cen([g.A,g.B,g.C,g.D]);
+  F.pg([g.A,g.B,g.C,g.D]); F.ln(g.A,g.C); F.ln(g.B,g.D); F.pa(g.A,g.D); F.pa(g.B,g.C);
+  ['A','B','C','D'].forEach(v=>F.vl(g[v],v,cc)); F.vl(g.O,'O',V(g.O.x,g.O.y-30),16);
+  return simFlow({ text:'AD∥BC の台形 ABCD で、対角線 AC と BD の交点を O とします。<br>△OAD と △OCB が相似であることを、錯角を2組使って証明しよう。',
+    fig:F.svg('台形ABCD。ADとBCが平行。対角線の交点O。'),
+    premises:[{fact:'∠OAD ＝ ∠OCB',reason:'平行線の錯角は等しい'},{fact:'∠ODA ＝ ∠OBC',reason:'平行線の錯角は等しい'}],
+    factOpts:['∠OAD ＝ ∠OCB','∠ODA ＝ ∠OBC','∠OAD ＝ ∠OBC','∠ODA ＝ ∠OCB'],
+    cond:CONDS[2], conclOpts:['△OAD ∽ △OCB','△OAD ∽ △OBC','△OAD ∽ △CBO'], concl:'△OAD ∽ △OCB',
+    hints:['AD∥BC。対角線 AC を横切る線とみると ∠OAD と ∠OCB が錯角。','対角線 BD についても同じように錯角が見つかる。','A↔C、D↔B、O↔O。'],
+    proof:['△OAD と △OCB において','AD∥BC より、錯角は等しいので　∠OAD ＝ ∠OCB …①','同様に、錯角は等しいので　∠ODA ＝ ∠OBC …②','①、②より、2組の角がそれぞれ等しいので　<b>△OAD ∽ △OCB</b>'] });
+}
+function u2sas2(){
+  const [q,p]=pick([[1,2],[2,3],[3,4]]); let u,v; do{ u=rnd(2,4); v=rnd(2,5); }while(u===v);
+  const AB=q*u, BC=q*v, EF=p*u, FD=p*v, deg=pick([50,60,70,80]);
+  const t={B:V(0,0),C:V(BC,0),A:V(AB*Math.cos(deg*D2R),-AB*Math.sin(deg*D2R))}; centerize(t);
+  const an=rnd(70,290)*D2R, refl=Math.random()<.5, k=p/q, t2={};
+  [['A','E'],['B','F'],['C','D']].forEach(([a,b])=>{ let x=t[a]; if(refl) x=V(-x.x,x.y); t2[b]=rot(mul(x,k),an); });
+  const [g1,g2]=fit([{pts:t,box:[0,0,150,250]},{pts:t2,box:[150,0,360,250]}],32);
+  const F=new Fig(); const c1=cen(Object.values(g1)), c2=cen(Object.values(g2));
+  F.pg([g1.A,g1.B,g1.C]); F.pg([g2.D,g2.E,g2.F]); F.ang(g1.B,g1.A,g1.C,1,16); F.ang(g2.F,g2.E,g2.D,1,16);
+  ['A','B','C'].forEach(v=>F.vl(g1[v],v,c1)); ['D','E','F'].forEach(v=>F.vl(g2[v],v,c2));
+  F.sl(g1.A,g1.B,AB,c1); F.sl(g1.B,g1.C,BC,c1); F.sl(g2.E,g2.F,EF,c2); F.sl(g2.F,g2.D,FD,c2);
+  const r=`${q} : ${p}`;
+  return simFlow({ text:`図の △ABC と △DEF で、∠B ＝ ∠F ＝ ${deg}° です（同じ印の角）。<br>△ABC と △DEF が相似であることを、フローチャートで証明しよう。`,
+    fig:F.svg('三角形ABCと三角形DEF。2辺の長さと、その間の角に印。'),
+    premises:[{fact:`AB : EF ＝ BC : FD ＝ ${r}`,reason:'仮定の長さから計算'},{fact:'∠ABC ＝ ∠EFD',reason:'仮定'}],
+    factOpts:[`AB : EF ＝ BC : FD ＝ ${r}`,'AB : DE ＝ BC : EF','AB : FD ＝ BC : EF','∠ABC ＝ ∠EFD','∠ABC ＝ ∠DEF'],
+    cond:CONDS[1], conclOpts:['△ABC ∽ △EFD','△ABC ∽ △DEF','△ABC ∽ △FED'], concl:'△ABC ∽ △EFD',
+    hints:['印のついた角 ∠B と ∠F をはさむ辺どうしを比べよう。',`AB(${AB}) と EF(${EF})、BC(${BC}) と FD(${FD}) が組になる。`,'∠B↔∠F なので B↔F。AB と EF が対応するので A↔E。'],
+    proof:['△ABC と △EFD において',`AB : EF ＝ ${AB} : ${EF} ＝ ${r}、BC : FD ＝ ${BC} : ${FD} ＝ ${r} …①`,`仮定より　∠ABC ＝ ∠EFD ＝ ${deg}° …②`,'①、②より、2組の辺の比とその間の角がそれぞれ等しいので　<b>△ABC ∽ △EFD</b>'] });
+}
+
+/* ---- ② チャレンジ ---- */
+const ch2 = o => flowProb(Object.assign({unit:2},o));
+function c2alt(){
+  const {F}=altFig();
+  return ch2({ text:'∠BAC＝90° の直角三角形 ABC で、A から BC に垂線 AH を引きます。<br>小さい2つの三角形 △HBA と △HAC が相似であることを証明しよう。<br>（ヒントなしで共通な角は見つからないよ。角の大きさを「90° − ○」で表してみよう）',
+    fig:F.svg('直角三角形ABC（角Aが直角）。AからBCに垂線AH。'),
+    rows:[[ ['仮定より<br>',{b:'a'}] ],
+          [ ['△ABH の内角の和から<br>∠HBA ＝ 90° − ∠BAH'], ['∠BAC ＝ 90° だから<br>',{b:'b'}] ],
+          [[ 'よって<br>',{b:'c'} ]], [[ '<b>相似条件</b><br>',{b:'d'} ]], [[ '<b>結論</b>　よって ',{b:'z'} ]]],
+    blanks:{ a:[['∠AHB ＝ ∠CHA ＝ 90°','∠BAC ＝ ∠AHB ＝ 90°','∠HAB ＝ ∠HAC'],'∠AHB ＝ ∠CHA ＝ 90°'],
+      b:[['∠HAC ＝ 90° − ∠BAH','∠HAC ＝ ∠BAH','∠HAC ＝ 180° − ∠BAH'],'∠HAC ＝ 90° − ∠BAH'],
+      c:[['∠HBA ＝ ∠HAC','∠HBA ＝ ∠HCA','∠HAB ＝ ∠HAC'],'∠HBA ＝ ∠HAC'], d:[CONDS,CONDS[2]],
+      z:[['△HBA ∽ △HAC','△HBA ∽ △HCA','△HAB ∽ △HAC'],'△HBA ∽ △HAC'] },
+    ansHtml:'△HBA ∽ △HAC',
+    hints:['H のところの2つの角は、どちらも 90°。','∠HBA も ∠HAC も「90° − ∠BAH」で表せる。','∠HBA＝∠HAC だから B↔A、残り A↔C。'],
+    proof:['△HBA と △HAC において','仮定より　∠AHB ＝ ∠CHA ＝ 90° …①','△ABH の内角の和より　∠HBA ＝ 180° − 90° − ∠BAH ＝ 90° − ∠BAH','∠BAC ＝ 90° より　∠HAC ＝ 90° − ∠BAH','よって　∠HBA ＝ ∠HAC …②','①、②より、2組の角がそれぞれ等しいので　<b>△HBA ∽ △HAC</b>'] });
+}
+function c2eq(){
+  const tt=pick([.3,.35,.4,.6,.65]); const t={B:V(0,0),C:V(1,0),A:V(.5,-Math.sqrt(3)/2)}; t.D=lerp(t.B,t.C,tt); t.E=lerp(t.C,t.A,tt*(1-tt));
+  const g=fit1(t); const F=new Fig(); const cc=cen([g.A,g.B,g.C]);
+  F.pg([g.A,g.B,g.C]); F.ln(g.A,g.D); F.ln(g.D,g.E); F.ang(g.D,g.A,g.E,1,20); F.ang(g.B,g.A,g.C,2,14); F.ang(g.C,g.B,g.A,2,14);
+  ['A','B','C','D','E'].forEach(v=>F.vl(g[v],v,cc));
+  return ch2({ text:'正三角形 ABC の辺 BC 上に点 D、辺 CA 上に点 E を、∠ADE ＝ 60° となるようにとります。<br>△ABD と △DCE が相似であることを証明しよう。',
+    fig:F.svg('正三角形ABC。BC上の点D、CA上の点E。角ADEが60度。'),
+    rows:[[ ['正三角形の角だから<br>',{b:'a'}] ],
+          [ ['△ABD の内角の和から<br>∠BAD ＝ 180° − 60° − ∠ADB'], ['B, D, C は一直線上で ∠ADE＝60° だから<br>',{b:'b'}] ],
+          [[ 'よって<br>',{b:'c'} ]], [[ '<b>相似条件</b><br>',{b:'d'} ]], [[ '<b>結論</b>　よって ',{b:'z'} ]]],
+    blanks:{ a:[['∠ABD ＝ ∠DCE ＝ 60°','∠BAD ＝ ∠DCE ＝ 60°','∠ADB ＝ ∠DEC ＝ 60°'],'∠ABD ＝ ∠DCE ＝ 60°'],
+      b:[['∠CDE ＝ 180° − 60° − ∠ADB','∠CDE ＝ 60° − ∠ADB','∠CDE ＝ ∠ADB'],'∠CDE ＝ 180° − 60° − ∠ADB'],
+      c:[['∠BAD ＝ ∠CDE','∠BAD ＝ ∠CED','∠ADB ＝ ∠CDE'],'∠BAD ＝ ∠CDE'], d:[CONDS,CONDS[2]],
+      z:[['△ABD ∽ △DCE','△ABD ∽ △ECD','△ABD ∽ △CDE'],'△ABD ∽ △DCE'] },
+    ansHtml:'△ABD ∽ △DCE',
+    hints:['正三角形の3つの角はどれも 60°。','点 D のまわり：∠ADB ＋ ∠ADE ＋ ∠CDE ＝ 180°（一直線）。','∠BAD と ∠CDE がどちらも「120° − ∠ADB」になる。'],
+    proof:['△ABD と △DCE において','正三角形の角なので　∠ABD ＝ ∠DCE ＝ 60° …①','△ABD で　∠BAD ＝ 180° − 60° − ∠ADB ＝ 120° − ∠ADB','B, D, C は一直線上なので　∠CDE ＝ 180° − ∠ADE − ∠ADB ＝ 120° − ∠ADB','よって　∠BAD ＝ ∠CDE …②','①、②より、2組の角がそれぞれ等しいので　<b>△ABD ∽ △DCE</b>'] });
+}
+function bowFig(){
+  const m=rnd(2,3), n=rnd(3,5); const u=nrm(V(-1,-0.7-Math.random()*.4)), w=nrm(V(1,-0.8-Math.random()*.3));
+  const t={O:V(0,0),A:mul(u,m),B:mul(w,m),D:mul(u,-n),C:mul(w,-n)};
+  const g=fit1(t,28); const F=new Fig();
+  F.ln(g.A,g.B); F.ln(g.C,g.D); F.ln(g.A,g.D); F.ln(g.B,g.C); F.pa(g.A,g.B); F.pa(g.C,g.D);
+  ['A','B','C','D'].forEach(v=>F.vl(g[v],v,g.O)); F.vl(g.O,'O',V(g.O.x-10,g.O.y)); return F;
+}
+function c2prod(){
+  const F=bowFig(); const AO=['∠OAB ＝ ∠ODC（錯角）','∠AOB ＝ ∠DOC（対頂角）','∠OAB ＝ ∠OCD（錯角）','∠AOB ＝ ∠AOC（対頂角）'];
+  return ch2({ text:'線分 AD と BC が点 O で交わり、AB∥CD です。<br><b>OA × OC ＝ OB × OD</b> であることを証明しよう。（まず相似を示し、そこから辺の比 → 積の式へ）',
+    fig:F.svg('線分ADとBCが点Oで交わる。ABとCDは平行。'),
+    rows:[[ ['根拠①<br>',{b:'a'}], ['根拠②<br>',{b:'b'}] ],
+          [[ '2組の角がそれぞれ等しいから<br>',{b:'c'} ]], [[ '相似な図形の対応する辺の比は等しいから<br>',{b:'d'} ]], [[ '外側の積＝内側の積より<br>',{b:'e'} ]]],
+    blanks:{ a:[AO,AO[0]], b:[AO,AO[1]], c:[['△OAB ∽ △ODC','△OAB ∽ △OCD','△OAB ∽ △DOC'],'△OAB ∽ △ODC'],
+      d:[['OA : OD ＝ OB : OC','OA : OC ＝ OB : OD','OA : OD ＝ OC : OB'],'OA : OD ＝ OB : OC'],
+      e:[['OA × OC ＝ OB × OD','OA × OD ＝ OB × OC','OA × OB ＝ OC × OD'],'OA × OC ＝ OB × OD'] },
+    groups:[[['a'],['b']]], ansHtml:'OA × OC ＝ OB × OD',
+    hints:['まずは △OAB と △ODC の相似から（錯角・対頂角）。','A↔D、B↔C なので、OA と OD、OB と OC が対応する辺。','a : b ＝ c : d なら a × d ＝ b × c。'],
+    proof:['△OAB と △ODC において','AB∥CD より錯角は等しいので　∠OAB ＝ ∠ODC、対頂角は等しいので　∠AOB ＝ ∠DOC','2組の角がそれぞれ等しいので　△OAB ∽ △ODC','対応する辺の比は等しいので　OA : OD ＝ OB : OC','外側の積＝内側の積より　<b>OA × OC ＝ OB × OD</b>'] });
+}
+function c2sas(){
+  const [AB,AC,AD,r]=pick([[6,9,4,'2 : 3'],[4,8,2,'1 : 2'],[10,25,4,'2 : 5'],[12,18,8,'2 : 3'],[6,12,3,'1 : 2']]);
+  const angA=rnd(65,80)*D2R; const a=Math.sqrt(AB*AB+AC*AC-2*AB*AC*Math.cos(angA));
+  const {F,g,cc}=comFig([a,AC,AB,AD],false);
+  F.sl(g.A,g.B,AB,cc); F.sl(g.A,g.D,AD,cc,'sl',-14); F.sl(g.D,g.C,AC-AD,cc);
+  return ch2({ text:`△ABC で AB＝${AB}、AC＝${AC}、辺 AC 上の点 D は AD＝${AD} です。<br>△ABD ∽ △ACB を示し、さらに<b>∠ABD と等しい角</b>を答えよう。`,
+    fig:F.svg('三角形ABC。辺AC上に点D。長さが書いてある。'),
+    rows:[[ ['根拠①<br>',{b:'a'}], ['根拠②<br>',{b:'b'}] ],
+          [[ '<b>相似条件</b><br>',{b:'d'} ]], [[ 'よって ',{b:'z'} ]], [[ '相似な図形の対応する角は等しいので<br>∠ABD ＝ ',{b:'e'} ]]],
+    blanks:{ a:[[`AD : AB ＝ AB : AC ＝ ${r}`,`AD : AC ＝ AB : BC`,`AD : DC ＝ AB : AC`],`AD : AB ＝ AB : AC ＝ ${r}`], b:[['∠BAD ＝ ∠CAB','∠ABD ＝ ∠ACB','∠ADB ＝ ∠ABC'],'∠BAD ＝ ∠CAB'],
+      d:[CONDS,CONDS[1]], z:[['△ABD ∽ △ACB','△ABD ∽ △ABC','△ADB ∽ △ACB'],'△ABD ∽ △ACB'], e:[['∠ACB','∠ABC','∠BAC'],'∠ACB'] },
+    ansHtml:'△ABD ∽ △ACB、∠ABD ＝ ∠ACB',
+    hints:[`AD : AB ＝ ${AD} : ${AB}、AB : AC ＝ ${AB} : ${AC} を計算してみよう。`,'AB は2つの三角形の両方に出てくる辺（△ABD でも △ACB でも使う）。','A↔A、B↔C、D↔B。'],
+    proof:['△ABD と △ACB において',`AD : AB ＝ ${AD} : ${AB} ＝ ${r}、AB : AC ＝ ${AB} : ${AC} ＝ ${r}　より　AD : AB ＝ AB : AC …①`,'共通な角なので　∠BAD ＝ ∠CAB …②','①、②より、2組の辺の比とその間の角がそれぞれ等しいので　<b>△ABD ∽ △ACB</b>','対応する角は等しいので　<b>∠ABD ＝ ∠ACB</b>'] });
+}
+function genU2C(){ return pick([c2alt,c2eq,c2prod,c2sas])(); }
+
+/* ---- ⑤ 通常（追加6種） ---- */
+const CH=pts=>{ pts.P=lerp(pts.A,pts.B,.5); pts.Q=lerp(pts.B,pts.C,.5); pts.R=lerp(pts.C,pts.D,.5); pts.S=lerp(pts.D,pts.A,.5); return pts; };
+function quadFigT(t,diags,extra){
+  CH(t); const g=fit1(t,32); const F=new Fig(); const c=cen([g.A,g.B,g.C,g.D]);
+  F.pg([g.A,g.B,g.C,g.D]); F.pg([g.P,g.Q,g.R,g.S],'hl'); diags.forEach(([a,b])=>F.ln(g[a],g[b],'ln2'));
+  F.tk(g.A,g.P,1); F.tk(g.P,g.B,1); F.tk(g.B,g.Q,2); F.tk(g.Q,g.C,2); F.tk(g.C,g.R,3); F.tk(g.R,g.D,3);
+  ['A','B','C','D','P','Q','R','S'].forEach(v=>F.vl(g[v],v,c)); if(extra) extra(F,g); return F;
+}
+function perpQuad(sym){ const r=()=>2+Math.random()*2; const p=r(), q=r();
+  const t= sym ? {A:V(0,-p),B:V(-q,0),C:V(0,p),D:V(q,0),O:V(0,0)} : {A:V(0,-r()),B:V(-r(),0),C:V(0,r()),D:V(r(),0),O:V(0,0)};
+  rotAll(t,rnd(-15,15)*D2R); return t; }
+function u5rect(){
+  const F=quadFigT(perpQuad(false),[['A','C'],['B','D']],(F,g)=>F.rt(g.O,g.A,g.D,9));
+  return flowProb({ text:'四角形 ABCD で、対角線 AC と BD が<b>垂直</b>に交わっています。辺 AB, BC, CD, DA の中点を P, Q, R, S とするとき、四角形 PQRS が<b>長方形</b>であることを証明しよう。',
+    fig:F.svg('対角線が垂直な四角形ABCDと、各辺の中点P,Q,R,S。'),
+    rows:[[ ['△ABC で中点連結定理より<br>PQ∥',{b:'a'}], ['△BCD で中点連結定理より<br>QR∥',{b:'b'}] ],
+          [[ '仮定 AC⊥BD より<br>',{b:'c'} ]], [[ '同様に、四角形 PQRS の4つの角はすべて 90°<br>',{b:'d'},' から' ]], [[ '四角形 PQRS は ',{b:'e'} ]]],
+    blanks:{ a:[['AC','BD','AB'],'AC'], b:[['BD','AC','CD'],'BD'], c:[['PQ⊥QR（∠PQR＝90°）','PQ＝QR','PQ∥QR'],'PQ⊥QR（∠PQR＝90°）'],
+      d:[['4つの角がすべて等しい','4つの辺がすべて等しい','対角線が垂直に交わる'],'4つの角がすべて等しい'], e:[['長方形','ひし形','台形'],'長方形'] },
+    ansHtml:'四角形PQRS は長方形',
+    hints:['中点連結定理で、PQ は AC に、QR は BD に平行になる。','AC と BD が垂直なら、それに平行な PQ と QR も垂直。'],
+    proof:['△ABC で中点連結定理より　PQ∥AC','△BCD で中点連結定理より　QR∥BD','AC⊥BD なので　PQ⊥QR、つまり ∠PQR ＝ 90°','同様に ∠QRS ＝ ∠RSP ＝ ∠SPQ ＝ 90°','4つの角がすべて等しいので、<b>四角形 PQRS は長方形</b>'] });
+}
+function u5rhrect(){
+  const F=quadFigT(perpQuad(true),[['A','C'],['B','D']],(F,g)=>F.rt(g.O,g.A,g.D,9));
+  return flowProb({ text:'<b>ひし形</b> ABCD の辺 AB, BC, CD, DA の中点を P, Q, R, S とします。四角形 PQRS が<b>長方形</b>であることを証明しよう。',
+    fig:F.svg('ひし形ABCDと、各辺の中点P,Q,R,S。対角線ACとBD。'),
+    rows:[[ ['△ABC で中点連結定理より<br>',{b:'a'}], ['△BCD で中点連結定理より<br>',{b:'b'}] ],
+          [[ {b:'t'},' から AC⊥BD<br>よって ',{b:'c'} ]], [[ '同様にほかの角も 90° なので、四角形 PQRS は ',{b:'e'} ]]],
+    blanks:{ a:[['PQ∥AC','PQ∥BD','PQ＝AC'],'PQ∥AC'], b:[['QR∥BD','QR∥AC','QR＝BD'],'QR∥BD'],
+      t:[['ひし形の対角線は垂直に交わる','ひし形の対角線の長さは等しい','平行四辺形の対角線はそれぞれの中点で交わる'],'ひし形の対角線は垂直に交わる'],
+      c:[['∠PQR ＝ 90°','PQ ＝ QR','PQ∥QR'],'∠PQR ＝ 90°'], e:[['長方形','ひし形','正方形'],'長方形'] },
+    ansHtml:'四角形PQRS は長方形',
+    hints:['PQ は AC に、QR は BD に平行。','ひし形の対角線にはどんな性質がある？（長さ？角度？）'],
+    proof:['△ABC で中点連結定理より　PQ∥AC','△BCD で中点連結定理より　QR∥BD','ひし形の対角線は垂直に交わるので　AC⊥BD','よって　PQ⊥QR（∠PQR ＝ 90°）。同様にほかの角も 90°','4つの角がすべて等しいので、<b>四角形 PQRS は長方形</b>'] });
+}
+function u5rectrh(){
+  const w=rnd(5,8), h=rnd(3,4); const t={A:V(0,0),B:V(0,h),C:V(w,h),D:V(w,0)};
+  const F=quadFigT(t,[['A','C'],['B','D']]);
+  return flowProb({ text:'<b>長方形</b> ABCD の辺 AB, BC, CD, DA の中点を P, Q, R, S とします。四角形 PQRS が<b>ひし形</b>であることを証明しよう。',
+    fig:F.svg('長方形ABCDと、各辺の中点P,Q,R,S。対角線ACとBD。'),
+    rows:[[ ['△ABC と △ACD で中点連結定理より<br>PQ ＝ SR ＝ ',{b:'a'}], ['△ABD と △BCD で中点連結定理より<br>PS ＝ QR ＝ ',{b:'b'}] ],
+          [[ {b:'t'},' から AC ＝ BD<br>よって ',{b:'c'} ]], [[ {b:'d'},' から、四角形 PQRS は ひし形' ]]],
+    blanks:{ a:[['½AC','½BD','AC'],'½AC'], b:[['½BD','½AC','BD'],'½BD'],
+      t:[['長方形の対角線の長さは等しい','長方形の対角線は垂直に交わる','長方形の4つの角は等しい'],'長方形の対角線の長さは等しい'],
+      c:[['PQ ＝ QR ＝ RS ＝ SP','PQ⊥QR','PR ＝ QS'],'PQ ＝ QR ＝ RS ＝ SP'], d:[['4つの辺がすべて等しい','4つの角がすべて等しい','2組の対辺がそれぞれ平行'],'4つの辺がすべて等しい'] },
+    ansHtml:'四角形PQRS はひし形',
+    hints:['PQ と SR は AC の半分、PS と QR は BD の半分。','長方形の対角線の性質は？'],
+    proof:['中点連結定理より　PQ ＝ SR ＝ ½AC、PS ＝ QR ＝ ½BD','長方形の対角線の長さは等しいので　AC ＝ BD','よって　PQ ＝ QR ＝ RS ＝ SP','4つの辺がすべて等しいので、<b>四角形 PQRS はひし形</b>'] });
+}
+function u5half(){
+  const t=triSides(...pick(TRIS)); t.D=lerp(t.A,t.B,.5); t.E=lerp(t.A,t.C,.5);
+  const g=fit1(t); const F=new Fig(); const c=cen([g.A,g.B,g.C]);
+  F.pg([g.A,g.B,g.C]); F.ln(g.D,g.E); F.tk(g.A,g.D,1); F.tk(g.D,g.B,1); F.tk(g.A,g.E,2); F.tk(g.E,g.C,2);
+  ['A','B','C','D','E'].forEach(v=>F.vl(g[v],v,c));
+  return flowProb({ text:'△ABC の辺 AB, AC の中点を D, E とします。<b>3組の辺の比</b>を使って、△ADE ∽ △ABC を証明しよう。',
+    fig:F.svg('三角形ABC。DとEはABとACの中点。'),
+    rows:[[ ['D は AB の中点だから<br>',{b:'a'}], ['E は AC の中点だから<br>',{b:'b'}], ['中点連結定理より<br>',{b:'c'}] ],
+          [[ '<b>相似条件</b><br>',{b:'d'} ]], [[ 'よって ',{b:'z'} ]]],
+    blanks:{ a:[['AD : AB ＝ 1 : 2','AD : DB ＝ 1 : 2','AD : AB ＝ 1 : 1'],'AD : AB ＝ 1 : 2'], b:[['AE : AC ＝ 1 : 2','AE : EC ＝ 1 : 2','AE : AC ＝ 2 : 1'],'AE : AC ＝ 1 : 2'],
+      c:[['DE : BC ＝ 1 : 2','DE : BC ＝ 1 : 1','DE : BC ＝ 2 : 1'],'DE : BC ＝ 1 : 2'], d:[CONDS,CONDS[0]], z:[['△ADE ∽ △ABC','△ADE ∽ △ACB','△AED ∽ △ABC'],'△ADE ∽ △ABC'] },
+    ansHtml:'△ADE ∽ △ABC',
+    hints:['中点なので、AD は AB の半分。AD : DB ではなく AD : AB。','DE は BC の半分（中点連結定理）。'],
+    proof:['D は AB の中点なので　AD : AB ＝ 1 : 2','E は AC の中点なので　AE : AC ＝ 1 : 2','中点連結定理より DE ＝ ½BC なので　DE : BC ＝ 1 : 2','3組の辺の比がすべて等しいので　<b>△ADE ∽ △ABC</b>'] });
+}
+function u5iso(){
+  const L=7, a1d=rnd(115,125), a1=a1d*D2R, a2=(a1d-90+rnd(-8,8))*D2R, w=rnd(6,8);
+  const t={B:V(0,0),C:V(w,0)}; t.A=V(L*Math.cos(a1),-L*Math.sin(a1)); t.D=V(w+L*Math.cos(a2),-L*Math.sin(a2));
+  t.P=lerp(t.A,t.D,.5); t.Q=lerp(t.B,t.C,.5); t.R=lerp(t.B,t.D,.5);
+  const g=fit1(t,32); const F=new Fig(); const c=cen([g.A,g.B,g.C,g.D]);
+  F.pg([g.A,g.B,g.C,g.D]); F.ln(g.B,g.D,'ln2'); F.pg([g.P,g.Q,g.R],'hl'); F.tk(g.A,g.B,3); F.tk(g.C,g.D,3);
+  ['A','B','C','D','P','Q'].forEach(v=>F.vl(g[v],v,c)); F.vl(g.R,'R',V(g.R.x,g.R.y-30),15);
+  return flowProb({ text:'四角形 ABCD で <b>AB ＝ CD</b> です（同じ印）。辺 AD, BC と対角線 BD の中点を、それぞれ P, Q, R とします。<br>△PQR が<b>二等辺三角形</b>であることを証明しよう。',
+    fig:F.svg('四角形ABCD。ABとCDの長さが等しい。AD,BC,BDの中点P,Q,R。'),
+    rows:[[ ['△ABD で P, R は AD, BD の中点だから<br>PR ＝ ',{b:'a'}], ['△BCD で Q, R は BC, BD の中点だから<br>RQ ＝ ',{b:'b'}] ],
+          [[ '仮定 AB ＝ CD より<br>',{b:'c'} ]], [[ '2つの辺が等しいので、△PQR は ',{b:'d'} ]]],
+    blanks:{ a:[['½AB','½CD','½BD'],'½AB'], b:[['½CD','½AB','½BD'],'½CD'], c:[['PR ＝ RQ','PQ ＝ PR','PQ ＝ RQ'],'PR ＝ RQ'], d:[['二等辺三角形','正三角形','直角三角形'],'二等辺三角形'] },
+    ansHtml:'△PQR は二等辺三角形',
+    hints:['△ABD では、PR は AB と向かい合う。','△BCD では、RQ は CD と向かい合う。'],
+    proof:['△ABD で中点連結定理より　PR ＝ ½AB','△BCD で中点連結定理より　RQ ＝ ½CD','仮定 AB ＝ CD より　PR ＝ RQ','2つの辺が等しいので、<b>△PQR は二等辺三角形</b>'] });
+}
+function u5bis(){
+  const t=triSides(...pick(TRIS)); t.D=lerp(t.A,t.B,.5); t.E=lerp(t.A,t.C,.5); t.F=lerp(t.B,t.C,pick([.3,.4,.6,.7])); t.M=inter(t.D,t.E,t.A,t.F);
+  const g=fit1(t); const F=new Fig(); const c=cen([g.A,g.B,g.C]);
+  F.pg([g.A,g.B,g.C]); F.ln(g.D,g.E); F.ln(g.A,g.F); F.tk(g.A,g.D,1); F.tk(g.D,g.B,1); F.tk(g.A,g.E,2); F.tk(g.E,g.C,2);
+  ['A','B','C','D','E','F'].forEach(v=>F.vl(g[v],v,c)); F.vl(g.M,'M',V(g.M.x+30,g.M.y+10),15);
+  return flowProb({ text:'△ABC の辺 AB, AC の中点を D, E、辺 BC 上の点を F とし、AF と DE の交点を M とします。<br>M が AF の<b>中点</b>であることを証明しよう。',
+    fig:F.svg('三角形ABC。DとEはABとACの中点。BC上の点F。AFとDEの交点M。'),
+    rows:[[ ['△ABC で D, E は中点だから<br>',{b:'a'},'（中点連結定理）'] ],
+          [[ 'よって DM∥BF。△ABF で、平行線と線分の比より<br>',{b:'b'} ]], [[ 'D は AB の中点だから AD : DB ＝ 1 : 1<br>よって ',{b:'c'} ]], [[ 'したがって M は AF の ',{b:'d'} ]]],
+    blanks:{ a:[['DE∥BC','DE ＝ BC','DE∥AF'],'DE∥BC'], b:[['AM : MF ＝ AD : DB','AM : MF ＝ DM : BF','AM : AF ＝ AD : DB'],'AM : MF ＝ AD : DB'],
+      c:[['AM : MF ＝ 1 : 1','AM : MF ＝ 1 : 2','DM ＝ BF'],'AM : MF ＝ 1 : 1'], d:[['中点','延長上の点','頂点'],'中点'] },
+    ansHtml:'M は AF の中点',
+    hints:['まず中点連結定理で DE∥BC。','△ABF に注目すると、DM∥BF なので平行線と線分の比が使える。'],
+    proof:['△ABC で D, E は AB, AC の中点なので、中点連結定理より　DE∥BC','よって DM∥BF。△ABF で、平行線と線分の比より　AM : MF ＝ AD : DB','D は AB の中点なので　AD : DB ＝ 1 : 1','よって AM : MF ＝ 1 : 1 となり、<b>M は AF の中点</b>'] });
+}
+
+/* ---- ⑤ チャレンジ ---- */
+function c5trap(){
+  const a=rnd(3,5), b=a+rnd(3,5), off=(b-a)/2+(Math.random()-.5), h=b*.5;
+  const t={A:V(off,0),D:V(off+a,0),B:V(0,h),C:V(b,h)}; t.M=lerp(t.A,t.B,.5); t.N=lerp(t.D,t.C,.5); t.Q=lerp(t.A,t.C,.5);
+  const g=fit1(t,32); const F=new Fig(); const c=cen([g.A,g.B,g.C,g.D]);
+  F.pg([g.A,g.B,g.C,g.D]); F.ln(g.A,g.C,'ln2'); F.ln(g.M,g.N); F.pa(g.A,g.D); F.pa(g.B,g.C);
+  F.tk(g.A,g.M,1); F.tk(g.M,g.B,1); F.tk(g.D,g.N,2); F.tk(g.N,g.C,2);
+  ['A','B','C','D','M','N'].forEach(v=>F.vl(g[v],v,c)); F.vl(g.Q,'Q',V(g.Q.x,g.Q.y+30),15);
+  return flowProb({ unit:5, text:'AD∥BC の台形 ABCD で、辺 AB, DC の中点を M, N とします。<br><b>MN ＝ ½（AD ＋ BC）</b> であることを証明しよう。<br>（補助線：対角線 AC を引き、AC の中点を Q とする）',
+    fig:F.svg('台形ABCD。MとNはABとDCの中点。対角線ACとその中点Q。'),
+    rows:[[ ['△ABC で M, Q は AB, AC の中点だから<br>',{b:'a'}], ['△CDA で N, Q は CD, CA の中点だから<br>',{b:'b'}] ],
+          [[ 'AD∥BC なので MQ∥QN。だから<br>',{b:'c'} ]], [[ 'よって MN ＝ MQ ＋ QN ＝ ',{b:'d'} ]]],
+    blanks:{ a:[['MQ∥BC、MQ ＝ ½BC','MQ∥AD、MQ ＝ ½AD','MQ ＝ BC'],'MQ∥BC、MQ ＝ ½BC'], b:[['QN∥AD、QN ＝ ½AD','QN∥BC、QN ＝ ½BC','QN ＝ AD'],'QN∥AD、QN ＝ ½AD'],
+      c:[['M, Q, N は一直線上にある','MQ ⊥ QN','MQ ＝ QN'],'M, Q, N は一直線上にある'], d:[['½（AD ＋ BC）','½（BC − AD）','AD ＋ BC'],'½（AD ＋ BC）'] },
+    ansHtml:'MN ＝ ½（AD ＋ BC）',
+    hints:['対角線 AC で台形を2つの三角形に分けて、それぞれ中点連結定理。','MQ も QN も同じ向き（BC と AD は平行）なので、1本の直線になる。'],
+    proof:['対角線 AC を引き、その中点を Q とする','△ABC で中点連結定理より　MQ∥BC、MQ ＝ ½BC','△CDA で中点連結定理より　QN∥AD、QN ＝ ½AD','AD∥BC より MQ∥QN なので、M, Q, N は一直線上にある','よって　<b>MN ＝ MQ ＋ QN ＝ ½（AD ＋ BC）</b>'] });
+}
+function c5tri(){
+  const t=triSides(...pick(TRIS)); t.D=lerp(t.A,t.B,.5); t.E=lerp(t.A,t.C,1/3); t.Fp=lerp(t.A,t.C,2/3); t.G=inter(t.B,t.Fp,t.C,t.D);
+  const g=fit1(t); const F=new Fig(); const c=cen([g.A,g.B,g.C]);
+  F.pg([g.A,g.B,g.C]); F.ln(g.D,g.E,'ln2'); F.ln(g.B,g.Fp); F.ln(g.C,g.D);
+  F.tk(g.A,g.D,1); F.tk(g.D,g.B,1); F.tk(g.A,g.E,2); F.tk(g.E,g.Fp,2); F.tk(g.Fp,g.C,2);
+  ['A','B','C','D','E'].forEach(v=>F.vl(g[v],v,c)); F.vl(g.Fp,'F',c); F.vl(g.G,'G',V(g.G.x,g.G.y+30),15);
+  return flowProb({ unit:5, text:'△ABC で、D は辺 AB の中点、E, F は辺 AC を3等分する点（AE＝EF＝FC）です。BF と CD の交点を G とします。<br>G が CD の<b>中点</b>であることを証明しよう。',
+    fig:F.svg('三角形ABC。DはABの中点。EとFはACを3等分。BFとCDの交点G。'),
+    rows:[[ ['△ABF で、D, E は AB, AF の中点だから<br>',{b:'a'},'（中点連結定理）'] ],
+          [[ 'よって △CDE で<br>',{b:'b'} ]], [[ 'F は CE の中点だから、平行線と線分の比より<br>',{b:'c'} ]], [[ 'したがって G は CD の ',{b:'d'} ]]],
+    blanks:{ a:[['DE∥BF','DE∥BC','DE ＝ BF'],'DE∥BF'], b:[['FG∥ED','FG∥BC','FG ＝ ED'],'FG∥ED'],
+      c:[['CG : GD ＝ CF : FE ＝ 1 : 1','CG : GD ＝ CF : CE ＝ 1 : 2','CG : GD ＝ BF : DE'],'CG : GD ＝ CF : FE ＝ 1 : 1'], d:[['中点','延長上の点','頂点'],'中点'] },
+    ansHtml:'G は CD の中点',
+    hints:['AE＝EF なので、E は AF の中点。△ABF で中点連結定理。','DE∥BF なので、G を通る FG も DE と平行。今度は △CDE に注目。'],
+    proof:['AE ＝ EF より E は AF の中点','△ABF で D, E は AB, AF の中点なので、中点連結定理より　DE∥BF','よって △CDE で　FG∥ED','F は CE の中点（EF ＝ FC）なので、平行線と線分の比より　CG : GD ＝ CF : FE ＝ 1 : 1','したがって <b>G は CD の中点</b>'] });
+}
+function c5peqf(){
+  const j=()=>(Math.random()-.5)*0.8; const t={A:V(-3+j(),0+j()),B:V(-4+j(),3+j()),C:V(4+j(),3+j()),D:V(3+j(),-4+j())}; t.P=lerp(t.A,t.B,.5); t.Q=lerp(t.C,t.D,.5); t.E=lerp(t.A,t.C,.5); t.F=lerp(t.B,t.D,.5);
+  const g=fit1(t,32); const F=new Fig(); const c=cen([g.A,g.B,g.C,g.D]);
+  F.pg([g.A,g.B,g.C,g.D]); F.ln(g.A,g.C,'ln2'); F.ln(g.B,g.D,'ln2'); F.pg([g.P,g.E,g.Q,g.F],'hl');
+  ['A','B','C','D','P','Q'].forEach(v=>F.vl(g[v],v,c)); const pc=cen([g.P,g.E,g.Q,g.F]); F.vl(g.E,'E',pc,14); F.vl(g.F,'F',pc,14);
+  return flowProb({ unit:5, text:'四角形 ABCD で、辺 AB, CD の中点を P, Q、対角線 AC, BD の中点を E, F とします。<br>四角形 PEQF（太線）が<b>平行四辺形</b>であることを証明しよう。',
+    fig:F.svg('四角形ABCD。辺AB,CDの中点P,Q。対角線AC,BDの中点E,F。'),
+    rows:[[ ['△ABC で P, E は AB, AC の中点だから<br>',{b:'a'}], ['△DBC で F, Q は DB, DC の中点だから<br>',{b:'b'}] ],
+          [[ 'よって<br>',{b:'c'} ]], [[ {b:'d'},' から、四角形 PEQF は平行四辺形' ]]],
+    blanks:{ a:[['PE∥BC、PE ＝ ½BC','PE∥AD、PE ＝ ½AD','PE ＝ BC'],'PE∥BC、PE ＝ ½BC'], b:[['FQ∥BC、FQ ＝ ½BC','FQ∥AD、FQ ＝ ½AD','FQ ＝ BC'],'FQ∥BC、FQ ＝ ½BC'],
+      c:[['PE∥FQ、PE ＝ FQ','PE∥PF、PE ＝ PF','PQ ＝ EF'],'PE∥FQ、PE ＝ FQ'], d:[['1組の対辺が平行でその長さが等しい','2組の対角がそれぞれ等しい','対角線が垂直に交わる'],'1組の対辺が平行でその長さが等しい'] },
+    ansHtml:'四角形PEQF は平行四辺形',
+    hints:['どちらも BC をふくむ三角形 △ABC と △DBC に注目しよう。','PE と FQ はどちらも「BC と平行で、BC の半分」。'],
+    proof:['△ABC で中点連結定理より　PE∥BC、PE ＝ ½BC','△DBC で中点連結定理より　FQ∥BC、FQ ＝ ½BC','よって　PE∥FQ、PE ＝ FQ','1組の対辺が平行でその長さが等しいので、<b>四角形 PEQF は平行四辺形</b>'] });
+}
+function c5ratio(){
+  const t=triSides(...pick(TRIS)); t.D=lerp(t.B,t.C,.5); t.E=lerp(t.A,t.D,.5); t.F=lerp(t.A,t.C,1/3); t.G=lerp(t.A,t.C,2/3);
+  const g=fit1(t); const F=new Fig(); const c=cen([g.A,g.B,g.C]);
+  F.pg([g.A,g.B,g.C]); F.ln(g.A,g.D); F.ln(g.B,g.F); F.ln(g.D,g.G,'ln2');
+  F.tk(g.B,g.D,1); F.tk(g.D,g.C,1); F.tk(g.A,g.E,2); F.tk(g.E,g.D,2);
+  ['A','B','C','D','F','G'].forEach(v=>F.vl(g[v],v,c)); F.vl(g.E,'E',V(g.E.x+30,g.E.y),15);
+  return flowProb({ unit:5, text:'△ABC で、D は辺 BC の中点、E は AD の中点です。BE の延長と AC の交点を F とします。<br><b>AF : FC ＝ 1 : 2</b> であることを証明しよう。<br>（補助線：D を通り BF に平行な直線を引き、AC との交点を G とする）',
+    fig:F.svg('三角形ABC。DはBCの中点、EはADの中点。BEの延長とACの交点F。補助線DG。'),
+    rows:[[ ['△CBF で、D は BC の中点、DG∥BF だから<br>',{b:'a'}] ],
+          [[ '△ADG で、E は AD の中点、EF∥DG だから<br>',{b:'b'} ]], [[ 'よって AF ＝ FG ＝ GC だから<br>',{b:'c'} ]]],
+    blanks:{ a:[['G は FC の中点（FG ＝ GC）','G は AC の中点（AG ＝ GC）','DG ＝ BF'],'G は FC の中点（FG ＝ GC）'],
+      b:[['F は AG の中点（AF ＝ FG）','F は AC の中点（AF ＝ FC）','EF ＝ DG'],'F は AG の中点（AF ＝ FG）'],
+      c:[['AF : FC ＝ 1 : 2','AF : FC ＝ 1 : 3','AF : FC ＝ 1 : 1'],'AF : FC ＝ 1 : 2'] },
+    ansHtml:'AF : FC ＝ 1 : 2',
+    hints:['△CBF：中点 D を通り BF に平行な線 → 残りの辺 FC の中点を通る（中点連結定理の逆）。','△ADG：中点 E を通り DG に平行な線 EF → AG の中点を通る。','AC が AF, FG, GC の3つの等しい部分に分かれる。'],
+    proof:['D を通り BF に平行な直線と AC の交点を G とする','△CBF で、D は BC の中点、DG∥BF なので、G は FC の中点　→　FG ＝ GC','△ADG で、E は AD の中点、EF∥DG なので、F は AG の中点　→　AF ＝ FG','よって AF ＝ FG ＝ GC なので　<b>AF : FC ＝ 1 : 2</b>'] });
+}
+function genU5C(){ return pick([c5trap,c5tri,c5peqf,c5ratio])(); }
+
+/* =========================================================
    テーマ一覧・ポイント
 ========================================================= */
 const UNITS=[
   {id:1,icon:'🔤',name:'相似な三角形を記号で表す',sub:'∽ の前後で頂点の順番をそろえる',gen:genU1},
-  {id:2,icon:'🧩',name:'相似の証明（フローチャート）',sub:'根拠 → 相似条件 → 結論 を組み立てる',gen:genU2},
+  {id:2,icon:'🧩',name:'相似の証明（フローチャート）',sub:'根拠 → 相似条件 → 結論 を組み立てる',gen:genU2,genC:genU2C},
   {id:3,icon:'📏',name:'対応する辺の比・長さ',sub:'相似比を使って長さを求める',gen:genU3},
   {id:4,icon:'✂️',name:'中点連結定理で長さを求める',sub:'中点どうしを結ぶと「平行で半分」',gen:genU4},
-  {id:5,icon:'🧱',name:'中点連結定理の証明（フローチャート）',sub:'平行四辺形・ひし形・中点を示す',gen:genU5},
+  {id:5,icon:'🧱',name:'中点連結定理の証明（フローチャート）',sub:'平行四辺形・ひし形・中点を示す',gen:genU5,genC:genU5C},
   {id:6,icon:'📐',name:'角の二等分線と比・長さ',sub:'BD : DC ＝ AB : AC',gen:genU6},
   {id:7,icon:'🔺',name:'チェバ・メネラウスの定理',sub:'比をかけて一周すると 1',gen:genU7},
 ];
@@ -946,22 +1291,25 @@ function addRec(unit,ok){ const r=loadRec(); r[unit]=r[unit]||{t:0,c:0}; r[unit]
 /* =========================================================
    状態・画面
 ========================================================= */
-let S={ unit:null, count:0, startAt:null, endAt:null, showPoint:true, idx:0, log:[], cur:null, f:{}, fOrder:[], act:null, ord:[], fv:{}, ab:null, hint:0, done:false, lastKey:'', shown:1, flowRes:null };
+let S={ chMode:false, offered:false, finalCh:false, unit:null, count:0, startAt:null, endAt:null, showPoint:true, idx:0, log:[], cur:null, f:{}, fOrder:[], act:null, ord:[], fv:{}, ab:null, hint:0, done:false, lastKey:'', shown:1, flowRes:null };
 
 function showScreen(id){ document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active')); $(id).classList.add('active'); window.scrollTo(0,0); }
 function renderUnits(){
   const r=loadRec();
   const rec=id=>r[id]?`これまで：${r[id].t}問中 ${r[id].c}問 正解`:'';
-  $('unitGrid').innerHTML=UNITS.map(u=>`<button class="unitcard" onclick="startUnit(${u.id})"><span class="uic" aria-hidden="true">${u.icon}</span><span><div class="un">${u.id}. ${u.name}</div><div class="us">${u.sub}</div><div class="ur">${rec(u.id)}</div></span></button>`).join('')
-    +`<button class="unitcard mix" onclick="startUnit(0)"><span class="uic" aria-hidden="true">🎲</span><span><div class="un">ミックス（全テーマからランダム）</div><div class="us">いろいろなテーマがまざって出題されます</div></span></button>`;
+  $('unitGrid').innerHTML=UNITS.map(u=>`<button class="unitcard" ${S.chMode&&!u.genC?'disabled':''} onclick="startUnit(${u.id})"><span class="uic" aria-hidden="true">${u.icon}</span><span><div class="un">${u.id}. ${u.name}</div><div class="us">${u.sub}</div><div class="ur">${rec(u.id)}</div></span></button>`).join('')
+    +`<button class="unitcard mix" onclick="startUnit(0)"><span class="uic" aria-hidden="true">🎲</span><span><div class="un">ミックス（${S.chMode?'②⑤のチャレンジ問題':'全テーマからランダム'}）</div><div class="us">いろいろなテーマがまざって出題されます</div></span></button>`;
 }
 function pickCount(n){ S.count=n; document.querySelectorAll('#countChips .chip').forEach(c=>c.classList.toggle('picked',+c.dataset.n===n)); }
+function pickDiff(b){ S.chMode=b; document.querySelectorAll('#diffChips .chip').forEach(c=>c.classList.toggle('picked',c.dataset.d===(b?'1':'0'))); renderUnits(); }
 function pickPoint(b){ S.showPoint=b; document.querySelectorAll('#pointChips .chip').forEach(c=>c.classList.toggle('picked',c.dataset.p===(b?'1':'0'))); }
 
-function startUnit(id){ S.unit=id; S.idx=0; S.log=[]; S.startAt=new Date(); S.endAt=null; showScreen('screen-quiz'); newQ(); }
+function startUnit(id){ S.unit=id; S.idx=0; S.log=[]; S.startAt=new Date(); S.endAt=null; S.offered=false; S.finalCh=false; showScreen('screen-quiz'); newQ(); }
 function newQ(){
   let p,tries=0;
-  do{ const u= S.unit===0 ? pick(UNITS) : UNITS.find(x=>x.id===S.unit); p=u.gen(); tries++; }
+  const ch = S.finalCh || S.chMode || (S.count>0 && S.idx===S.count-1 && [0,2,5].includes(S.unit));
+  do{ const u= S.unit===0 ? (ch ? UNITS[pick([1,4])] : pick(UNITS)) : UNITS.find(x=>x.id===S.unit);
+    if(ch && u.genC){ p=u.genC(); p.challenge=true; } else p=u.gen(); tries++; }
   while(p.text+p.ansHtml===S.lastKey && tries<10);
   S.lastKey=p.text+p.ansHtml; S.cur=p; S.hint=0; S.done=false; S.shown=1; S.flowRes=null; S.pointNow=S.showPoint;
   renderQ();
@@ -971,7 +1319,7 @@ function renderQ(){
   $('qProg').textContent= S.count ? `${S.idx+1} / ${S.count} 問目` : `${S.idx+1} 問目`;
   $('pbarIn').parentNode.style.display= S.count ? 'block':'none';
   if(S.count) $('pbarIn').style.width=(100*S.idx/S.count)+'%';
-  $('qTag').textContent=u.icon+' '+u.name;
+  $('qTag').innerHTML=u.icon+' '+u.name+(p.challenge?'　<span class="chtag">★チャレンジ問題</span>':'');
   $('qText').innerHTML=p.text;
   $('qFig').innerHTML=p.fig||''; $('qFig').style.display=p.fig?'block':'none';
   $('qPoint').innerHTML=POINTS[p.unit]; updatePointVis();
@@ -979,7 +1327,7 @@ function renderQ(){
   $('explainBox').className='explain'; $('explainBox').innerHTML='';
   $('preBtns').style.display='flex'; $('postBtns').style.display='none';
   $('hintBtn').disabled=false; $('hintBtn').textContent=`💡 ヒント（${p.hints.length}こ）`;
-  $('nextBtn').textContent = S.count && S.idx+1>=S.count ? '結果を見る ▶' : '次の問題へ ▶';
+  $('nextBtn').textContent = S.finalCh || (S.count && S.idx+1>=S.count) ? '記録を表示 ▶' : '次の問題へ ▶';
   buildAnswer();
 }
 function updatePointVis(){ $('qPoint').style.display=S.pointNow?'block':'none'; $('pointToggle').textContent=S.pointNow?'📘 ポイントをかくす':'📘 ポイントを表示'; }
@@ -1120,8 +1468,11 @@ function renderExplain(box,p,all){
 }
 function moreStep(){ S.shown++; renderExplain($('explainBox'),S.cur,false); }
 function allStep(){ S.shown=S.cur.steps.length; renderExplain($('explainBox'),S.cur,false); }
-function goNext(){ try{ speechSynthesis.cancel(); }catch(e){} S.idx++; if(S.count && S.idx>=S.count){ showResult(); return; } newQ(); window.scrollTo(0,0); }
-function quitQuiz(){ try{ speechSynthesis.cancel(); }catch(e){} showResult(); }
+function goNext(){ try{ speechSynthesis.cancel(); }catch(e){} S.idx++; if(S.finalCh || (S.count && S.idx>=S.count)){ showResult(); return; } newQ(); window.scrollTo(0,0); }
+function quitQuiz(){ try{ speechSynthesis.cancel(); }catch(e){}
+  if(!S.chMode && !S.finalCh && !S.offered && [0,2,5].includes(S.unit) && !(S.count && S.log.some(l=>l.p.challenge))){ S.offered=true; showScreen('screen-offer'); return; }
+  showResult(); }
+function startFinalCh(){ S.finalCh=true; S.idx=S.log.length; showScreen('screen-quiz'); newQ(); }
 
 /* ---- 結果・振り返り ---- */
 const WD='日月火水木金土';
@@ -1135,16 +1486,16 @@ function showResult(){
   const name=($('stuName').value||'').trim(), no=($('stuNo').value||'').trim();
   const units=[...new Set(S.log.map(l=>l.p.unit))].sort();
   const themeTxt = S.unit===0 ? `ミックス（${units.map(u=>CIRC[u-1]).join('')}）` : `${CIRC[S.unit-1]} ${UNITS[S.unit-1].name}`;
-  const mix = S.unit===0;
+  const mix = S.unit===0; const chs=S.log.filter(l=>l.p.challenge);
   const ox = S.log.map((l,i)=>{ const sym=l.status==='ok'?'○':l.status==='ng'?'×':'？';
-    return `<span class="ox ${l.status}" aria-label="${i+1}問目 ${l.status==='ok'?'正解':l.status==='ng'?'不正解':'解説を見た'}">${i+1} ${sym}${mix?`<span class="u">${CIRC[l.p.unit-1]}</span>`:''}</span>`; }).join('');
+    return `<span class="ox ${l.status}" aria-label="${i+1}問目${l.p.challenge?' チャレンジ':''} ${l.status==='ok'?'正解':l.status==='ng'?'不正解':'解説を見た'}">${l.p.challenge?'<span class="star">★</span>':''}${i+1} ${sym}${mix?`<span class="u">${CIRC[l.p.unit-1]}</span>`:''}</span>`; }).join('');
   $('subCard').innerHTML=`
     <div class="subhead"><span>📋 朝学 提出用記録</span><span class="app">相似マスター（BEKI幾何2）</span></div>
     <div class="subid">${no?no+'番　':'<span class="miss">出席番号 未入力</span>　'}${name||'<span class="miss">名前 未入力</span>'}</div>
     <div class="submeta">
       <b>日付</b>　${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日（${WD[d.getDay()]}）<br>
       <b>時刻</b>　開始 ${hm(d)} 〜 終了 ${hm(S.endAt)}<br>
-      <b>テーマ</b>　${themeTxt}
+      <b>テーマ</b>　${themeTxt}${S.chMode?'（★チャレンジ問題だけ）':''}${chs.length?`<br><b>★チャレンジ</b>　${chs.length}問挑戦・${chs.filter(l=>l.status==='ok').length}問正解`:''}
     </div>
     <div class="substats">
       <div class="main"><div class="n">${solved}<small>問</small></div><div class="l">解いた問題</div></div>
@@ -1152,13 +1503,13 @@ function showResult(){
       <div><div class="n">${idk}<small>問</small></div><div class="l">解説を見た</div></div>
     </div>
     <div class="oxgrid">${ox||'<span class="oxlegend">まだ1問も答えていません</span>'}</div>
-    <div class="oxlegend">○ 正解　× 不正解　？ 解説を見た${mix?'　（丸数字はテーマ番号）':''}</div>`;
+    <div class="oxlegend">○ 正解　× 不正解　？ 解説を見た　★ チャレンジ問題${mix?'　（丸数字はテーマ番号）':''}</div>`;
   $('resMsg').style.display = tot ? 'block':'none';
   $('resMsg').textContent= tot===0?'' : ok===tot ? 'ぜんぶ正解！すばらしい！' : ok/tot>=0.6 ? 'よくできました。まちがえた問題を「振り返る」で見直そう。' : 'まちがえた問題は、解説をもう一度読んでから、同じテーマでもう一度やってみよう。';
   $('resList').innerHTML=S.log.map((l,i)=>{
     const b= l.status==='ok'?'<span class="badge ok">✓ 正解</span>' : l.status==='ng'?'<span class="badge ng">✗ 不正解</span>' : '<span class="badge idk">？ 解説を見た</span>';
     const h= l.hint?`<span class="badge h">💡ヒント${l.hint}</span>`:'';
-    return `<div class="qitem"><span class="qn">${i+1}.</span><span class="qs">${UNITS[l.p.unit-1].name}<br>答え：${l.p.ansHtml}</span>${b}${h}<button class="microbtn" onclick="openReview(${i})">振り返る</button></div>`;
+    return `<div class="qitem"><span class="qn">${i+1}.</span><span class="qs">${l.p.challenge?'<span class="chtag">★</span>':''}${UNITS[l.p.unit-1].name}<br>答え：${l.p.ansHtml}</span>${b}${h}<button class="microbtn" onclick="openReview(${i})">振り返る</button></div>`;
   }).join('');
   renderUnits(); showScreen('screen-result');
 }
