@@ -1,0 +1,1224 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>相似マスター（BEKI幾何2）</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  html{ font-size:16px; }
+  :root{
+    --bg:#f4f6fb; --bg-soft:#e8ebf6; --card:#ffffff; --line:#c9cee6;
+    --text:#171a33; --dim:#4d5278;
+    --c1:#a8690a; --c1-dim:#fbe9cf;   /* 印1つ */
+    --c2:#00875f; --c2-dim:#d8f3ea;   /* 印2つ */
+    --c3:#6b4fbb;
+    /* 正誤は「青・朱色」（Okabe-Ito配色）＋記号・文言を必ず併記 */
+    --good:#0072b2; --good-dim:#dcedfa;
+    --bad:#b34700; --bad-dim:#fbe4d5;
+    --accent:#0072b2; --accent-dim:#dcedfa; --btn-text:#ffffff;
+    --hint:#6b4fbb; --hint-dim:#ece6fa;
+    --point:#a8690a; --point-dim:#fdf3e3;
+  }
+  body.theme-dark{
+    --bg:#12142a; --bg-soft:#1b1e3c; --card:#232752; --line:#3d4280;
+    --text:#f4f5fc; --dim:#b8bce3;
+    --c1:#e69f00; --c1-dim:#4a3a10;
+    --c2:#2fc497; --c2-dim:#0f3b30;
+    --c3:#b39ddb;
+    --good:#56b4e9; --good-dim:#122a40;
+    --bad:#e8833a; --bad-dim:#3f2210;
+    --accent:#56b4e9; --accent-dim:#1c3a4d; --btn-text:#0b2536;
+    --hint:#b39ddb; --hint-dim:#33294d;
+    --point:#e6b34d; --point-dim:#33290f;
+  }
+  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  button{ font-family:inherit; -webkit-touch-callout:none; -webkit-user-select:none; user-select:none; touch-action:manipulation; }
+  button:focus-visible{ outline:3px solid #ffe066; outline-offset:2px; }
+  @media (prefers-reduced-motion: reduce){ *{ animation:none !important; transition:none !important; } }
+  body{ margin:0; background:var(--bg); color:var(--text); font-family:'Noto Sans JP',sans-serif; display:flex; justify-content:center; line-height:1.7; }
+  body.spacious{ letter-spacing:0.06em; }
+  body.spacious .qtext, body.spacious .fbox, body.spacious .st{ line-height:2.2; }
+  #app{ width:100%; max-width:760px; padding:18px 16px 60px; display:flex; flex-direction:column; gap:16px; }
+  h1,h2,h3{ font-family:'Zen Maru Gothic',sans-serif; margin:0; }
+  h1{ font-size:1.3rem; font-weight:900; line-height:1.5; }
+  h3{ font-size:1rem; }
+  .eyebrow{ font-size:0.8rem; color:var(--dim); }
+
+  .settingsbar{ display:flex; gap:8px; flex-wrap:wrap; }
+  .segwrap{ display:flex; background:var(--bg-soft); border:1px solid var(--line); border-radius:12px; padding:3px; flex:1 1 200px; }
+  .segwrap button{ flex:1; background:none; border:none; color:var(--dim); font-size:0.8rem; padding:8px 4px; border-radius:9px; cursor:pointer; min-height:40px; }
+  .segwrap button.active{ background:var(--card); color:var(--text); font-weight:700; box-shadow:0 1px 3px rgba(0,0,0,0.15); }
+
+  .screen{ display:none; flex-direction:column; gap:16px; animation:fadein .25s ease; }
+  .screen.active{ display:flex; }
+  @keyframes fadein{ from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:none;} }
+
+  .card{ background:var(--card); border:1.5px solid var(--line); border-radius:18px; padding:16px; display:flex; flex-direction:column; gap:12px; }
+  .note{ font-size:0.85rem; color:var(--dim); line-height:1.8; }
+
+  .unitgrid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(250px,1fr)); gap:10px; }
+  .unitcard{ display:flex; gap:12px; align-items:flex-start; text-align:left; background:var(--card); border:1.5px solid var(--line); border-radius:16px; padding:14px; cursor:pointer; color:var(--text); min-height:88px; }
+  .unitcard:hover{ border-color:var(--accent); }
+  .unitcard .uic{ width:42px; height:42px; flex:none; border-radius:12px; background:var(--accent-dim); display:flex; align-items:center; justify-content:center; font-size:1.3rem; }
+  .unitcard .un{ font-weight:700; font-size:0.97rem; line-height:1.5; }
+  .unitcard .us{ font-size:0.78rem; color:var(--dim); margin-top:2px; }
+  .unitcard .ur{ font-size:0.75rem; color:var(--accent); margin-top:4px; font-weight:700; }
+  .unitcard.mix{ grid-column:1/-1; border-style:dashed; }
+
+  .chips{ display:flex; flex-wrap:wrap; gap:8px; }
+  .chip{ background:var(--bg-soft); border:1.5px solid var(--line); color:var(--dim); border-radius:99px; padding:10px 18px; font-size:0.95rem; cursor:pointer; min-height:48px; }
+  .chip.picked{ background:var(--text); color:var(--card); border-color:var(--text); font-weight:700; }
+  .chip.picked::before{ content:"✓ "; }
+
+  /* ---- quiz ---- */
+  .qhead{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  .qtag{ font-size:0.8rem; color:var(--dim); background:var(--bg-soft); border-radius:99px; padding:4px 12px; }
+  .qprog{ margin-left:auto; font-weight:700; font-family:'Zen Maru Gothic',sans-serif; }
+  .pbar{ height:8px; background:var(--bg-soft); border-radius:99px; overflow:hidden; border:1px solid var(--line); }
+  .pbar > div{ height:100%; background:var(--accent); transition:width .3s; }
+  .qcard{ background:var(--card); border:1.5px solid var(--line); border-radius:20px; padding:16px; display:flex; flex-direction:column; gap:12px; }
+  .qtext{ font-size:1.06rem; line-height:1.95; }
+  .qtools{ display:flex; gap:8px; flex-wrap:wrap; }
+  .microbtn{ background:var(--bg-soft); border:1px solid var(--line); color:var(--text); border-radius:11px; padding:8px 14px; font-size:0.85rem; cursor:pointer; min-height:44px; }
+  .figwrap{ border-radius:14px; background:var(--bg); border:1px solid var(--line); padding:4px; }
+  svg.fig{ width:100%; height:auto; max-height:340px; display:block; font-family:'Noto Sans JP',sans-serif; }
+  svg.fig .ln{ stroke:var(--text); stroke-width:2.2; fill:none; stroke-linejoin:round; }
+  svg.fig .ln2{ stroke:var(--dim); stroke-width:1.6; fill:none; stroke-dasharray:6 5; }
+  svg.fig .hl{ stroke:var(--accent); stroke-width:3; fill:none; }
+  svg.fig .mk1{ stroke:var(--c1); stroke-width:2.2; fill:none; }
+  svg.fig .mk2{ stroke:var(--c2); stroke-width:2.2; fill:none; }
+  svg.fig .mk3{ stroke:var(--c3); stroke-width:2.2; fill:none; }
+  svg.fig .rt{ stroke:var(--text); stroke-width:1.6; fill:none; }
+  svg.fig .tk{ stroke:var(--c2); stroke-width:2; }
+  svg.fig .pa{ stroke:var(--accent); stroke-width:2.2; fill:none; stroke-linecap:round; }
+  svg.fig .dot{ fill:var(--text); }
+  svg.fig text{ paint-order:stroke; stroke:var(--bg); stroke-width:5px; stroke-linejoin:round; dominant-baseline:central; text-anchor:middle; }
+  svg.fig .vl{ fill:var(--text); font-size:17px; font-weight:700; }
+  svg.fig .sl{ fill:var(--accent); font-size:15px; font-weight:700; }
+  svg.fig .slq{ fill:var(--bad); font-size:17px; font-weight:900; }
+
+  .point{ background:var(--point-dim); border:1px solid var(--point); border-radius:14px; padding:12px 14px; font-size:0.88rem; line-height:1.9; }
+  .point b{ color:var(--point); }
+  .frac{ display:inline-flex; flex-direction:column; vertical-align:middle; text-align:center; line-height:1.2; margin:0 3px; font-size:0.95em; }
+  .frac > span:first-child{ border-bottom:1.5px solid currentColor; padding:0 3px; }
+
+  .ansarea{ display:flex; flex-direction:column; gap:10px; }
+  .ansrow{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; justify-content:center; font-size:1.15rem; font-weight:700; }
+  .alabel{ font-size:1.15rem; }
+  .numbox{ width:96px; min-height:60px; text-align:center; font-size:1.5rem; background:var(--bg-soft); border:1.5px solid var(--line); border-radius:10px; color:var(--text); padding:6px 4px; cursor:pointer; }
+  .numbox.active{ border-color:var(--accent); border-width:3px; background:var(--card); }
+  .numbox:empty::before{ content:attr(data-placeholder); color:var(--dim); opacity:.55; font-size:1rem; }
+  .fracin{ display:inline-flex; flex-direction:column; align-items:center; gap:6px; }
+  .fracin .fbar{ width:110px; height:3px; background:var(--text); border-radius:2px; }
+  .fracin .numbox{ width:110px; }
+  .colon{ font-size:1.6rem; }
+  .exhint{ font-size:0.82rem; color:var(--dim); text-align:center; }
+
+  .numpad{ display:grid; grid-template-columns:repeat(3,1fr); gap:10px; width:100%; max-width:420px; margin:0 auto; }
+  .numpad button{ background:var(--card); border:1.5px solid var(--line); border-radius:16px; color:var(--text); font-family:'Zen Maru Gothic',sans-serif; font-size:1.9rem; font-weight:700; cursor:pointer; min-height:68px; }
+  .numpad button:active{ background:var(--bg-soft); }
+  .numpad button.wide{ font-size:1.05rem; color:var(--dim); }
+
+  .slots{ display:inline-flex; gap:6px; }
+  .slot{ display:inline-flex; align-items:center; justify-content:center; width:56px; height:60px; border:2px dashed var(--accent); border-radius:10px; font-size:1.6rem; font-weight:900; background:var(--accent-dim); }
+  .slot.filled{ border-style:solid; background:var(--card); }
+  .letterpad{ display:grid; grid-template-columns:repeat(4,1fr); gap:10px; width:100%; max-width:440px; margin:0 auto; }
+  .letterpad button{ background:var(--card); border:1.5px solid var(--line); border-radius:16px; color:var(--text); font-size:1.8rem; font-weight:700; min-height:68px; cursor:pointer; }
+  .letterpad button:disabled{ opacity:.3; cursor:default; }
+  .letterpad button.wide{ font-size:0.95rem; color:var(--dim); }
+
+  /* ---- flowchart ---- */
+  .flow{ display:flex; flex-direction:column; gap:4px; }
+  .frow{ display:flex; gap:10px; flex-wrap:wrap; }
+  .fbox{ flex:1 1 240px; border:2px solid var(--line); border-radius:14px; padding:10px 12px; background:var(--card); line-height:2.3; font-size:0.97rem; }
+  .farrow{ text-align:center; color:var(--dim); font-size:1.1rem; line-height:1.4; }
+  .blank{ display:inline-block; border:2px dashed var(--accent); background:var(--accent-dim); border-radius:10px; padding:4px 10px; min-height:44px; min-width:120px; font-size:0.97rem; color:var(--text); cursor:pointer; margin:2px 0; line-height:1.6; text-align:left; vertical-align:middle; }
+  .blank.empty{ color:var(--dim); }
+  .blank.filled{ border-style:solid; background:var(--card); font-weight:700; }
+  .blank.active{ outline:3px solid var(--c1); outline-offset:1px; }
+  .blank.ok{ border:2px solid var(--good); background:var(--good-dim); cursor:default; }
+  .blank.ok::after{ content:"  ✓"; color:var(--good); font-weight:900; }
+  .blank.ng{ border:2px solid var(--bad); background:var(--bad-dim); cursor:default; }
+  .blank.ng::after{ content:"  ✗"; color:var(--bad); font-weight:900; }
+  .blank.ans{ border:2px solid var(--good); background:var(--good-dim); font-weight:700; cursor:default; }
+  .chooser{ background:var(--bg-soft); border:1.5px solid var(--c1); border-radius:14px; padding:12px; display:none; flex-direction:column; gap:8px; }
+  .chooser.show{ display:flex; }
+  .chooser .ct{ font-size:0.85rem; color:var(--dim); }
+  .chooser .opt{ text-align:left; background:var(--card); border:1.5px solid var(--line); border-radius:12px; padding:10px 14px; font-size:1rem; color:var(--text); cursor:pointer; min-height:52px; }
+  .chooser .opt:hover{ border-color:var(--accent); }
+
+  .btn{ border:none; border-radius:14px; padding:14px 20px; font-size:1.15rem; font-weight:700; font-family:'Zen Maru Gothic',sans-serif; cursor:pointer; min-height:60px; }
+  .btn.primary{ background:var(--accent); color:var(--btn-text); }
+  .btn.ghost{ background:transparent; color:var(--text); border:1.5px solid var(--line); }
+  .btn.hint{ background:var(--hint-dim); color:var(--hint); border:1.5px solid var(--hint); }
+  .btn:disabled{ opacity:.4; cursor:not-allowed; }
+  .btnrow{ display:flex; gap:10px; flex-wrap:wrap; }
+  .btnrow .btn{ flex:1 1 150px; }
+  .btn.big{ font-size:1.4rem; min-height:72px; }
+  .backbtn{ background:none; border:none; color:var(--dim); font-size:0.9rem; cursor:pointer; padding:6px 0; align-self:flex-start; min-height:40px; }
+
+  .msg{ font-size:0.95rem; line-height:1.9; padding:12px 14px; border-radius:14px; display:none; }
+  .msg.show{ display:block; }
+  .msg.ok{ background:var(--good-dim); border:1.5px solid var(--good); }
+  .msg.ng{ background:var(--bad-dim); border:1.5px solid var(--bad); }
+  .msg.hintm{ background:var(--hint-dim); border:1.5px solid var(--hint); }
+  .msg.info{ background:var(--bg-soft); border:1.5px solid var(--line); }
+  .msg .big{ font-size:1.25rem; font-weight:900; font-family:'Zen Maru Gothic',sans-serif; }
+
+  .explain{ display:none; flex-direction:column; gap:10px; background:var(--card); border:1.5px solid var(--line); border-radius:18px; padding:14px; }
+  .explain.show{ display:flex; }
+  .explain h3{ font-size:1rem; }
+  .exsub{ font-size:0.85rem; color:var(--dim); font-weight:700; }
+  .steps{ display:flex; flex-direction:column; gap:8px; }
+  .st{ display:none; gap:10px; align-items:flex-start; background:var(--bg-soft); border-radius:12px; padding:10px 12px; line-height:1.9; }
+  .st.show{ display:flex; animation:fadein .25s ease; }
+  .stn{ flex:none; width:26px; height:26px; border-radius:50%; background:var(--accent); color:var(--btn-text); font-size:0.8rem; font-weight:700; display:flex; align-items:center; justify-content:center; margin-top:3px; }
+
+  .scorecard{ background:var(--card); border:1px solid var(--line); border-radius:20px; padding:20px; text-align:center; }
+  .scorecard .big{ font-family:'Zen Maru Gothic',sans-serif; font-size:2.2rem; font-weight:900; }
+  .scorecard .lab{ font-size:0.85rem; color:var(--dim); }
+  .idrow{ display:flex; gap:10px; flex-wrap:wrap; }
+  .idrow label{ display:flex; flex-direction:column; gap:4px; font-size:0.85rem; color:var(--dim); flex:1 1 140px; }
+  .idrow input{ font:inherit; font-size:1.1rem; color:var(--text); background:var(--bg-soft); border:1.5px solid var(--line); border-radius:10px; padding:10px 12px; min-height:52px; width:100%; }
+  .idrow input:focus-visible{ outline:3px solid #ffe066; outline-offset:2px; }
+  .endbtn{ width:100%; }
+  .subcard{ background:var(--card); border:3px solid var(--accent); border-radius:20px; padding:16px; display:flex; flex-direction:column; gap:10px; }
+  .subhead{ display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap; font-family:'Zen Maru Gothic',sans-serif; font-weight:900; font-size:1.1rem; }
+  .subhead .app{ font-size:0.75rem; color:var(--dim); font-weight:500; }
+  .subid{ font-size:1.25rem; font-weight:900; font-family:'Zen Maru Gothic',sans-serif; }
+  .subid .miss{ color:var(--bad); font-size:0.95rem; }
+  .submeta{ font-size:0.92rem; line-height:1.8; }
+  .submeta b{ font-weight:700; }
+  .substats{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+  .substats > div{ background:var(--bg-soft); border-radius:14px; padding:10px 4px; text-align:center; }
+  .substats .n{ font-family:'Zen Maru Gothic',sans-serif; font-size:2rem; font-weight:900; line-height:1.2; }
+  .substats .n small{ font-size:0.9rem; }
+  .substats .l{ font-size:0.78rem; color:var(--dim); }
+  .substats .main{ background:var(--accent-dim); border:2px solid var(--accent); }
+  .oxgrid{ display:flex; flex-wrap:wrap; gap:5px; }
+  .ox{ display:inline-flex; align-items:center; gap:3px; border-radius:8px; padding:2px 7px; font-size:0.85rem; font-weight:700; border:1.5px solid; }
+  .ox.ok{ color:var(--good); background:var(--good-dim); border-color:var(--good); }
+  .ox.ng{ color:var(--bad); background:var(--bad-dim); border-color:var(--bad); }
+  .ox.idk{ color:var(--dim); background:var(--bg-soft); border-color:var(--line); }
+  .ox .u{ font-size:0.7rem; font-weight:500; opacity:.85; }
+  .oxlegend{ font-size:0.75rem; color:var(--dim); }
+  .qlist{ display:flex; flex-direction:column; gap:8px; }
+  .qitem{ display:flex; align-items:center; gap:8px; background:var(--card); border:1px solid var(--line); border-radius:12px; padding:10px 12px; font-size:0.88rem; flex-wrap:wrap; }
+  .qitem .qn{ font-weight:700; }
+  .qitem .qs{ color:var(--dim); flex:1 1 200px; }
+  .badge{ font-size:0.78rem; padding:3px 10px; border-radius:99px; font-weight:700; }
+  .badge.ok{ background:var(--good-dim); color:var(--good); border:1px solid var(--good); }
+  .badge.ng{ background:var(--bad-dim); color:var(--bad); border:1px solid var(--bad); }
+  .badge.idk{ background:var(--bg-soft); color:var(--dim); border:1px solid var(--line); }
+  .badge.h{ background:var(--hint-dim); color:var(--hint); }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="eyebrow">相似マスター ／ BEKI幾何2 対応</div>
+
+  <div class="settingsbar" aria-label="表示の設定">
+    <div class="segwrap" id="themeSeg">
+      <button data-theme="light" class="active" onclick="setTheme('light')">☀️ 明るい画面</button>
+      <button data-theme="dark" onclick="setTheme('dark')">🌙 暗い画面</button>
+    </div>
+    <div class="segwrap" id="sizeSeg">
+      <button data-size="0" class="active" onclick="setTextSize(0)">文字 標準</button>
+      <button data-size="1" onclick="setTextSize(1)">大きめ</button>
+      <button data-size="2" onclick="setTextSize(2)">最大</button>
+    </div>
+    <div class="segwrap" id="spaceSeg">
+      <button data-sp="0" class="active" onclick="setSpacing(0)">行間 ふつう</button>
+      <button data-sp="1" onclick="setSpacing(1)">ゆったり</button>
+    </div>
+  </div>
+
+  <!-- ============ スタート ============ -->
+  <div class="screen active" id="screen-start">
+    <h1>相似の問題に、少しずつチャレンジしよう</h1>
+    <div class="card">
+      <h3>名前と出席番号</h3>
+      <div class="idrow">
+        <label>出席番号<input type="text" id="stuNo" inputmode="numeric" autocomplete="off" placeholder="例：12" oninput="saveId()"></label>
+        <label style="flex-basis:220px">名前<input type="text" id="stuName" autocomplete="off" placeholder="例：相似 太郎" oninput="saveId()"></label>
+      </div>
+      <h3>① 何問やる？</h3>
+      <div class="chips" id="countChips">
+        <button class="chip picked" data-n="0" onclick="pickCount(0)">決めない（「終了」を押すまで）</button>
+        <button class="chip" data-n="3" onclick="pickCount(3)">3問</button>
+        <button class="chip" data-n="5" onclick="pickCount(5)">5問</button>
+        <button class="chip" data-n="10" onclick="pickCount(10)">10問</button>
+      </div>
+      <h3>② ポイント（公式・考え方）を問題といっしょに表示する？</h3>
+      <div class="chips" id="pointChips">
+        <button class="chip picked" data-p="1" onclick="pickPoint(true)">表示する</button>
+        <button class="chip" data-p="0" onclick="pickPoint(false)">かくす（テスト形式）</button>
+      </div>
+      <div class="note">時間制限はありません。やめたいときは、いつでも「■ 終了して記録を表示」を押そう。わからないときは「💡ヒント」や「解説を見る」を使ってOK。まちがえた問題は、あとから「振り返る」で見直せます。</div>
+    </div>
+    <h3>③ 練習するテーマを選ぼう</h3>
+    <div class="unitgrid" id="unitGrid"></div>
+  </div>
+
+  <!-- ============ 出題 ============ -->
+  <div class="screen" id="screen-quiz">
+    <div class="qhead">
+      <button class="backbtn" onclick="quitQuiz()">■ 終了して記録を表示</button>
+      <span class="qprog" id="qProg">1 / 5 問目</span>
+    </div>
+    <div class="pbar" aria-hidden="true"><div id="pbarIn" style="width:0%"></div></div>
+    <div class="qcard">
+      <div class="qhead"><span class="qtag" id="qTag"></span></div>
+      <div class="qtext" id="qText"></div>
+      <div class="qtools">
+        <button class="microbtn" id="speakBtn" onclick="speakQ()">🔊 問題を読み上げる</button>
+        <button class="microbtn" id="pointToggle" onclick="togglePointNow()">📘 ポイントを表示</button>
+      </div>
+      <div class="figwrap" id="qFig"></div>
+      <div class="point" id="qPoint"></div>
+    </div>
+
+    <div class="qcard">
+      <div class="ansarea" id="ansArea"></div>
+    </div>
+
+    <div class="msg" id="hintBox" aria-live="polite"></div>
+    <div class="msg" id="fbBox" aria-live="polite"></div>
+
+    <div id="preBtns" class="btnrow">
+      <button class="btn primary big" id="submitBtn" onclick="submitAns()" style="flex-basis:100%">決定</button>
+      <button class="btn hint" id="hintBtn" onclick="showHint()">💡 ヒント</button>
+      <button class="btn ghost" onclick="giveUp()">🤔 解説を見る</button>
+    </div>
+
+    <div class="explain" id="explainBox"></div>
+
+    <div id="postBtns" class="btnrow" style="display:none;">
+      <button class="btn primary big" id="nextBtn" onclick="goNext()" style="flex-basis:100%">次の問題へ ▶</button>
+    </div>
+    <button class="btn ghost endbtn" onclick="quitQuiz()">■ 終了して記録を表示</button>
+  </div>
+
+  <!-- ============ 結果 ============ -->
+  <div class="screen" id="screen-result">
+    <h1>おつかれさま！</h1>
+    <div class="subcard" id="subCard"></div>
+    <div class="note" id="resMsg"></div>
+    <h3>振り返り（まちがえた問題を見直そう）</h3>
+    <div class="qlist" id="resList"></div>
+    <div class="btnrow">
+      <button class="btn primary" onclick="retrySame()">同じテーマでもう一度</button>
+      <button class="btn ghost" onclick="backToStart()">テーマを選び直す</button>
+    </div>
+  </div>
+
+  <!-- ============ 振り返り ============ -->
+  <div class="screen" id="screen-review">
+    <button class="backbtn" onclick="showScreen('screen-result')">← 結果一覧へ戻る</button>
+    <div class="qcard">
+      <div class="qhead"><span class="qtag" id="rvTag"></span></div>
+      <div class="qtext" id="rvText"></div>
+      <div class="figwrap" id="rvFig"></div>
+    </div>
+    <div class="msg show" id="rvAns"></div>
+    <div class="explain show" id="rvExplain"></div>
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   基本ヘルパー
+========================================================= */
+const $ = id => document.getElementById(id);
+const rnd = (a,b) => Math.floor(Math.random()*(b-a+1))+a;
+const pick = a => a[Math.floor(Math.random()*a.length)];
+const shuffle = a => { a=a.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; };
+const gcd = (a,b) => { a=Math.abs(a); b=Math.abs(b); while(b){ [a,b]=[b,a%b]; } return a||1; };
+const red = (n,d) => { const g=gcd(n,d); return [n/g, d/g]; };
+const D2R = Math.PI/180;
+const mid = (x,y) => { const t=x/(x+y); return t>0.3 && t<0.7; };
+function fr(n,d){ [n,d]=red(n,d); return d===1 ? `${n}` : `<span class="frac"><span>${n}</span><span>${d}</span></span>`; }
+function fx(a,b){ return `<span class="frac"><span>${a}</span><span>${b}</span></span>`; }
+const HALF = fx(1,2);
+const qperm = arr => Math.random()<0.5 ? arr.slice() : shuffle(arr);
+
+/* ---- 幾何 ---- */
+const V=(x,y)=>({x,y});
+const add=(p,q)=>V(p.x+q.x,p.y+q.y), sub=(p,q)=>V(p.x-q.x,p.y-q.y), mul=(p,k)=>V(p.x*k,p.y*k);
+const len=p=>Math.hypot(p.x,p.y), nrm=p=>{ const l=len(p)||1; return V(p.x/l,p.y/l); };
+const lerp=(p,q,t)=>V(p.x+(q.x-p.x)*t, p.y+(q.y-p.y)*t);
+const rot=(p,a)=>V(p.x*Math.cos(a)-p.y*Math.sin(a), p.x*Math.sin(a)+p.y*Math.cos(a));
+function inter(p1,p2,p3,p4){
+  const d=(p1.x-p2.x)*(p3.y-p4.y)-(p1.y-p2.y)*(p3.x-p4.x);
+  const t=((p1.x-p3.x)*(p3.y-p4.y)-(p1.y-p3.y)*(p3.x-p4.x))/d;
+  return lerp(p1,p2,t);
+}
+// a=BC, b=CA, c=AB（Aが上に来る）
+function triSides(a,b,c){ const x=(c*c+a*a-b*b)/(2*a); const y=Math.sqrt(Math.max(0.01,c*c-x*x)); return {A:V(x,-y),B:V(0,0),C:V(a,0)}; }
+const cen = arr => V(arr.reduce((s,p)=>s+p.x,0)/arr.length, arr.reduce((s,p)=>s+p.y,0)/arr.length);
+function centerize(t,keys){ const c=cen((keys||Object.keys(t)).map(k=>t[k])); for(const k in t) t[k]=sub(t[k],c); }
+function rotAll(t,a){ for(const k in t) t[k]=rot(t[k],a); }
+function bbox(pts){ const xs=Object.values(pts).map(p=>p.x), ys=Object.values(pts).map(p=>p.y);
+  const x0=Math.min(...xs),x1=Math.max(...xs),y0=Math.min(...ys),y1=Math.max(...ys); return {x0,x1,y0,y1,w:x1-x0,h:y1-y0}; }
+// 複数の図形を「同じ縮尺」で、それぞれの枠に収める
+function fit(groups,pad=30){
+  let s=Infinity;
+  groups.forEach(g=>{ const b=bbox(g.pts); s=Math.min(s,(g.box[2]-g.box[0]-2*pad)/Math.max(b.w,1e-6),(g.box[3]-g.box[1]-2*pad)/Math.max(b.h,1e-6)); });
+  return groups.map(g=>{ const b=bbox(g.pts); const cx=(g.box[0]+g.box[2])/2, cy=(g.box[1]+g.box[3])/2; const o={};
+    for(const k in g.pts){ const p=g.pts[k]; o[k]=V(cx+(p.x-(b.x0+b.x1)/2)*s, cy+(p.y-(b.y0+b.y1)/2)*s); } return o; });
+}
+const f1=n=>n.toFixed(1);
+class Fig{
+  constructor(W=360,H=250){ this.W=W; this.H=H; this.a=[]; this.b=[]; }
+  ln(p,q,c='ln'){ this.a.push(`<line class="${c}" x1="${f1(p.x)}" y1="${f1(p.y)}" x2="${f1(q.x)}" y2="${f1(q.y)}"/>`); return this; }
+  pg(arr,c='ln'){ this.a.push(`<polygon class="${c}" points="${arr.map(p=>f1(p.x)+','+f1(p.y)).join(' ')}"/>`); return this; }
+  dot(p){ this.b.push(`<circle class="dot" cx="${f1(p.x)}" cy="${f1(p.y)}" r="3"/>`); return this; }
+  vl(p,t,ctr,d=16){ const u=nrm(sub(p,ctr)); const q=add(p,mul(u,d)); this.b.push(`<text class="vl" x="${f1(q.x)}" y="${f1(q.y)}">${t}</text>`); return this; }
+  sl(p,q,t,ctr,c='sl',d=14){ const m=lerp(p,q,.5); let n=nrm(V(-(q.y-p.y),q.x-p.x)); if((m.x-ctr.x)*n.x+(m.y-ctr.y)*n.y<0) n=mul(n,-1);
+    const r=add(m,mul(n,d)); this.b.push(`<text class="${c}" x="${f1(r.x)}" y="${f1(r.y)}">${t}</text>`); return this; }
+  ang(Vx,A,B,n=1,r=18){ const c=['','mk1','mk2','mk3'][n]||'mk1'; const u1=nrm(sub(A,Vx)), u2=nrm(sub(B,Vx)); const cr=u1.x*u2.y-u1.y*u2.x;
+    for(let i=0;i<n;i++){ const rr=r+i*5; const s=add(Vx,mul(u1,rr)), e=add(Vx,mul(u2,rr));
+      this.a.push(`<path class="${c}" d="M${f1(s.x)} ${f1(s.y)} A${rr} ${rr} 0 0 ${cr>0?1:0} ${f1(e.x)} ${f1(e.y)}"/>`); } return this; }
+  rt(Vx,A,B,s=11){ const u1=mul(nrm(sub(A,Vx)),s), u2=mul(nrm(sub(B,Vx)),s); const p1=add(Vx,u1), p2=add(p1,u2), p3=add(Vx,u2);
+    this.a.push(`<path class="rt" d="M${f1(p1.x)} ${f1(p1.y)} L${f1(p2.x)} ${f1(p2.y)} L${f1(p3.x)} ${f1(p3.y)}"/>`); return this; }
+  tk(p,q,n=1){ const m=lerp(p,q,.5), d=nrm(sub(q,p)), nn=V(-d.y,d.x);
+    for(let i=0;i<n;i++){ const c=add(m,mul(d,(i-(n-1)/2)*5)); this.ln(add(c,mul(nn,6)),add(c,mul(nn,-6)),'tk'); } return this; }
+  pa(p,q,n=1){ const m=lerp(p,q,.5), d=nrm(sub(q,p)), nn=V(-d.y,d.x);
+    for(let i=0;i<n;i++){ const tip=add(m,mul(d,(i-(n-1)/2)*7+4)); const b=add(tip,mul(d,-7));
+      this.a.push(`<path class="pa" d="M${f1(b.x+nn.x*5)} ${f1(b.y+nn.y*5)} L${f1(tip.x)} ${f1(tip.y)} L${f1(b.x-nn.x*5)} ${f1(b.y-nn.y*5)}"/>`); } return this; }
+  svg(aria){ return `<svg class="fig" viewBox="0 0 ${this.W} ${this.H}" role="img" aria-label="${aria||'図'}">${this.a.join('')}${this.b.join('')}</svg>`; }
+}
+// a が最長（BC）になる三角形の辺 [BC, CA, AB]
+const TRIS=[[8,6,7],[7,5,6],[9,6,8],[8,5,7],[9,7,8],[9,6,7],[8,7,6]];
+
+/* =========================================================
+   ① 相似な三角形を記号で表す
+========================================================= */
+function mkOrder(o){
+  const q=qperm(o.src); const ans=q.map(v=>o.map[v]).join('');
+  return { unit:1,
+    text:`${o.lead}<br><b>△${q.join('')} ∽ △□□□</b> の □ に、△${o.tgtName} の頂点を<b>対応する順</b>に入れよう。`,
+    fig:o.fig, ans:{type:'order',prefix:'△'+q.join('')+' ∽ △',letters:o.letters,ans},
+    ansHtml:`△${q.join('')} ∽ △${ans}`, hints:o.hints,
+    steps:[...q.map(v=>`${v} と対応するのは <b>${o.map[v]}</b>　（${o.why[v]}）`), `対応する頂点を同じ順に並べて　<b>△${q.join('')} ∽ △${ans}</b>`] };
+}
+function u1sep(){
+  const s=pick(TRIS); const t=triSides(...s); centerize(t); rotAll(t,rnd(-12,12)*D2R);
+  const L2=pick([['D','E','F'],['P','Q','R'],['L','M','N']]);
+  const perm=shuffle(L2); const map={A:perm[0],B:perm[1],C:perm[2]};
+  const k=pick([0.7,0.8,1.25,1.4]), an=rnd(50,310)*D2R, refl=Math.random()<.5;
+  const t2={}; ['A','B','C'].forEach(v=>{ let p=t[v]; if(refl) p=V(-p.x,p.y); t2[map[v]]=rot(mul(p,k),an); });
+  const [g1,g2]=fit([{pts:t,box:[0,0,180,250]},{pts:t2,box:[180,0,360,250]}],36);
+  const marked=shuffle(['A','B','C']).slice(0,2); const nOf={}; marked.forEach((v,i)=>nOf[v]=i+1);
+  const F=new Fig(); F.pg([g1.A,g1.B,g1.C]); F.pg(L2.map(v=>g2[v]));
+  const c1=cen([g1.A,g1.B,g1.C]), c2=cen(L2.map(v=>g2[v]));
+  marked.forEach(v=>{ const o=['A','B','C'].filter(x=>x!==v); F.ang(g1[v],g1[o[0]],g1[o[1]],nOf[v]); F.ang(g2[map[v]],g2[map[o[0]]],g2[map[o[1]]],nOf[v]); });
+  ['A','B','C'].forEach(v=>F.vl(g1[v],v,c1)); L2.forEach(v=>F.vl(g2[v],v,c2));
+  const mk=v=>nOf[v]?`どちらも印が${nOf[v]}つの角`:'どちらも印のない残りの角';
+  const why={}; ['A','B','C'].forEach(v=>why[v]=mk(v));
+  return mkOrder({ src:['A','B','C'], map, letters:L2, tgtName:L2.join(''), why,
+    lead:'2つの三角形は相似です。同じ数の弧の印がついた角は、大きさが等しい角です。',
+    fig:F.svg(`左に三角形ABC、右に三角形${L2.join('')}。等しい角に同じ数の弧の印がある。`),
+    hints:['同じ印（弧の数が同じ）の角どうしが、対応する頂点だよ。','印のない角どうしも等しいよ（三角形の内角の和は180°なので、残りの角も等しくなる）。'] });
+}
+function u1par(){
+  const t=triSides(...pick(TRIS)); const tt=pick([.45,.5,.55,.6]); t.D=lerp(t.A,t.B,tt); t.E=lerp(t.A,t.C,tt);
+  const [g]=fit([{pts:t,box:[30,0,330,250]}],28); const F=new Fig(); const c=cen([g.A,g.B,g.C]);
+  F.pg([g.A,g.B,g.C]); F.ln(g.D,g.E); F.pa(g.D,g.E); F.pa(g.B,g.C); ['A','B','C','D','E'].forEach(v=>F.vl(g[v],v,c));
+  const fig=F.svg('三角形ABCの辺AB上に点D、辺AC上に点E。DEとBCは平行。');
+  const hints=['∠A は2つの三角形に共通な角。だから A と対応するのは A。','DE∥BC なので同位角が等しい：∠ADE＝∠ABC、∠AED＝∠ACB。'];
+  if(Math.random()<.5) return mkOrder({src:['A','D','E'],map:{A:'A',D:'B',E:'C'},letters:['A','B','C'],tgtName:'ABC',
+    why:{A:'∠A は共通',D:'同位角 ∠ADE＝∠ABC',E:'同位角 ∠AED＝∠ACB'},lead:'DE∥BC です。',fig,hints});
+  return mkOrder({src:['A','B','C'],map:{A:'A',B:'D',C:'E'},letters:['A','D','E'],tgtName:'ADE',
+    why:{A:'∠A は共通',B:'同位角 ∠ABC＝∠ADE',C:'同位角 ∠ACB＝∠AED'},lead:'DE∥BC です。',fig,hints});
+}
+function u1anti(){
+  const t=triSides(...pick(TRIS)); const AB=len(sub(t.B,t.A)), AC=len(sub(t.C,t.A));
+  const k=0.6*Math.min(AC/AB,AB/AC);
+  t.D=add(t.A,mul(nrm(sub(t.B,t.A)),k*AC)); t.E=add(t.A,mul(nrm(sub(t.C,t.A)),k*AB));
+  const [g]=fit([{pts:t,box:[30,0,330,250]}],28); const F=new Fig(); const c=cen([g.A,g.B,g.C]);
+  F.pg([g.A,g.B,g.C]); F.ln(g.D,g.E); F.ang(g.B,g.A,g.C,1,20); F.ang(g.E,g.A,g.D,1,16);
+  ['A','B','C','D','E'].forEach(v=>F.vl(g[v],v,c));
+  const fig=F.svg('三角形ABCの辺AB上に点D、辺AC上に点E。角ABCと角AEDに同じ印。');
+  const hints=['∠A は共通。印のついた角 ∠ABC と ∠AED が等しいよ。','B と対応するのは、印のついた角の頂点 E。D ではないので注意！'];
+  if(Math.random()<.6) return mkOrder({src:['A','B','C'],map:{A:'A',B:'E',C:'D'},letters:['A','D','E'],tgtName:'ADE',
+    why:{A:'∠A は共通',B:'印のついた角 ∠ABC＝∠AED',C:'残りの角 ∠ACB＝∠ADE'},lead:'図で、同じ印の角は等しい角です。',fig,hints});
+  return mkOrder({src:['A','D','E'],map:{A:'A',D:'C',E:'B'},letters:['A','B','C'],tgtName:'ABC',
+    why:{A:'∠A は共通',D:'残りの角 ∠ADE＝∠ACB',E:'印のついた角 ∠AED＝∠ABC'},lead:'図で、同じ印の角は等しい角です。',fig,hints});
+}
+function altFig(){
+  const [p,q]=pick([[3,4],[4,3],[5,7],[7,5],[4,6],[6,4],[5,6]]); const a=Math.hypot(p,q);
+  const t=triSides(a,q,p); t.H=V(t.A.x,0);
+  const [g]=fit([{pts:t,box:[30,0,330,250]}],30); const F=new Fig(); const c=cen([g.A,g.B,g.C]);
+  F.pg([g.A,g.B,g.C]); F.ln(g.A,g.H); F.rt(g.A,g.B,g.C); F.rt(g.H,g.A,g.C,10);
+  F.vl(g.A,'A',c); F.vl(g.B,'B',c); F.vl(g.C,'C',c); F.vl(g.H,'H',V(g.H.x,0));
+  return {F,g};
+}
+function u1alt(){
+  const {F}=altFig(); const fig=F.svg('直角三角形ABC（角Aが直角）。AからBCに垂線AHを引いた図。');
+  const lead='∠BAC＝90°、AH⊥BC です。';
+  if(Math.random()<.5) return mkOrder({src:['A','B','C'],map:{A:'H',B:'B',C:'A'},letters:['A','B','H'],tgtName:'ABH',
+    why:{A:'直角 ∠BAC＝∠BHA＝90°',B:'∠B は共通',C:'残りの角 ∠ACB＝∠BAH'},lead,fig,
+    hints:['直角どうしが対応するよ：∠BAC と ∠BHA。','∠B は2つの三角形に共通な角。']});
+  return mkOrder({src:['A','B','C'],map:{A:'H',B:'A',C:'C'},letters:['A','C','H'],tgtName:'AHC',
+    why:{A:'直角 ∠BAC＝∠AHC＝90°',B:'残りの角 ∠ABC＝∠HAC',C:'∠C は共通'},lead,fig,
+    hints:['直角どうしが対応するよ：∠BAC と ∠AHC。','∠C は2つの三角形に共通な角。']});
+}
+function genU1(){ return pick([u1sep,u1sep,u1par,u1anti,u1alt])(); }
+
+/* =========================================================
+   フローチャート共通
+========================================================= */
+const REASONS=['仮定','共通な角','対頂角は等しい','平行線の同位角は等しい','平行線の錯角は等しい','仮定の長さから計算'];
+const CONDS=['3組の辺の比がすべて等しい','2組の辺の比とその間の角がそれぞれ等しい','2組の角がそれぞれ等しい'];
+function simFlow(o){
+  const marks='①②③';
+  const blanks={}; const rows=[];
+  rows.push(o.premises.map((p,i)=>{ blanks['f'+i]={opts:shuffle(o.factOpts),ans:p.fact}; blanks['r'+i]={opts:shuffle(o.reasonOpts||REASONS),ans:p.reason};
+    return [`<b>根拠${marks[i]}</b><br>`,{b:'f'+i},'<br>理由：',{b:'r'+i}]; }));
+  blanks.c={opts:shuffle(CONDS),ans:o.cond}; rows.push([[ `<b>相似条件</b>（${marks.slice(0,o.premises.length).split('').join('、')}より）<br>`,{b:'c'} ]]);
+  blanks.z={opts:shuffle(o.conclOpts),ans:o.concl}; rows.push([[ '<b>結論</b>　よって ',{b:'z'} ]]);
+  return { unit:2, text:o.text, fig:o.fig,
+    ans:{type:'flow',flow:{rows,blanks,groups:[o.premises.map((p,i)=>['f'+i,'r'+i])]}},
+    ansHtml:o.concl, hints:o.hints, steps:o.proof };
+}
+
+/* =========================================================
+   ② 相似の証明（フローチャート）
+========================================================= */
+function u2par(){
+  const t=triSides(...pick(TRIS)); t.D=lerp(t.A,t.B,.5); t.E=lerp(t.A,t.C,.5);
+  const [g]=fit([{pts:t,box:[30,0,330,250]}],28); const F=new Fig(); const c=cen([g.A,g.B,g.C]);
+  F.pg([g.A,g.B,g.C]); F.ln(g.D,g.E); F.pa(g.D,g.E); F.pa(g.B,g.C); ['A','B','C','D','E'].forEach(v=>F.vl(g[v],v,c));
+  return simFlow({ text:'△ABC の辺 AB, AC 上にそれぞれ点 D, E があり、DE∥BC です。<br>△ADE と △ABC が相似であることを、フローチャートで証明しよう。',
+    fig:F.svg('三角形ABCの辺AB上に点D、AC上に点E。DEとBCは平行。'),
+    premises:[{fact:'∠ADE ＝ ∠ABC',reason:'平行線の同位角は等しい'},{fact:'∠DAE ＝ ∠BAC',reason:'共通な角'}],
+    factOpts:['∠ADE ＝ ∠ABC','∠ADE ＝ ∠ACB','∠DAE ＝ ∠BAC','∠AED ＝ ∠ABC'],
+    cond:CONDS[2], conclOpts:['△ADE ∽ △ABC','△ADE ∽ △ACB','△ADE ∽ △BAC'], concl:'△ADE ∽ △ABC',
+    hints:['DE∥BC から等しくなる角は？ 同位角を探そう（∠ADE と ∠ABC など）。','∠A は2つの三角形に共通な角だね。','結論では、等しい角の頂点を同じ順に書くよ（A↔A、D↔B、E↔C）。'],
+    proof:['△ADE と △ABC において','DE∥BC より、平行線の同位角は等しいので　∠ADE ＝ ∠ABC …①','共通な角なので　∠DAE ＝ ∠BAC …②','①、②より、2組の角がそれぞれ等しいので　<b>△ADE ∽ △ABC</b>'] });
+}
+function u2bow(){
+  const m=rnd(2,3), n=rnd(3,5); const u=nrm(V(-1,-0.7-Math.random()*.4)), w=nrm(V(1,-0.8-Math.random()*.3));
+  const t={O:V(0,0),A:mul(u,m),B:mul(w,m),D:mul(u,-n),C:mul(w,-n)};
+  const [g]=fit([{pts:t,box:[30,0,330,250]}],28); const F=new Fig();
+  F.ln(g.A,g.B); F.ln(g.C,g.D); F.ln(g.A,g.D); F.ln(g.B,g.C); F.pa(g.A,g.B); F.pa(g.C,g.D);
+  F.vl(g.A,'A',g.O); F.vl(g.B,'B',g.O); F.vl(g.C,'C',g.O); F.vl(g.D,'D',g.O); F.vl(g.O,'O',V(g.O.x-10,g.O.y));
+  return simFlow({ text:'線分 AD と BC が点 O で交わり、AB∥CD です。<br>△OAB と △ODC が相似であることを、フローチャートで証明しよう。',
+    fig:F.svg('線分ADとBCが点Oで交わる。ABとCDは平行。'),
+    premises:[{fact:'∠OAB ＝ ∠ODC',reason:'平行線の錯角は等しい'},{fact:'∠AOB ＝ ∠DOC',reason:'対頂角は等しい'}],
+    factOpts:['∠OAB ＝ ∠ODC','∠OAB ＝ ∠OCD','∠AOB ＝ ∠DOC','∠AOB ＝ ∠AOC'],
+    cond:CONDS[2], conclOpts:['△OAB ∽ △ODC','△OAB ∽ △OCD','△OAB ∽ △DOC'], concl:'△OAB ∽ △ODC',
+    hints:['AB∥CD で、直線 AD を横切る線とみると「錯角」が等しいよ。','O のところで向かい合っている角は「対頂角」。','∠OAB＝∠ODC だから A↔D。∽ の順番に注意！'],
+    proof:['△OAB と △ODC において','AB∥CD より、平行線の錯角は等しいので　∠OAB ＝ ∠ODC …①','対頂角は等しいので　∠AOB ＝ ∠DOC …②','①、②より、2組の角がそれぞれ等しいので　<b>△OAB ∽ △ODC</b>'] });
+}
+function u2sas(){
+  const [AB,AC,AD,AE,k]=pick([[8,6,3,4,2],[10,8,4,5,2],[12,9,3,4,3],[9,6,2,3,3],[12,10,5,6,2]]);
+  const t1=118*D2R, t2=58*D2R; const dB=V(Math.cos(t1),Math.sin(t1)), dC=V(Math.cos(t2),Math.sin(t2));
+  const t={A:V(0,0),B:mul(dB,AB),C:mul(dC,AC),D:mul(dB,AD),E:mul(dC,AE)};
+  const [g]=fit([{pts:t,box:[30,0,330,250]}],30); const F=new Fig(); const c=cen([g.A,g.B,g.C]);
+  F.pg([g.A,g.B,g.C]); F.ln(g.D,g.E); ['A','B','C','D','E'].forEach(v=>F.vl(g[v],v,c));
+  F.sl(g.A,g.D,AD,c); F.sl(g.D,g.B,AB-AD,c); F.sl(g.A,g.E,AE,c); F.sl(g.E,g.C,AC-AE,c);
+  const r=`1 : ${k}`;
+  return simFlow({ text:`△ABC で AB＝${AB}、AC＝${AC} です。辺 AB 上に AD＝${AD}、辺 AC 上に AE＝${AE} となる点 D, E をとります。<br>△ADE と △ABC が相似であることを、フローチャートで証明しよう。`,
+    fig:F.svg('三角形ABC。辺AB上に点D、辺AC上に点E。各部分の長さが書いてある。'),
+    premises:[{fact:`AE : AB ＝ AD : AC ＝ ${r}`,reason:'仮定の長さから計算'},{fact:'∠EAD ＝ ∠BAC',reason:'共通な角'}],
+    factOpts:[`AE : AB ＝ AD : AC ＝ ${r}`,`AD : AB ＝ AE : AC ＝ ${r}`,'∠EAD ＝ ∠BAC','∠ADE ＝ ∠ABC'],
+    cond:CONDS[1], conclOpts:['△AED ∽ △ABC','△ADE ∽ △ABC','△AED ∽ △ACB'], concl:'△AED ∽ △ABC',
+    hints:[`AD : AB ＝ ${AD} : ${AB} と AE : AC ＝ ${AE} : ${AC} は等しくないね。組み合わせを変えて AE : AB と AD : AC を計算してみよう。`,'比が等しい2組の辺の「間の角」は ∠A。共通な角だね。','AE と AB が対応するから E↔B、AD と AC が対応するから D↔C。'],
+    proof:['△AED と △ABC において',`AE : AB ＝ ${AE} : ${AB} ＝ ${r}、AD : AC ＝ ${AD} : ${AC} ＝ ${r}　より　AE : AB ＝ AD : AC …①`,'共通な角なので　∠EAD ＝ ∠BAC …②','①、②より、2組の辺の比とその間の角がそれぞれ等しいので　<b>△AED ∽ △ABC</b>','⚠ 頂点の順番に注意。E↔B、D↔C なので「△ADE ∽ △ABC」ではない。'] });
+}
+function u2alt(){
+  const {F}=altFig();
+  return simFlow({ text:'∠BAC＝90° の直角三角形 ABC で、頂点 A から辺 BC に垂線 AH を引きます。<br>△ABC と △HBA が相似であることを、フローチャートで証明しよう。',
+    fig:F.svg('直角三角形ABC（角Aが直角）。AからBCに垂線AH。'),
+    premises:[{fact:'∠BAC ＝ ∠BHA（＝90°）',reason:'仮定'},{fact:'∠ABC ＝ ∠HBA',reason:'共通な角'}],
+    factOpts:['∠BAC ＝ ∠BHA（＝90°）','∠ABC ＝ ∠HBA','∠BAC ＝ ∠BAH','∠ACB ＝ ∠ABH'],
+    cond:CONDS[2], conclOpts:['△ABC ∽ △HBA','△ABC ∽ △HAB','△ABC ∽ △BHA'], concl:'△ABC ∽ △HBA',
+    hints:['90°の角どうしは等しい。仮定から言えるね。','∠B は △ABC にも △HBA にも含まれる共通な角。','直角の頂点 A↔H、共通の B↔B、残り C↔A。'],
+    proof:['△ABC と △HBA において','仮定より　∠BAC ＝ ∠BHA ＝ 90° …①','共通な角なので　∠ABC ＝ ∠HBA …②','①、②より、2組の角がそれぞれ等しいので　<b>△ABC ∽ △HBA</b>'] });
+}
+function u2sss(){
+  const [ab,bc,ca]=pick([[4,6,5],[3,5,4],[5,7,6],[4,7,6]]); const k=pick([2,3]);
+  const QR=ab*k, RP=bc*k, PQ=ca*k;
+  const t=triSides(bc,ca,ab); centerize(t);
+  const an=rnd(70,290)*D2R, refl=Math.random()<.5; const t2={};
+  [['A','Q'],['B','R'],['C','P']].forEach(([a,b])=>{ let p=t[a]; if(refl)p=V(-p.x,p.y); t2[b]=rot(mul(p,k),an); });
+  const [g1,g2]=fit([{pts:t,box:[0,0,150,250]},{pts:t2,box:[150,0,360,250]}],32);
+  const F=new Fig(); const c1=cen(Object.values(g1)), c2=cen(Object.values(g2));
+  F.pg([g1.A,g1.B,g1.C]); F.pg([g2.P,g2.Q,g2.R]);
+  ['A','B','C'].forEach(v=>F.vl(g1[v],v,c1)); ['P','Q','R'].forEach(v=>F.vl(g2[v],v,c2));
+  F.sl(g1.A,g1.B,ab,c1); F.sl(g1.B,g1.C,bc,c1); F.sl(g1.C,g1.A,ca,c1);
+  F.sl(g2.Q,g2.R,QR,c2); F.sl(g2.R,g2.P,RP,c2); F.sl(g2.P,g2.Q,PQ,c2);
+  const r=`1 : ${k}`; const [w1,w2]=red(ab,PQ), [w3,w4]=red(bc,QR);
+  return simFlow({ text:'△ABC と △PQR の辺の長さは図のとおりです。<br>△ABC と △PQR が相似であることを、フローチャートで証明しよう。',
+    fig:F.svg('三角形ABCと三角形PQR。すべての辺の長さが書いてある。'),
+    premises:[{fact:`AB : QR ＝ ${r}`,reason:'仮定の長さから計算'},{fact:`BC : RP ＝ ${r}`,reason:'仮定の長さから計算'},{fact:`CA : PQ ＝ ${r}`,reason:'仮定の長さから計算'}],
+    factOpts:[`AB : QR ＝ ${r}`,`BC : RP ＝ ${r}`,`CA : PQ ＝ ${r}`,`AB : PQ ＝ ${w1} : ${w2}`,`BC : QR ＝ ${w3} : ${w4}`],
+    cond:CONDS[0], conclOpts:['△ABC ∽ △QRP','△ABC ∽ △PQR','△ABC ∽ △RPQ'], concl:'△ABC ∽ △QRP',
+    hints:['短い辺どうし・中くらいの辺どうし・長い辺どうしを組にしよう。',`AB(${ab}) と QR(${QR})、BC(${bc}) と RP(${RP})、CA(${ca}) と PQ(${PQ}) が組になるね。`,'AB と QR が対応 → A, B は Q, R のどちらか。CA と PQ が対応 → 共通の A は Q。'],
+    proof:['△ABC と △QRP において',`AB : QR ＝ ${ab} : ${QR} ＝ ${r} …①`,`BC : RP ＝ ${bc} : ${RP} ＝ ${r} …②`,`CA : PQ ＝ ${ca} : ${PQ} ＝ ${r} …③`,'①、②、③より、3組の辺の比がすべて等しいので　<b>△ABC ∽ △QRP</b>'],
+    reasonOpts:REASONS });
+}
+function genU2(){ return pick([u2par,u2bow,u2sas,u2alt,u2sss])(); }
+
+/* =========================================================
+   ③ 対応する辺の比・長さ
+========================================================= */
+function u3sep(){
+  const base=pick([[2,3,4],[3,4,5],[4,5,6],[3,5,7],[2,4,5],[3,4,6],[4,6,7],[5,6,8]]); // AB, BC, CA の比
+  const [q,p]=pick([[1,2],[2,1],[2,3],[3,2],[3,4],[4,3],[3,5],[5,3],[4,5],[5,4]]);
+  const s1=base.map(v=>v*q), s2=base.map(v=>v*p); const N1=['AB','BC','CA'], N2=['DE','EF','FD'];
+  const t=triSides(s1[1],s1[2],s1[0]); centerize(t); rotAll(t,rnd(-10,10)*D2R);
+  const an=rnd(60,300)*D2R, refl=Math.random()<.4, k=p/q; const t2={};
+  [['A','D'],['B','E'],['C','F']].forEach(([a,b])=>{ let v=t[a]; if(refl) v=V(-v.x,v.y); t2[b]=rot(mul(v,k),an); });
+  const [g1,g2]=fit([{pts:t,box:[0,0,180,250]},{pts:t2,box:[180,0,360,250]}],34);
+  const F=new Fig(); const c1=cen(Object.values(g1)), c2=cen(Object.values(g2));
+  F.pg([g1.A,g1.B,g1.C]); F.pg([g2.D,g2.E,g2.F]);
+  ['A','B','C'].forEach(v=>F.vl(g1[v],v,c1)); ['D','E','F'].forEach(v=>F.vl(g2[v],v,c2));
+  const S1=[[g1.A,g1.B],[g1.B,g1.C],[g1.C,g1.A]], S2=[[g2.D,g2.E],[g2.E,g2.F],[g2.F,g2.D]];
+  const i=rnd(0,2); let j; do{ j=rnd(0,2); }while(j===i);
+  F.sl(...S1[i],s1[i],c1); F.sl(...S2[i],s2[i],c2);
+  const fig0='三角形ABCと三角形DEF。向きが違うが相似。辺の長さが書いてある。';
+  const H=['∽ の記号で同じ位置にある頂点どうしが対応するよ（A↔D、B↔E、C↔F）。',`長さが2つともわかっている対応する辺 ${N1[i]} と ${N2[i]} に注目しよう。`];
+  const st1=`△ABC ∽ △DEF なので、対応する辺は AB と DE、BC と EF、CA と FD`;
+  const st2=`相似比 ＝ ${N1[i]} : ${N2[i]} ＝ ${s1[i]} : ${s2[i]} ＝ <b>${q} : ${p}</b>`;
+  if(Math.random()<.25){
+    return { unit:3, text:'△ABC ∽ △DEF です。<br>△ABC と △DEF の<b>相似比</b>を、最も簡単な整数の比で求めよう。',
+      fig:F.svg(fig0), ans:{type:'ratio',label:'△ABC : △DEF ＝',a:q,b:p}, ansHtml:`${q} : ${p}`, hints:H, steps:[st1,st2] };
+  }
+  if(Math.random()<.5){
+    F.sl(...S1[j],s1[j],c1); F.sl(...S2[j],'x',c2,'slq');
+    return { unit:3, text:'△ABC ∽ △DEF です。<br><b>x</b> の値を求めよう。', fig:F.svg(fig0),
+      ans:{type:'num',label:'x ＝',n:s2[j],d:1}, ansHtml:`x ＝ ${s2[j]}`, hints:[...H,`${N1[j]} : ${N2[j]} も相似比と等しくなるよ。`],
+      steps:[st1,st2,`${N1[j]} : ${N2[j]} ＝ ${q} : ${p} だから　${s1[j]} : x ＝ ${q} : ${p}`,`外側の積＝内側の積より　${q} × x ＝ ${s1[j]} × ${p}　→　<b>x ＝ ${s2[j]}</b>`] };
+  }
+  F.sl(...S2[j],s2[j],c2); F.sl(...S1[j],'x',c1,'slq');
+  return { unit:3, text:'△ABC ∽ △DEF です。<br><b>x</b> の値を求めよう。', fig:F.svg(fig0),
+    ans:{type:'num',label:'x ＝',n:s1[j],d:1}, ansHtml:`x ＝ ${s1[j]}`, hints:[...H,`${N1[j]} : ${N2[j]} も相似比と等しくなるよ。`],
+    steps:[st1,st2,`${N1[j]} : ${N2[j]} ＝ ${q} : ${p} だから　x : ${s2[j]} ＝ ${q} : ${p}`,`外側の積＝内側の積より　${p} × x ＝ ${s2[j]} × ${q}　→　<b>x ＝ ${s1[j]}</b>`] };
+}
+function u3par(){
+  const [m,n]=pick([[1,2],[2,1],[2,3],[3,2],[1,3],[3,1],[3,4],[4,3],[2,5],[3,5]]);
+  const tt=rnd(1,3), AD=m*tt, DB=n*tt;
+  const t=triSides(...pick(TRIS)); t.D=lerp(t.A,t.B,m/(m+n)); t.E=lerp(t.A,t.C,m/(m+n));
+  const [g]=fit([{pts:t,box:[30,0,330,250]}],30); const F=new Fig(); const c=cen([g.A,g.B,g.C]);
+  F.pg([g.A,g.B,g.C]); F.ln(g.D,g.E); F.pa(g.D,g.E); F.pa(g.B,g.C); ['A','B','C','D','E'].forEach(v=>F.vl(g[v],v,c));
+  F.sl(g.A,g.D,AD,c); F.sl(g.D,g.B,DB,c);
+  const type=pick(['DE','DE','EC','BC']); const s=rnd(1,4);
+  const fig=()=>F.svg('三角形ABCで、DEとBCが平行。各部分の長さが書いてある。');
+  if(type==='EC'){
+    const AE=m*s, EC=n*s; F.sl(g.A,g.E,AE,c); F.sl(g.E,g.C,'x',c,'slq');
+    return { unit:3, text:'DE∥BC です。<b>x</b>（EC の長さ）を求めよう。', fig:fig(),
+      ans:{type:'num',label:'x ＝',n:EC,d:1}, ansHtml:`x ＝ ${EC}`,
+      hints:['DE∥BC のとき、AD : DB ＝ AE : EC（平行線と線分の比）が使えるよ。',`${AD} : ${DB} ＝ ${AE} : x を解こう。`],
+      steps:['DE∥BC だから　AD : DB ＝ AE : EC（平行線と線分の比）',`${AD} : ${DB} ＝ ${AE} : x`,`外側の積＝内側の積より　${AD} × x ＝ ${DB} × ${AE}　→　<b>x ＝ ${EC}</b>`] };
+  }
+  const BC=(m+n)*s, DE=m*s; const AB=AD+DB;
+  if(type==='DE'){
+    F.sl(g.B,g.C,BC,c); F.sl(g.D,g.E,'x',lerp(g.B,g.C,.5),'slq');
+    return { unit:3, text:'DE∥BC です。<b>x</b>（DE の長さ）を求めよう。', fig:fig(),
+      ans:{type:'num',label:'x ＝',n:DE,d:1}, ansHtml:`x ＝ ${DE}`,
+      hints:['DE と BC は、△ADE と △ABC の対応する辺だよ。',`相似比は AD : AB。AB ＝ AD ＋ DB ＝ ${AB} を先に計算しよう。`],
+      steps:['DE∥BC だから　△ADE ∽ △ABC（∠A が共通、同位角が等しい）',`相似比は　AD : AB ＝ ${AD} : ${AB} ＝ ${m} : ${m+n}`,`DE : BC ＝ ${m} : ${m+n} より　x : ${BC} ＝ ${m} : ${m+n}`,`${m+n} × x ＝ ${BC} × ${m}　→　<b>x ＝ ${DE}</b>`,`⚠ AD : DB（＝ ${m} : ${n}）を使うのはまちがい。DE と BC の比は AD : <b>AB</b>。`] };
+  }
+  F.sl(g.D,g.E,DE,lerp(g.B,g.C,.5)); F.sl(g.B,g.C,'x',c,'slq');
+  return { unit:3, text:'DE∥BC です。<b>x</b>（BC の長さ）を求めよう。', fig:fig(),
+    ans:{type:'num',label:'x ＝',n:BC,d:1}, ansHtml:`x ＝ ${BC}`,
+    hints:['DE と BC は、△ADE と △ABC の対応する辺だよ。',`相似比は AD : AB。AB ＝ AD ＋ DB ＝ ${AB}。`],
+    steps:['DE∥BC だから　△ADE ∽ △ABC',`相似比は　AD : AB ＝ ${AD} : ${AB} ＝ ${m} : ${m+n}`,`DE : BC ＝ ${m} : ${m+n} より　${DE} : x ＝ ${m} : ${m+n}`,`${m} × x ＝ ${DE} × ${m+n}　→　<b>x ＝ ${BC}</b>`,`⚠ AD : DB ではなく AD : <b>AB</b> を使う。`] };
+}
+function u3bow(){
+  const [m,n]=pick([[2,3],[3,2],[1,2],[2,1],[3,4],[4,3],[2,5],[3,5]]); const tt=rnd(1,3), s=rnd(1,3);
+  const OA=m*tt, OD=n*tt, AB=m*s, DC=n*s;
+  const u=nrm(V(-1,-0.8)), w=nrm(V(1,-0.9)); const t={O:V(0,0),A:mul(u,m),B:mul(w,m),D:mul(u,-n),C:mul(w,-n)};
+  const [g]=fit([{pts:t,box:[30,0,330,250]}],30); const F=new Fig();
+  F.ln(g.A,g.B); F.ln(g.C,g.D); F.ln(g.A,g.D); F.ln(g.B,g.C); F.pa(g.A,g.B); F.pa(g.C,g.D);
+  ['A','B','C','D'].forEach(v=>F.vl(g[v],v,g.O)); F.vl(g.O,'O',V(g.O.x-10,g.O.y));
+  const cc=cen([g.A,g.B,g.C,g.D]);
+  F.sl(g.O,g.A,OA,g.B); F.sl(g.A,g.B,AB,g.O);
+  const fig=()=>F.svg('線分ADとBCが点Oで交わり、ABとCDが平行。長さが書いてある。');
+  const base=['AB∥CD より、錯角が等しい（∠OAB＝∠ODC）。対頂角も等しい（∠AOB＝∠DOC）。','よって　△OAB ∽ △ODC'];
+  if(Math.random()<.5){
+    F.sl(g.O,g.D,OD,g.C); F.sl(g.C,g.D,'x',g.O,'slq');
+    return { unit:3, text:'AB∥CD です。<b>x</b>（DC の長さ）を求めよう。', fig:fig(), ans:{type:'num',label:'x ＝',n:DC,d:1}, ansHtml:`x ＝ ${DC}`,
+      hints:['AB∥CD なので △OAB ∽ △ODC。どの辺とどの辺が対応するか考えよう。','OA と OD、AB と DC が対応する辺だよ。'],
+      steps:[...base,`相似比は　OA : OD ＝ ${OA} : ${OD} ＝ ${m} : ${n}`,`AB : DC ＝ ${m} : ${n} より　${AB} : x ＝ ${m} : ${n}`,`${m} × x ＝ ${AB} × ${n}　→　<b>x ＝ ${DC}</b>`] };
+  }
+  F.sl(g.C,g.D,DC,g.O); F.sl(g.O,g.D,'x',g.C,'slq');
+  return { unit:3, text:'AB∥CD です。<b>x</b>（OD の長さ）を求めよう。', fig:fig(), ans:{type:'num',label:'x ＝',n:OD,d:1}, ansHtml:`x ＝ ${OD}`,
+    hints:['AB∥CD なので △OAB ∽ △ODC。','AB と DC から相似比を出して、OA : OD に使おう。'],
+    steps:[...base,`相似比は　AB : DC ＝ ${AB} : ${DC} ＝ ${m} : ${n}`,`OA : OD ＝ ${m} : ${n} より　${OA} : x ＝ ${m} : ${n}`,`${m} × x ＝ ${OA} × ${n}　→　<b>x ＝ ${OD}</b>`] };
+}
+function genU3(){ return pick([u3sep,u3sep,u3par,u3par,u3bow])(); }
+
+/* =========================================================
+   ④ 中点連結定理で長さ
+========================================================= */
+function u4tri(){
+  const t=triSides(...pick(TRIS)); t.M=lerp(t.A,t.B,.5); t.N=lerp(t.A,t.C,.5);
+  const type=pick(['MN','BC','FG']);
+  if(type==='FG'){ t.F=lerp(t.A,t.M,.5); t.G=lerp(t.A,t.N,.5); }
+  const [g]=fit([{pts:t,box:[30,0,330,250]}],30); const F=new Fig(); const c=cen([g.A,g.B,g.C]);
+  F.pg([g.A,g.B,g.C]); F.ln(g.M,g.N);
+  ['A','B','C','M','N'].forEach(v=>F.vl(g[v],v,c));
+  if(type==='FG'){
+    F.ln(g.F,g.G); F.vl(g.F,'F',c); F.vl(g.G,'G',c);
+    F.tk(g.A,g.F,1); F.tk(g.F,g.M,1); F.tk(g.M,g.B,2); F.tk(g.A,g.G,3); F.tk(g.G,g.N,3); F.tk(g.N,g.C,4);
+    const k=rnd(2,6), BC=4*k; F.sl(g.B,g.C,BC,c); F.sl(g.F,g.G,'x',g.A,'slq');
+    return { unit:4, text:`M, N は辺 AB, AC の中点、F, G は AM, AN の中点です。BC＝${BC} のとき、<b>x</b>（FG の長さ）を求めよう。`,
+      fig:F.svg('三角形ABCで、MとNはAB、ACの中点。FとGはAM、ANの中点。'), ans:{type:'num',label:'x ＝',n:k,d:1}, ansHtml:`x ＝ ${k}`,
+      hints:['まず △ABC で中点連結定理を使って MN を求めよう。','次に △AMN で、もう一度中点連結定理！'],
+      steps:[`△ABC で M, N は AB, AC の中点なので、中点連結定理より　MN ＝ ${HALF}BC ＝ ${2*k}`,`△AMN で F, G は AM, AN の中点なので、中点連結定理より　FG ＝ ${HALF}MN`,`<b>x ＝ ${k}</b>（BC の ${fx(1,4)} になる）`] };
+  }
+  F.tk(g.A,g.M,1); F.tk(g.M,g.B,1); F.tk(g.A,g.N,2); F.tk(g.N,g.C,2);
+  const k=rnd(3,12);
+  if(type==='MN'){
+    F.sl(g.B,g.C,2*k,c); F.sl(g.M,g.N,'x',lerp(g.B,g.C,.5),'slq');
+    return { unit:4, text:`M, N は辺 AB, AC の中点です（同じ印は同じ長さ）。BC＝${2*k} のとき、<b>x</b>（MN の長さ）を求めよう。`,
+      fig:F.svg('三角形ABCで、MとNはAB、ACの中点。'), ans:{type:'num',label:'x ＝',n:k,d:1}, ansHtml:`x ＝ ${k}`,
+      hints:['2辺の中点を結んだ線分は、残りの辺と平行で、長さは半分。'],
+      steps:[`M, N はそれぞれ AB, AC の中点`,`中点連結定理より　MN∥BC、MN ＝ ${HALF}BC`,`x ＝ ${HALF} × ${2*k} ＝ <b>${k}</b>`] };
+  }
+  F.sl(g.M,g.N,k,lerp(g.B,g.C,.5)); F.sl(g.B,g.C,'x',c,'slq');
+  return { unit:4, text:`M, N は辺 AB, AC の中点です。MN＝${k} のとき、<b>x</b>（BC の長さ）を求めよう。`,
+    fig:F.svg('三角形ABCで、MとNはAB、ACの中点。'), ans:{type:'num',label:'x ＝',n:2*k,d:1}, ansHtml:`x ＝ ${2*k}`,
+    hints:['MN ＝ ½BC。逆に考えると、BC は MN の何倍？'],
+    steps:['中点連結定理より　MN ＝ '+HALF+'BC',`だから　BC ＝ 2 × MN ＝ 2 × ${k} ＝ <b>${2*k}</b>`] };
+}
+function u4per(){
+  const [a,b,c0]=pick([[8,6,7],[10,8,6],[9,7,8],[12,9,10],[11,7,8],[10,6,8]]); // BC, CA, AB
+  const t=triSides(a,b,c0); t.D=lerp(t.B,t.C,.5); t.E=lerp(t.C,t.A,.5); t.F=lerp(t.A,t.B,.5);
+  const [g]=fit([{pts:t,box:[30,0,330,250]}],32); const F=new Fig(); const c=cen([g.A,g.B,g.C]);
+  F.pg([g.A,g.B,g.C]); F.pg([g.D,g.E,g.F],'hl'); ['A','B','C','D','E','F'].forEach(v=>F.vl(g[v],v,c));
+  F.sl(g.B,g.C,a,c,'sl',22); F.sl(g.C,g.A,b,c,'sl',22); F.sl(g.A,g.B,c0,c,'sl',22);
+  const sum=a+b+c0;
+  return { unit:4, text:`D, E, F は辺 BC, CA, AB の中点です。△DEF（太線）の<b>周の長さ</b>を求めよう。`,
+    fig:F.svg('三角形ABCと、各辺の中点を結んだ三角形DEF。'), ans:{type:'num',label:'周の長さ ＝',n:sum,d:2}, ansHtml:`${fr(sum,2)}`,
+    hints:['EF, FD, DE はそれぞれ、向かい合う辺の半分になるよ（中点連結定理）。'],
+    steps:[`中点連結定理より　EF ＝ ${HALF}BC ＝ ${fr(a,2)}、FD ＝ ${HALF}CA ＝ ${fr(b,2)}、DE ＝ ${HALF}AB ＝ ${fr(c0,2)}`,`周の長さ ＝ ${HALF} ×（${a}＋${b}＋${c0}）＝ <b>${fr(sum,2)}</b>`,'△ABC の周の長さのちょうど半分になる'] };
+}
+function u4trap(){
+  const a=rnd(2,5)*2-(Math.random()<.5?1:0); let b; do{ b=a+2*rnd(1,4); }while(b>18);
+  const off=(b-a)/2+(Math.random()-.5)*1.2, h=b*0.5;
+  const t={A:V(off,0),D:V(off+a,0),B:V(0,h),C:V(b,h)}; t.M=lerp(t.A,t.B,.5); t.N=lerp(t.D,t.C,.5);
+  const type=Math.random()<.55?'MN':'PQ';
+  if(type==='PQ'){ t.P=inter(t.M,t.N,t.B,t.D); t.Q=inter(t.M,t.N,t.A,t.C); }
+  const [g]=fit([{pts:t,box:[20,0,340,250]}],32); const F=new Fig(); const c=cen([g.A,g.B,g.C,g.D]);
+  F.pg([g.A,g.B,g.C,g.D]); F.ln(g.M,g.N); F.pa(g.A,g.D); F.pa(g.B,g.C);
+  F.tk(g.A,g.M,1); F.tk(g.M,g.B,1); F.tk(g.D,g.N,2); F.tk(g.N,g.C,2);
+  ['A','B','C','D','M','N'].forEach(v=>F.vl(g[v],v,c));
+  F.sl(g.A,g.D,a,c); F.sl(g.B,g.C,b,c);
+  if(type==='MN'){
+    F.sl(g.M,g.N,'x',g.C,'slq',12);
+    const ans=(a+b)/2;
+    return { unit:4, text:`AD∥BC の台形 ABCD で、M, N は辺 AB, DC の中点です。<b>x</b>（MN の長さ）を求めよう。`,
+      fig:F.svg('台形ABCD。ADとBCが平行。MとNはABとDCの中点。'), ans:{type:'num',label:'x ＝',n:ans,d:1}, ansHtml:`x ＝ ${ans}`,
+      hints:['対角線 AC を引いて、2つの三角形に分けて考えよう。','△ABC で M と AC の中点、△ACD で AC の中点と N を結ぶと、中点連結定理が使えるよ。'],
+      steps:['対角線 AC を引き、MN との交点を Q とする（Q は AC の中点）',`△ABC で中点連結定理より　MQ ＝ ${HALF}BC ＝ ${fr(b,2)}`,`△CDA で中点連結定理より　QN ＝ ${HALF}AD ＝ ${fr(a,2)}`,`MN ＝ MQ ＋ QN ＝ ${fr(b,2)} ＋ ${fr(a,2)} ＝ <b>${ans}</b>`,`まとめ：MN ＝ ${HALF}（AD ＋ BC）`] };
+  }
+  F.ln(g.A,g.C,'ln2'); F.ln(g.B,g.D,'ln2'); F.vl(g.P,'P',V(g.P.x,g.P.y+30)); F.vl(g.Q,'Q',V(g.Q.x,g.Q.y+30));
+  F.sl(g.P,g.Q,'x',V((g.P.x+g.Q.x)/2,g.P.y-30),'slq',14);
+  const ans=(b-a)/2;
+  return { unit:4, text:`AD∥BC の台形 ABCD で、M, N は辺 AB, DC の中点です。MN と対角線 BD, AC の交点を P, Q とするとき、<b>x</b>（PQ の長さ）を求めよう。`,
+    fig:F.svg('台形ABCD。MとNはABとDCの中点。MNと対角線の交点PとQ。'), ans:{type:'num',label:'x ＝',n:ans,d:1}, ansHtml:`x ＝ ${ans}`,
+    hints:['△ABD で MP、△ABC で MQ を、それぞれ中点連結定理で求めよう。','PQ ＝ MQ − MP'],
+    steps:[`△ABD で M は AB の中点、MP∥AD なので P は BD の中点。中点連結定理より　MP ＝ ${HALF}AD ＝ ${fr(a,2)}`,`△ABC で同様に　MQ ＝ ${HALF}BC ＝ ${fr(b,2)}`,`PQ ＝ MQ − MP ＝ ${fr(b,2)} − ${fr(a,2)} ＝ <b>${ans}</b>`,`まとめ：PQ ＝ ${HALF}（BC − AD）`] };
+}
+function quadPts(){ const r=()=>(Math.random()-.5)*1.4;
+  return {A:V(-3+r(),-3+r()),B:V(-4.2+r(),2.6+r()),C:V(4.2+r(),3+r()),D:V(3.4+r(),-2.6+r())}; }
+function u4quad(){
+  const t=quadPts(); t.P=lerp(t.A,t.B,.5); t.Q=lerp(t.B,t.C,.5); t.R=lerp(t.C,t.D,.5); t.S=lerp(t.D,t.A,.5);
+  const [g]=fit([{pts:t,box:[20,0,340,250]}],32); const F=new Fig(); const c=cen([g.A,g.B,g.C,g.D]);
+  F.pg([g.A,g.B,g.C,g.D]); F.pg([g.P,g.Q,g.R,g.S],'hl'); F.ln(g.A,g.C,'ln2'); F.ln(g.B,g.D,'ln2');
+  ['A','B','C','D','P','Q','R','S'].forEach(v=>F.vl(g[v],v,c));
+  const AC=rnd(4,12)*1, BD=rnd(4,12);
+  const ac=lerp(g.A,g.C,.3), bd=lerp(g.B,g.D,.3);
+  F.b.push(`<text class="sl" x="${f1(ac.x+12)}" y="${f1(ac.y-12)}">AC=${AC}</text>`);
+  F.b.push(`<text class="sl" x="${f1(bd.x+14)}" y="${f1(bd.y+12)}">BD=${BD}</text>`);
+  return { unit:4, text:`四角形 ABCD の辺 AB, BC, CD, DA の中点を P, Q, R, S とします。対角線 AC＝${AC}、BD＝${BD} のとき、四角形 PQRS（太線）の<b>周の長さ</b>を求めよう。`,
+    fig:F.svg('四角形ABCDと、各辺の中点を結んだ四角形PQRS。対角線ACとBD。'), ans:{type:'num',label:'周の長さ ＝',n:AC+BD,d:1}, ansHtml:`${AC+BD}`,
+    hints:['対角線で三角形に分けて、中点連結定理を4回使おう。','PQ と SR は AC の半分、QR と PS は BD の半分。'],
+    steps:[`△ABC で　PQ ＝ ${HALF}AC ＝ ${fr(AC,2)}、△ACD で　SR ＝ ${HALF}AC ＝ ${fr(AC,2)}`,`△ABD で　PS ＝ ${HALF}BD ＝ ${fr(BD,2)}、△BCD で　QR ＝ ${HALF}BD ＝ ${fr(BD,2)}`,`周の長さ ＝ AC ＋ BD ＝ ${AC} ＋ ${BD} ＝ <b>${AC+BD}</b>`] };
+}
+function genU4(){ return pick([u4tri,u4tri,u4per,u4trap,u4trap,u4quad])(); }
+
+/* =========================================================
+   ⑤ 中点連結定理の証明（フローチャート）
+========================================================= */
+function flowProb(o){
+  const blanks={}; for(const k in o.blanks){ blanks[k]={opts:shuffle(o.blanks[k][0]),ans:o.blanks[k][1]}; }
+  return { unit:5, text:o.text, fig:o.fig, ans:{type:'flow',flow:{rows:o.rows,blanks,groups:o.groups||[]}}, ansHtml:o.ansHtml, hints:o.hints, steps:o.proof };
+}
+const TH=['中点連結定理','平行線と線分の比','対頂角は等しい','共通な角'];
+function quadFig(diags){
+  const t=quadPts(); t.P=lerp(t.A,t.B,.5); t.Q=lerp(t.B,t.C,.5); t.R=lerp(t.C,t.D,.5); t.S=lerp(t.D,t.A,.5);
+  const [g]=fit([{pts:t,box:[20,0,340,250]}],32); const F=new Fig(); const c=cen([g.A,g.B,g.C,g.D]);
+  F.pg([g.A,g.B,g.C,g.D]); F.pg([g.P,g.Q,g.R,g.S],'hl'); diags.forEach(([a,b])=>F.ln(g[a],g[b],'ln2'));
+  F.tk(g.A,g.P,1); F.tk(g.P,g.B,1); F.tk(g.B,g.Q,2); F.tk(g.Q,g.C,2); F.tk(g.C,g.R,3); F.tk(g.R,g.D,3);
+  ['A','B','C','D','P','Q','R','S'].forEach(v=>F.vl(g[v],v,c)); return F;
+}
+function u5para(){
+  const F=quadFig([['A','C']]);
+  return flowProb({ text:'四角形 ABCD の辺 AB, BC, CD, DA の中点を、それぞれ P, Q, R, S とします。<br>四角形 PQRS が<b>平行四辺形</b>であることを、フローチャートで証明しよう。',
+    fig:F.svg('四角形ABCDと各辺の中点P,Q,R,S。対角線AC。'),
+    rows:[[ ['<b>①</b> △ABC で、P, Q は AB, BC の中点だから<br>',{b:'a1'},'<br>理由：',{b:'t1'}], ['<b>②</b> △ACD で、S, R は AD, CD の中点だから<br>',{b:'a2'},'<br>理由：',{b:'t2'}] ],
+          [[ '①、②より<br>',{b:'c'} ]], [[ {b:'d'},'<br>から' ]], [[ '四角形 PQRS は ',{b:'e'} ]]],
+    blanks:{ a1:[['PQ∥AC、PQ ＝ ½AC','PQ∥BD、PQ ＝ ½BD','PQ ＝ AC'],'PQ∥AC、PQ ＝ ½AC'], a2:[['SR∥AC、SR ＝ ½AC','SR∥BD、SR ＝ ½BD','SR ＝ AC'],'SR∥AC、SR ＝ ½AC'],
+      t1:[TH,'中点連結定理'], t2:[TH,'中点連結定理'], c:[['PQ∥SR、PQ ＝ SR','PQ∥QR、PQ ＝ QR','PS∥QR、PS ＝ AC'],'PQ∥SR、PQ ＝ SR'],
+      d:[['1組の対辺が平行でその長さが等しい','2組の対角がそれぞれ等しい','対角線がそれぞれの中点で交わる'],'1組の対辺が平行でその長さが等しい'], e:[['平行四辺形','ひし形','長方形'],'平行四辺形'] },
+    ansHtml:'四角形PQRS は平行四辺形',
+    hints:['対角線 AC を引くと、△ABC と △ACD に分けられるね。','どちらの三角形でも中点連結定理が使える。PQ と SR はどちらも AC と平行で、長さは AC の半分。','平行で長さが等しい → 平行四辺形になる条件はどれ？'],
+    proof:['△ABC で、P, Q は AB, BC の中点なので、中点連結定理より　PQ∥AC、PQ ＝ ½AC …①','△ACD で、S, R は AD, CD の中点なので、中点連結定理より　SR∥AC、SR ＝ ½AC …②','①、②より　PQ∥SR、PQ ＝ SR','1組の対辺が平行でその長さが等しいので、<b>四角形 PQRS は平行四辺形</b>'] });
+}
+function u5rh(){
+  const F=quadFig([['A','C'],['B','D']]);
+  return flowProb({ text:'四角形 ABCD で <b>AC ＝ BD</b> です。辺 AB, BC, CD, DA の中点を P, Q, R, S とします。<br>四角形 PQRS が<b>ひし形</b>であることを、フローチャートで証明しよう。',
+    fig:F.svg('四角形ABCDと各辺の中点P,Q,R,S。対角線ACとBD。'),
+    rows:[[ ['△ABC で中点連結定理より<br>PQ ＝ ',{b:'a'}], ['△BCD で中点連結定理より<br>QR ＝ ',{b:'b'}] ],
+          [[ '同様に　RS ＝ ½AC、SP ＝ ½BD' ]], [[ '仮定 AC ＝ BD より<br>',{b:'c'} ]], [[ {b:'d'},' から<br>四角形 PQRS は ',{b:'e'} ]]],
+    blanks:{ a:[['½AC','½BD','AC','½AB'],'½AC'], b:[['½BD','½AC','BD','½BC'],'½BD'], c:[['PQ ＝ QR ＝ RS ＝ SP','PQ∥RS','PR ＝ QS'],'PQ ＝ QR ＝ RS ＝ SP'],
+      d:[['4つの辺がすべて等しい','4つの角がすべて等しい','2組の対辺がそれぞれ平行'],'4つの辺がすべて等しい'], e:[['ひし形','長方形','台形'],'ひし形'] },
+    ansHtml:'四角形PQRS はひし形',
+    hints:['PQ は △ABC で、AC と向かい合っている辺の中点を結んだ線分。','QR は △BCD で、BD の半分。','AC ＝ BD なら、半分どうしも等しい。4辺が等しい四角形は？'],
+    proof:['△ABC で中点連結定理より　PQ ＝ ½AC','△BCD で中点連結定理より　QR ＝ ½BD','同様に　RS ＝ ½AC、SP ＝ ½BD','仮定 AC ＝ BD より　PQ ＝ QR ＝ RS ＝ SP','4つの辺がすべて等しいので、<b>四角形 PQRS はひし形</b>'] });
+}
+function u5conv(){
+  const t=triSides(...pick(TRIS)); t.M=lerp(t.A,t.B,.5); t.N=lerp(t.A,t.C,.5);
+  const [g]=fit([{pts:t,box:[30,0,330,250]}],30); const F=new Fig(); const c=cen([g.A,g.B,g.C]);
+  F.pg([g.A,g.B,g.C]); F.ln(g.M,g.N); F.pa(g.M,g.N); F.pa(g.B,g.C); F.tk(g.A,g.M,1); F.tk(g.M,g.B,1);
+  ['A','B','C','M','N'].forEach(v=>F.vl(g[v],v,c));
+  return flowProb({ text:'△ABC で、辺 AB の中点 M を通り BC に平行な直線が、辺 AC と交わる点を N とします。<br>N が AC の<b>中点</b>であることを、フローチャートで証明しよう。',
+    fig:F.svg('三角形ABC。MはABの中点。MNとBCは平行。'),
+    rows:[[ ['MN∥BC だから<br>',{b:'a'},'<br>理由：',{b:'t'}], ['M は AB の中点だから<br>',{b:'b'}] ],
+          [[ 'よって<br>',{b:'c'} ]], [[ 'したがって N は AC の ',{b:'d'} ]]],
+    blanks:{ a:[['AN : NC ＝ AM : MB','AN : NC ＝ MN : BC','AM : AB ＝ AN : NC'],'AN : NC ＝ AM : MB'], t:[TH,'平行線と線分の比'],
+      b:[['AM : MB ＝ 1 : 1','AM : AB ＝ 1 : 1','MN : BC ＝ 1 : 2'],'AM : MB ＝ 1 : 1'], c:[['AN : NC ＝ 1 : 1','AN : AC ＝ 1 : 1','MN ＝ BC'],'AN : NC ＝ 1 : 1'],
+      d:[['中点','延長上の点','頂点'],'中点'] },
+    ansHtml:'N は AC の中点',
+    hints:['平行線があるときに使える「比」の性質は？','この問題では N が中点かどうかを示したいので、「中点連結定理」はまだ使えない（N が中点だと決まっていないから）。','M が中点 → AM : MB ＝ 1 : 1'],
+    proof:['MN∥BC なので、平行線と線分の比より　AN : NC ＝ AM : MB …①','M は AB の中点なので　AM : MB ＝ 1 : 1 …②','①、②より　AN : NC ＝ 1 : 1','したがって <b>N は AC の中点</b>','⚠ 理由に「中点連結定理」を使うのはまちがい。中点連結定理は「2つの点が中点」とわかっているときに使う定理。'] });
+}
+function u5dbfe(){
+  const t=triSides(...pick(TRIS)); t.D=lerp(t.A,t.B,.5); t.E=lerp(t.A,t.C,.5); t.F=lerp(t.B,t.C,.5);
+  const [g]=fit([{pts:t,box:[30,0,330,250]}],30); const F=new Fig(); const c=cen([g.A,g.B,g.C]);
+  F.pg([g.A,g.B,g.C]); F.pg([g.D,g.B,g.F,g.E],'hl');
+  F.tk(g.A,g.D,1); F.tk(g.D,g.B,1); F.tk(g.A,g.E,2); F.tk(g.E,g.C,2); F.tk(g.B,g.F,3); F.tk(g.F,g.C,3);
+  ['A','B','C','D','E','F'].forEach(v=>F.vl(g[v],v,c));
+  return flowProb({ text:'△ABC の辺 AB, AC, BC の中点を、それぞれ D, E, F とします。<br>四角形 DBFE（太線）が<b>平行四辺形</b>であることを、フローチャートで証明しよう。',
+    fig:F.svg('三角形ABCと各辺の中点D,E,F。四角形DBFEが太線。'),
+    rows:[[ ['△ABC で D, E は AB, AC の中点だから<br>',{b:'a'},'<br>理由：',{b:'t'}], ['F は BC の中点だから<br>',{b:'b'}] ],
+          [[ 'DE∥BC より DE∥BF。また<br>',{b:'c'} ]], [[ {b:'d'},'<br>から、四角形 DBFE は平行四辺形' ]]],
+    blanks:{ a:[['DE∥BC、DE ＝ ½BC','DE∥AB、DE ＝ ½AB','DE ＝ BC'],'DE∥BC、DE ＝ ½BC'], t:[TH,'中点連結定理'],
+      b:[['BF ＝ ½BC','BF ＝ BC','BF ＝ ½AB'],'BF ＝ ½BC'], c:[['DE ＝ BF','DE ＝ DB','DE ＝ EF'],'DE ＝ BF'],
+      d:[['1組の対辺が平行でその長さが等しい','2組の対角がそれぞれ等しい','対角線が垂直に交わる'],'1組の対辺が平行でその長さが等しい'] },
+    ansHtml:'四角形DBFE は平行四辺形',
+    hints:['D と E はどちらも中点。中点どうしを結んだ DE について何が言える？','DE も BF も「BC の半分」だね。'],
+    proof:['△ABC で D, E は AB, AC の中点なので、中点連結定理より　DE∥BC、DE ＝ ½BC','F は BC の中点なので　BF ＝ ½BC','DE∥BF、DE ＝ BF','1組の対辺が平行でその長さが等しいので、<b>四角形 DBFE は平行四辺形</b>'] });
+}
+function genU5(){ return pick([u5para,u5rh,u5conv,u5dbfe])(); }
+
+/* =========================================================
+   ⑥ 角の二等分線と比
+========================================================= */
+function bisFig(a,b,c,labels){
+  const t=triSides(a,b,c); t.D=lerp(t.B,t.C,c/(b+c));
+  const [g]=fit([{pts:t,box:[30,0,330,250]}],32); const F=new Fig(); const cc=cen([g.A,g.B,g.C]);
+  F.pg([g.A,g.B,g.C]); F.ln(g.A,g.D); F.ang(g.A,g.B,g.D,1,26); F.ang(g.A,g.D,g.C,1,26);
+  ['A','B','C','D'].forEach(v=>F.vl(g[v],v,cc));
+  labels(F,g,cc); return F;
+}
+function u6len(){
+  let a,b,c,tries=0;
+  do{ b=rnd(3,10); c=rnd(3,10); a=rnd(4,14); tries++; }
+  while((b===c || a>=b+c || a<=Math.abs(b-c)+1 || red(a*c,b+c)[1]>4) && tries<500);
+  const askBD=Math.random()<.5; const [n,d]= askBD? red(a*c,b+c) : red(a*b,b+c);
+  const F=bisFig(a,b,c,(F,g,cc)=>{ F.sl(g.A,g.B,c,cc); F.sl(g.A,g.C,b,cc); if(askBD) F.sl(g.B,g.D,'x',cc,'slq'); else F.sl(g.D,g.C,'x',cc,'slq'); });
+  const nm=askBD?'BD':'DC';
+  return { unit:6, text:`△ABC で AD は ∠A の二等分線です。AB＝${c}、AC＝${b}、BC＝${a} のとき、<b>x</b>（${nm} の長さ）を求めよう。`,
+    fig:F.svg('三角形ABC。ADは角Aの二等分線で、DはBC上。'), ans:{type:'num',label:'x ＝',n,d}, ansHtml:`x ＝ ${fr(n,d)}`,
+    hints:['角の二等分線の定理：BD : DC ＝ AB : AC',`BC を ${c} : ${b} に分けると考えよう。`],
+    steps:[`AD は ∠A の二等分線なので　BD : DC ＝ AB : AC ＝ ${c} : ${b}`,`BC ＝ ${a} を ${c} : ${b} に分ける`,
+      askBD?`BD ＝ ${a} × ${fx(c,c+'＋'+b)} ＝ ${a} × ${fx(c,b+c)} ＝ <b>${fr(n,d)}</b>`:`DC ＝ ${a} × ${fx(b,c+'＋'+b)} ＝ ${a} × ${fx(b,b+c)} ＝ <b>${fr(n,d)}</b>`] };
+}
+function u6ratio(){
+  let a,b,c; do{ b=rnd(3,12); c=rnd(3,12); a=rnd(4,14); }while(b===c || a>=b+c || a<=Math.abs(b-c)+1);
+  const [p,q]=red(c,b);
+  const F=bisFig(a,b,c,(F,g,cc)=>{ F.sl(g.A,g.B,c,cc); F.sl(g.A,g.C,b,cc); });
+  return { unit:6, text:`△ABC で AD は ∠A の二等分線です。AB＝${c}、AC＝${b} のとき、<b>BD : DC</b> を最も簡単な整数の比で求めよう。`,
+    fig:F.svg('三角形ABC。ADは角Aの二等分線。'), ans:{type:'ratio',label:'BD : DC ＝',a:p,b:q}, ansHtml:`BD : DC ＝ ${p} : ${q}`,
+    hints:['BD : DC ＝ AB : AC','B 側の辺 AB と、C 側の辺 AC の順番に注意。'],
+    steps:[`AD は ∠A の二等分線なので　BD : DC ＝ AB : AC`,`＝ ${c} : ${b} ＝ <b>${p} : ${q}</b>`] };
+}
+function u6ac(){
+  let p,q,m,c,b,a,tries=0;
+  do{ p=rnd(2,6); q=rnd(2,6); m=rnd(2,3); c=m*p; b=m*q; a=p+q; tries++; }while((p===q || a>=b+c || a<=Math.abs(b-c)) && tries<200);
+  const F=bisFig(a,b,c,(F,g,cc)=>{ F.sl(g.A,g.B,c,cc); F.sl(g.A,g.C,'x',cc,'slq'); F.sl(g.B,g.D,p,cc); F.sl(g.D,g.C,q,cc); });
+  return { unit:6, text:`△ABC で AD は ∠A の二等分線です。AB＝${c}、BD＝${p}、DC＝${q} のとき、<b>x</b>（AC の長さ）を求めよう。`,
+    fig:F.svg('三角形ABC。ADは角Aの二等分線。'), ans:{type:'num',label:'x ＝',n:b,d:1}, ansHtml:`x ＝ ${b}`,
+    hints:['AB : AC ＝ BD : DC を使おう。',`${c} : x ＝ ${p} : ${q}`],
+    steps:['角の二等分線の定理より　AB : AC ＝ BD : DC',`${c} : x ＝ ${p} : ${q}`,`${p} × x ＝ ${c} × ${q}　→　<b>x ＝ ${b}</b>`] };
+}
+function genU6(){ return pick([u6len,u6len,u6ratio,u6ac])(); }
+
+/* =========================================================
+   ⑦ チェバ・メネラウスの定理
+========================================================= */
+function baseTri(){ const t=triSides(...pick([[9,7,8],[10,8,7],[9,8,6],[10,7,8]])); return t; }
+function u7ceva(){
+  let r1,r2,p1,p2,c1,c2,tries=0;
+  do{ r1=rnd(1,4); r2=rnd(1,4); p1=rnd(1,4); p2=rnd(1,4); [c1,c2]=red(r2*p2,r1*p1); tries++; }
+  while((gcd(r1,r2)>1||gcd(p1,p2)>1||c1>9||c2>9||(r1===r2&&p1===p2)||!mid(r1,r2)||!mid(p1,p2)||!mid(c1,c2)) && tries<2000);
+  const t=baseTri(); t.R=lerp(t.A,t.B,r1/(r1+r2)); t.P=lerp(t.B,t.C,p1/(p1+p2)); t.Q=lerp(t.C,t.A,c1/(c1+c2)); t.O=inter(t.A,t.P,t.C,t.R);
+  const [g]=fit([{pts:t,box:[30,0,330,250]}],32); const F=new Fig(); const c=cen([g.A,g.B,g.C]);
+  F.pg([g.A,g.B,g.C]); F.ln(g.A,g.P); F.ln(g.B,g.Q); F.ln(g.C,g.R);
+  ['A','B','C','P','Q','R'].forEach(v=>F.vl(g[v],v,c)); F.vl(g.O,'O',V(g.O.x-40,g.O.y-10),14);
+  F.sl(g.A,g.R,r1,c,'sl',15); F.sl(g.R,g.B,r2,c,'sl',15); F.sl(g.B,g.P,p1,c,'sl',15); F.sl(g.P,g.C,p2,c,'sl',15); F.sl(g.C,g.Q,'?',c,'slq',15); F.sl(g.Q,g.A,'?',c,'slq',15);
+  return { unit:7, text:`△ABC で、3本の線分 AP, BQ, CR は1点 O で交わっています。AR : RB ＝ ${r1} : ${r2}、BP : PC ＝ ${p1} : ${p2} のとき、<b>CQ : QA</b> を求めよう。`,
+    fig:F.svg('三角形ABCの内部の点Oを通る3本の線分AP、BQ、CR。'), ans:{type:'ratio',label:'CQ : QA ＝',a:c1,b:c2}, ansHtml:`CQ : QA ＝ ${c1} : ${c2}`,
+    hints:['3本の線が1点で交わる → チェバの定理。','A → R → B → P → C → Q → A と一周：'+fx('AR','RB')+'×'+fx('BP','PC')+'×'+fx('CQ','QA')+'＝1'],
+    steps:['チェバの定理より　'+fx('AR','RB')+' × '+fx('BP','PC')+' × '+fx('CQ','QA')+' ＝ 1',`${fx(r1,r2)} × ${fx(p1,p2)} × ${fx('CQ','QA')} ＝ 1`,
+      `${fx('CQ','QA')} ＝ ${fx(r2,r1)} × ${fx(p2,p1)} ＝ ${fr(r2*p2,r1*p1)}`,`よって　<b>CQ : QA ＝ ${c1} : ${c2}</b>`] };
+}
+function u7men(){
+  let r1,r2,q1,q2,b1,b2,tries=0;
+  do{ r1=rnd(1,4); r2=rnd(1,4); q1=rnd(1,4); q2=rnd(1,4); [b1,b2]=red(r2*q1,r1*q2); tries++; }
+  while((gcd(r1,r2)>1||gcd(q1,q2)>1||b1>9||b2>9||b1/b2<1.5||!mid(r1,r2)||!mid(q1,q2)) && tries<2000);
+  const t=baseTri(); t.R=lerp(t.A,t.B,r1/(r1+r2)); t.Q=lerp(t.A,t.C,q1/(q1+q2)); t.P=inter(t.R,t.Q,t.B,t.C);
+  const [g]=fit([{pts:t,box:[10,0,350,250]}],30); const F=new Fig(); const c=cen([g.A,g.B,g.C]);
+  F.pg([g.A,g.B,g.C]); F.ln(g.C,g.P); F.ln(g.R,g.P,'hl');
+  ['A','B','C','Q','R'].forEach(v=>F.vl(g[v],v,c)); F.vl(g.P,'P',V(g.P.x-10,g.P.y-20));
+  F.sl(g.A,g.R,r1,c,'sl',15); F.sl(g.R,g.B,r2,c,'sl',15); F.sl(g.A,g.Q,q1,c,'sl',15); F.sl(g.Q,g.C,q2,c,'sl',15);
+  return { unit:7, text:`△ABC の辺 AB 上の点 R、辺 AC 上の点 Q を通る直線が、辺 BC の延長と点 P で交わっています。AR : RB ＝ ${r1} : ${r2}、AQ : QC ＝ ${q1} : ${q2} のとき、<b>BP : PC</b> を求めよう。`,
+    fig:F.svg('三角形ABCを1本の直線が横切り、BCの延長と点Pで交わる図。'), ans:{type:'ratio',label:'BP : PC ＝',a:b1,b:b2}, ansHtml:`BP : PC ＝ ${b1} : ${b2}`,
+    hints:['1本の直線が三角形を横切る → メネラウスの定理。','A → R → B → P → C → Q → A と一周：'+fx('AR','RB')+'×'+fx('BP','PC')+'×'+fx('CQ','QA')+'＝1','CQ : QA は AQ : QC の逆になることに注意。'],
+    steps:['メネラウスの定理より　'+fx('AR','RB')+' × '+fx('BP','PC')+' × '+fx('CQ','QA')+' ＝ 1',`CQ : QA ＝ ${q2} : ${q1} に注意して　${fx(r1,r2)} × ${fx('BP','PC')} × ${fx(q2,q1)} ＝ 1`,
+      `${fx('BP','PC')} ＝ ${fx(r2,r1)} × ${fx(q1,q2)} ＝ ${fr(r2*q1,r1*q2)}`,`よって　<b>BP : PC ＝ ${b1} : ${b2}</b>`] };
+}
+function u7ao(){
+  let r1,r2,p1,p2,a1,a2,tries=0;
+  do{ r1=rnd(1,4); r2=rnd(1,4); p1=rnd(1,4); p2=rnd(1,4); [a1,a2]=red(r1*(p1+p2),r2*p2); tries++; }
+  while((gcd(r1,r2)>1||gcd(p1,p2)>1||a1>12||a2>9||!mid(r1,r2)||!mid(p1,p2)) && tries<2000);
+  const t=baseTri(); t.R=lerp(t.A,t.B,r1/(r1+r2)); t.P=lerp(t.B,t.C,p1/(p1+p2)); t.O=inter(t.A,t.P,t.C,t.R);
+  const [g]=fit([{pts:t,box:[30,0,330,250]}],32); const F=new Fig(); const c=cen([g.A,g.B,g.C]);
+  F.pg([g.A,g.B,g.C]); F.ln(g.A,g.P,'hl'); F.ln(g.C,g.R);
+  ['A','B','C','P','R'].forEach(v=>F.vl(g[v],v,c)); F.vl(g.O,'O',V(g.O.x-30,g.O.y+10),14);
+  F.sl(g.A,g.R,r1,c,'sl',15); F.sl(g.R,g.B,r2,c,'sl',15); F.sl(g.B,g.P,p1,c,'sl',15); F.sl(g.P,g.C,p2,c,'sl',15);
+  return { unit:7, text:`△ABC で、辺 AB 上の点 R、辺 BC 上の点 P について、AP と CR の交点を O とします。AR : RB ＝ ${r1} : ${r2}、BP : PC ＝ ${p1} : ${p2} のとき、<b>AO : OP</b> を求めよう。`,
+    fig:F.svg('三角形ABC。APとCRが点Oで交わる。'), ans:{type:'ratio',label:'AO : OP ＝',a:a1,b:a2}, ansHtml:`AO : OP ＝ ${a1} : ${a2}`,
+    hints:['△ABP と、それを横切る直線 RC（R, O, C を通る）に注目 → メネラウスの定理。','A → R → B → C → P → O → A と一周：'+fx('AR','RB')+'×'+fx('BC','CP')+'×'+fx('PO','OA')+'＝1',`BC ＝ BP ＋ PC なので、BC : CP ＝ ${p1+p2} : ${p2}`],
+    steps:['△ABP と直線 RC にメネラウスの定理を使う','　'+fx('AR','RB')+' × '+fx('BC','CP')+' × '+fx('PO','OA')+' ＝ 1',`BC : CP ＝ (${p1}＋${p2}) : ${p2} ＝ ${p1+p2} : ${p2} なので　${fx(r1,r2)} × ${fx(p1+p2,p2)} × ${fx('PO','OA')} ＝ 1`,
+      `${fx('PO','OA')} ＝ ${fr(r2*p2,r1*(p1+p2))}　→　<b>AO : OP ＝ ${a1} : ${a2}</b>`] };
+}
+function genU7(){ return pick([u7ceva,u7ceva,u7men,u7ao])(); }
+
+/* =========================================================
+   テーマ一覧・ポイント
+========================================================= */
+const UNITS=[
+  {id:1,icon:'🔤',name:'相似な三角形を記号で表す',sub:'∽ の前後で頂点の順番をそろえる',gen:genU1},
+  {id:2,icon:'🧩',name:'相似の証明（フローチャート）',sub:'根拠 → 相似条件 → 結論 を組み立てる',gen:genU2},
+  {id:3,icon:'📏',name:'対応する辺の比・長さ',sub:'相似比を使って長さを求める',gen:genU3},
+  {id:4,icon:'✂️',name:'中点連結定理で長さを求める',sub:'中点どうしを結ぶと「平行で半分」',gen:genU4},
+  {id:5,icon:'🧱',name:'中点連結定理の証明（フローチャート）',sub:'平行四辺形・ひし形・中点を示す',gen:genU5},
+  {id:6,icon:'📐',name:'角の二等分線と比・長さ',sub:'BD : DC ＝ AB : AC',gen:genU6},
+  {id:7,icon:'🔺',name:'チェバ・メネラウスの定理',sub:'比をかけて一周すると 1',gen:genU7},
+];
+const POINTS={
+  1:'<b>ポイント</b>　∽ の記号の前後では、<b>対応する頂点を同じ順番</b>に書く。<br>同じ印の角・共通な角・直角などをたどって、どの頂点どうしが対応するか見つけよう。',
+  2:'<b>三角形の相似条件</b><br>① 3組の辺の比がすべて等しい<br>② 2組の辺の比とその間の角がそれぞれ等しい<br>③ 2組の角がそれぞれ等しい<br>流れ：<b>根拠（等しい角・辺の比） → 相似条件 → 結論</b>',
+  3:'<b>ポイント</b>　相似な図形では、対応する辺の比はすべて等しい（相似比）。<br>a : b ＝ c : d なら <b>a × d ＝ b × c</b>（外側の積＝内側の積）<br>DE∥BC のとき　<b>AD : AB ＝ AE : AC ＝ DE : BC</b>　／　<b>AD : DB ＝ AE : EC</b>',
+  4:'<b>中点連結定理</b>　△ABC で M, N が AB, AC の中点なら<br><b>MN∥BC、MN ＝ '+HALF+'BC</b>',
+  5:'<b>中点連結定理</b>　M, N が AB, AC の中点 → MN∥BC、MN ＝ '+HALF+'BC<br><b>平行四辺形になる条件</b>（例）　2組の対辺がそれぞれ平行／1組の対辺が平行でその長さが等しい<br><b>ひし形</b>　4つの辺がすべて等しい',
+  6:'<b>角の二等分線の定理</b>　AD が ∠A の二等分線なら<br><b>BD : DC ＝ AB : AC</b>',
+  7:'<b>チェバの定理</b>（3本の線が1点で交わる）・<b>メネラウスの定理</b>（1本の直線が三角形を横切る）<br>どちらも、<b>頂点 → 分点 → 頂点 → …</b> と一周するように比をかけると 1<br>'+fx('AR','RB')+' × '+fx('BP','PC')+' × '+fx('CQ','QA')+' ＝ 1',
+};
+
+/* =========================================================
+   記録（この端末のブラウザに保存）
+========================================================= */
+function loadRec(){ try{ return JSON.parse(localStorage.getItem('sojiRec_v1')||'{}'); }catch(e){ return {}; } }
+function saveRec(r){ try{ localStorage.setItem('sojiRec_v1',JSON.stringify(r)); }catch(e){} }
+function addRec(unit,ok){ const r=loadRec(); r[unit]=r[unit]||{t:0,c:0}; r[unit].t++; if(ok) r[unit].c++; saveRec(r); }
+
+/* =========================================================
+   状態・画面
+========================================================= */
+let S={ unit:null, count:0, startAt:null, endAt:null, showPoint:true, idx:0, log:[], cur:null, f:{}, fOrder:[], act:null, ord:[], fv:{}, ab:null, hint:0, done:false, lastKey:'', shown:1, flowRes:null };
+
+function showScreen(id){ document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active')); $(id).classList.add('active'); window.scrollTo(0,0); }
+function renderUnits(){
+  const r=loadRec();
+  const rec=id=>r[id]?`これまで：${r[id].t}問中 ${r[id].c}問 正解`:'';
+  $('unitGrid').innerHTML=UNITS.map(u=>`<button class="unitcard" onclick="startUnit(${u.id})"><span class="uic" aria-hidden="true">${u.icon}</span><span><div class="un">${u.id}. ${u.name}</div><div class="us">${u.sub}</div><div class="ur">${rec(u.id)}</div></span></button>`).join('')
+    +`<button class="unitcard mix" onclick="startUnit(0)"><span class="uic" aria-hidden="true">🎲</span><span><div class="un">ミックス（全テーマからランダム）</div><div class="us">いろいろなテーマがまざって出題されます</div></span></button>`;
+}
+function pickCount(n){ S.count=n; document.querySelectorAll('#countChips .chip').forEach(c=>c.classList.toggle('picked',+c.dataset.n===n)); }
+function pickPoint(b){ S.showPoint=b; document.querySelectorAll('#pointChips .chip').forEach(c=>c.classList.toggle('picked',c.dataset.p===(b?'1':'0'))); }
+
+function startUnit(id){ S.unit=id; S.idx=0; S.log=[]; S.startAt=new Date(); S.endAt=null; showScreen('screen-quiz'); newQ(); }
+function newQ(){
+  let p,tries=0;
+  do{ const u= S.unit===0 ? pick(UNITS) : UNITS.find(x=>x.id===S.unit); p=u.gen(); tries++; }
+  while(p.text+p.ansHtml===S.lastKey && tries<10);
+  S.lastKey=p.text+p.ansHtml; S.cur=p; S.hint=0; S.done=false; S.shown=1; S.flowRes=null; S.pointNow=S.showPoint;
+  renderQ();
+}
+function renderQ(){
+  const p=S.cur, u=UNITS[p.unit-1];
+  $('qProg').textContent= S.count ? `${S.idx+1} / ${S.count} 問目` : `${S.idx+1} 問目`;
+  $('pbarIn').parentNode.style.display= S.count ? 'block':'none';
+  if(S.count) $('pbarIn').style.width=(100*S.idx/S.count)+'%';
+  $('qTag').textContent=u.icon+' '+u.name;
+  $('qText').innerHTML=p.text;
+  $('qFig').innerHTML=p.fig||''; $('qFig').style.display=p.fig?'block':'none';
+  $('qPoint').innerHTML=POINTS[p.unit]; updatePointVis();
+  $('hintBox').className='msg'; $('fbBox').className='msg';
+  $('explainBox').className='explain'; $('explainBox').innerHTML='';
+  $('preBtns').style.display='flex'; $('postBtns').style.display='none';
+  $('hintBtn').disabled=false; $('hintBtn').textContent=`💡 ヒント（${p.hints.length}こ）`;
+  $('nextBtn').textContent = S.count && S.idx+1>=S.count ? '結果を見る ▶' : '次の問題へ ▶';
+  buildAnswer();
+}
+function updatePointVis(){ $('qPoint').style.display=S.pointNow?'block':'none'; $('pointToggle').textContent=S.pointNow?'📘 ポイントをかくす':'📘 ポイントを表示'; }
+function togglePointNow(){ S.pointNow=!S.pointNow; updatePointVis(); }
+
+/* ---- 解答欄 ---- */
+const NUMPAD=`<div class="numpad">${[7,8,9,4,5,6,1,2,3].map(n=>`<button type="button" onclick="keyPress('${n}')" aria-label="${n}">${n}</button>`).join('')}
+  <button type="button" class="wide" onclick="keyPress('⌫')" aria-label="1文字消す">⌫ 消す</button><button type="button" onclick="keyPress('0')">0</button><button type="button" class="wide" onclick="keyPress('next')">次の欄 ▶</button></div>`;
+const FLABEL={n:'分子または整数',d:'分母',a:'比の左側',b:'比の右側'};
+function buildAnswer(){
+  const a=S.cur.ans, box=$('ansArea'); S.f={}; S.ord=[]; S.fv={}; S.ab=null;
+  if(a.type==='num'){
+    S.fOrder=['n','d'];
+    box.innerHTML=`<div class="ansrow"><span class="alabel">${a.label}</span><span class="fracin"><button type="button" class="numbox" id="fld-n" data-placeholder="?" onclick="focusF('n')"></button><span class="fbar"></span><button type="button" class="numbox" id="fld-d" data-placeholder="（空でOK）" onclick="focusF('d')"></button></span></div>
+      <div class="exhint">整数の答え → 上の欄だけに入れる（下は空のまま）<br>分数の答え → 上に分子、下に分母</div>${NUMPAD}`;
+  } else if(a.type==='ratio'){
+    S.fOrder=['a','b'];
+    box.innerHTML=`<div class="ansrow"><span class="alabel">${a.label}</span><button type="button" class="numbox" id="fld-a" data-placeholder="?" onclick="focusF('a')"></button><span class="colon">:</span><button type="button" class="numbox" id="fld-b" data-placeholder="?" onclick="focusF('b')"></button></div>
+      <div class="exhint">最も簡単な整数の比で答えよう</div>${NUMPAD}`;
+  } else if(a.type==='order'){
+    box.innerHTML=`<div class="ansrow"><span class="alabel">${a.prefix}</span><span class="slots" aria-live="polite">${[0,1,2].map(i=>`<span class="slot" id="slot${i}"></span>`).join('')}</span></div>
+      <div class="exhint">下のボタンを、対応する順にタップしよう</div>
+      <div class="letterpad">${a.letters.map(l=>`<button type="button" id="lp-${l}" onclick="ordPress('${l}')">${l}</button>`).join('')}<button type="button" class="wide" onclick="ordBack()">⌫ 1つ消す</button></div>`;
+    renderOrd(); return;
+  } else if(a.type==='flow'){
+    box.innerHTML=`<div class="exhint" style="text-align:left">点線の □ をタップして、入る言葉を選ぼう。上から順に組み立てていくよ。</div><div id="flowWrap"></div><div class="chooser" id="chooser" aria-live="polite"></div>`;
+    renderFlowEdit(); openBlank(firstEmptyBlank()); return;
+  }
+  S.fOrder.forEach(id=>{ S.f[id]=''; renderField(id); }); focusF(S.fOrder[0]);
+}
+function renderField(id){ const el=$('fld-'+id); if(!el) return; el.textContent=S.f[id]||''; el.setAttribute('aria-label',FLABEL[id]+(S.f[id]?'、入力値 '+S.f[id]:'、未入力')); }
+function focusF(id){ if(S.done) return; S.act=id; S.fOrder.forEach(k=>{ const el=$('fld-'+k); if(el) el.classList.toggle('active',k===id); }); }
+function keyPress(ch){
+  if(S.done||!S.act) return;
+  if(ch==='next'){ const i=S.fOrder.indexOf(S.act); focusF(S.fOrder[(i+1)%S.fOrder.length]); return; }
+  let v=S.f[S.act]||'';
+  if(ch==='⌫') v=v.slice(0,-1); else if(v.length<4){ if(!(v===''&&ch==='0')) v+=ch; }
+  S.f[S.act]=v; renderField(S.act);
+}
+function renderOrd(){
+  const a=S.cur.ans;
+  for(let i=0;i<3;i++){ const el=$('slot'+i); el.textContent=S.ord[i]||''; el.classList.toggle('filled',!!S.ord[i]); el.setAttribute('aria-label',`${i+1}番目：${S.ord[i]||'未入力'}`); }
+  a.letters.forEach(l=>{ const b=$('lp-'+l); if(b) b.disabled=S.done||S.ord.includes(l); });
+}
+function ordPress(l){ if(S.done||S.ord.length>=3||S.ord.includes(l)) return; S.ord.push(l); renderOrd(); }
+function ordBack(){ if(S.done) return; S.ord.pop(); renderOrd(); }
+
+/* ---- フローチャート ---- */
+function blankIds(flow){ const ids=[]; flow.rows.forEach(r=>r.forEach(b=>b.forEach(p=>{ if(typeof p!=='string') ids.push(p.b); }))); return ids; }
+function flowHtml(flow,mode){
+  const part=p=>{
+    if(typeof p==='string') return p;
+    const id=p.b, bl=flow.blanks[id];
+    if(mode==='answer') return `<span class="blank ans">${bl.ans}</span>`;
+    const v=S.fv[id];
+    if(mode==='check'){ const ok=S.flowRes&&S.flowRes.per[id]; return `<span class="blank ${ok?'ok':'ng'}" aria-label="${v||'未入力'}、${ok?'正しい':'まちがい'}">${v||'（空欄）'}</span>`; }
+    return `<button type="button" class="blank ${v?'filled':'empty'} ${S.ab===id?'active':''}" onclick="openBlank('${id}')" aria-label="空欄：${v||'未選択'}">${v||'▢ タップして選ぶ'}</button>`;
+  };
+  return '<div class="flow">'+flow.rows.map((row,ri)=>(ri?'<div class="farrow" aria-hidden="true">▼</div>':'')+'<div class="frow">'+row.map(box=>'<div class="fbox">'+box.map(part).join('')+'</div>').join('')+'</div>').join('')+'</div>';
+}
+function renderFlowEdit(){ $('flowWrap').innerHTML=flowHtml(S.cur.ans.flow,S.done?'check':'edit'); }
+function firstEmptyBlank(){ return blankIds(S.cur.ans.flow).find(id=>!S.fv[id])||null; }
+function openBlank(id){
+  if(S.done) return; S.ab=id; renderFlowEdit();
+  const ch=$('chooser'); if(!id){ ch.className='chooser'; ch.innerHTML=''; return; }
+  const bl=S.cur.ans.flow.blanks[id];
+  ch.className='chooser show';
+  ch.innerHTML=`<div class="ct">この空欄に入るものを選ぼう</div>`+bl.opts.map((o,i)=>`<button type="button" class="opt" onclick="chooseOpt(${i})">${o}</button>`).join('')
+    +`<button type="button" class="microbtn" onclick="openBlank(null)">閉じる</button>`;
+}
+function chooseOpt(i){ const id=S.ab; if(!id) return; S.fv[id]=S.cur.ans.flow.blanks[id].opts[i]; const ids=blankIds(S.cur.ans.flow); const k=ids.indexOf(id);
+  const nxt=ids.slice(k+1).find(x=>!S.fv[x])||ids.find(x=>!S.fv[x])||null; openBlank(nxt); }
+function checkFlow(flow,vals){
+  const per={}; Object.keys(flow.blanks).forEach(id=>per[id]=vals[id]===flow.blanks[id].ans);
+  (flow.groups||[]).forEach(g=>{
+    const tup=ids=>ids.map(id=>flow.blanks[id].ans).join('|'), utup=ids=>ids.map(id=>vals[id]||'').join('|');
+    const used=g.map(()=>false), matched=g.map(()=>-1);
+    g.forEach((ids,i)=>{ const j=g.findIndex((e,k)=>!used[k]&&tup(e)===utup(ids)); if(j>=0){ used[j]=true; matched[i]=j; } });
+    g.forEach((ids,i)=>{
+      if(matched[i]>=0){ ids.forEach(id=>per[id]=true); return; }
+      let j=g.findIndex((e,k)=>!used[k]&&flow.blanks[e[0]].ans===vals[ids[0]]); if(j<0) j=used.findIndex(x=>!x);
+      if(j>=0){ used[j]=true; ids.forEach((id,s)=>per[id]=vals[id]===flow.blanks[g[j][s]].ans); }
+    });
+  });
+  return {per, all:Object.values(per).every(Boolean)};
+}
+
+/* ---- ヒント・判定 ---- */
+function showHint(){
+  if(S.done) return; const h=S.cur.hints; if(S.hint>=h.length) return;
+  S.hint++;
+  $('hintBox').className='msg show hintm';
+  $('hintBox').innerHTML=h.slice(0,S.hint).map((t,i)=>`💡 ヒント${i+1}：${t}`).join('<br>');
+  $('hintBtn').textContent = S.hint>=h.length ? '💡 ヒントはここまで' : `💡 次のヒント（あと${h.length-S.hint}こ）`;
+  $('hintBtn').disabled = S.hint>=h.length;
+}
+function userAnswer(){
+  const a=S.cur.ans;
+  if(a.type==='num'){ const n=parseInt(S.f.n,10), d=S.f.d?parseInt(S.f.d,10):1; if(isNaN(n)||!d) return null;
+    return {ok:n*a.d===a.n*d, html:`${a.label} ${d===1?n:fx(n,d)}`, note:(d!==1&&gcd(n,d)>1)?`（約分すると ${fr(n,d)}）`:''}; }
+  if(a.type==='ratio'){ const x=parseInt(S.f.a,10), y=parseInt(S.f.b,10); if(isNaN(x)||isNaN(y)||!x||!y) return null;
+    const ok=x*a.b===y*a.a; return {ok, html:`${a.label} ${x} : ${y}`, note:(ok&&gcd(x,y)>1)?`（比としては正しいよ。最も簡単にすると ${a.a} : ${a.b}）`:''}; }
+  if(a.type==='order'){ if(S.ord.length<3) return null; const s=S.ord.join(''); return {ok:s===a.ans, html:a.prefix+s, note:''}; }
+  if(a.type==='flow'){ if(firstEmptyBlank()) return null; S.flowRes=checkFlow(a.flow,S.fv);
+    const nNg=Object.values(S.flowRes.per).filter(v=>!v).length; return {ok:S.flowRes.all, html:'フローチャート', note:S.flowRes.all?'':`（✗ の空欄が ${nNg} か所あります）`}; }
+}
+function submitAns(){
+  if(S.done) return;
+  const r=userAnswer();
+  if(!r){ $('fbBox').className='msg show info'; $('fbBox').innerHTML='まだ入っていない欄があるよ。すべて入れてから「決定」を押そう。'; return; }
+  finishQ(r.ok?'ok':'ng', r);
+}
+function giveUp(){ if(S.done) return; finishQ('idk',{html:'（解説を見た）',note:''}); }
+function finishQ(status,r){
+  S.done=true; const p=S.cur;
+  S.log.push({p, status, user:r.html, note:r.note, hint:S.hint});
+  addRec(p.unit, status==='ok');
+  // 入力を固定
+  if(p.ans.type==='flow'){ if(status!=='idk' && S.flowRes) renderFlowEdit(); const ch=$('chooser'); if(ch){ ch.className='chooser'; } }
+  if(p.ans.type==='order') renderOrd();
+  document.querySelectorAll('#ansArea .numbox').forEach(b=>b.classList.remove('active'));
+  const fb=$('fbBox');
+  if(status==='ok'){ fb.className='msg show ok'; fb.innerHTML=`<span class="big">✓ 正解！</span>${r.note?'<br>'+r.note:''}<br>解説で考え方も確認しておこう。`; }
+  else if(status==='ng'){ fb.className='msg show ng'; fb.innerHTML=`<span class="big">✗ おしい！</span>${r.note?'<br>'+r.note:''}<br>正しい答え：<b>${p.ansHtml}</b><br>下の解説を1ステップずつ見てみよう。`; }
+  else { fb.className='msg show info'; fb.innerHTML=`正しい答え：<b>${p.ansHtml}</b><br>下の解説を1ステップずつ見てみよう。`; }
+  $('preBtns').style.display='none'; $('postBtns').style.display='flex';
+  S.shown = status==='ok' ? p.steps.length : 1;
+  renderExplain($('explainBox'),p,false); $('explainBox').className='explain show';
+  if(S.count) $('pbarIn').style.width=(100*(S.idx+1)/S.count)+'%';
+}
+function renderExplain(box,p,all){
+  let h='<h3>📝 解説</h3>';
+  if(p.ans.type==='flow') h+='<div class="exsub">正しいフローチャート</div>'+flowHtml(p.ans.flow,'answer')+'<div class="exsub">証明を文章で書くと</div>';
+  const n= all ? p.steps.length : S.shown;
+  h+='<div class="steps">'+p.steps.map((s,i)=>`<div class="st ${i<n?'show':''}"><span class="stn">${i+1}</span><div>${s}</div></div>`).join('')+'</div>';
+  if(!all && n<p.steps.length) h+=`<div class="btnrow"><button class="btn ghost" onclick="moreStep()">次のステップ ▼</button><button class="btn ghost" onclick="allStep()">すべて表示</button></div>`;
+  box.innerHTML=h;
+}
+function moreStep(){ S.shown++; renderExplain($('explainBox'),S.cur,false); }
+function allStep(){ S.shown=S.cur.steps.length; renderExplain($('explainBox'),S.cur,false); }
+function goNext(){ try{ speechSynthesis.cancel(); }catch(e){} S.idx++; if(S.count && S.idx>=S.count){ showResult(); return; } newQ(); window.scrollTo(0,0); }
+function quitQuiz(){ try{ speechSynthesis.cancel(); }catch(e){} showResult(); }
+
+/* ---- 結果・振り返り ---- */
+const WD='日月火水木金土';
+const hm=d=>`${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`;
+const CIRC='①②③④⑤⑥⑦';
+function showResult(){
+  if(!S.endAt) S.endAt=new Date();
+  const ok=S.log.filter(l=>l.status==='ok').length, ng=S.log.filter(l=>l.status==='ng').length, idk=S.log.filter(l=>l.status==='idk').length;
+  const tot=S.log.length, solved=ok+ng;
+  const d=S.startAt||S.endAt;
+  const name=($('stuName').value||'').trim(), no=($('stuNo').value||'').trim();
+  const units=[...new Set(S.log.map(l=>l.p.unit))].sort();
+  const themeTxt = S.unit===0 ? `ミックス（${units.map(u=>CIRC[u-1]).join('')}）` : `${CIRC[S.unit-1]} ${UNITS[S.unit-1].name}`;
+  const mix = S.unit===0;
+  const ox = S.log.map((l,i)=>{ const sym=l.status==='ok'?'○':l.status==='ng'?'×':'？';
+    return `<span class="ox ${l.status}" aria-label="${i+1}問目 ${l.status==='ok'?'正解':l.status==='ng'?'不正解':'解説を見た'}">${i+1} ${sym}${mix?`<span class="u">${CIRC[l.p.unit-1]}</span>`:''}</span>`; }).join('');
+  $('subCard').innerHTML=`
+    <div class="subhead"><span>📋 朝学 提出用記録</span><span class="app">相似マスター（BEKI幾何2）</span></div>
+    <div class="subid">${no?no+'番　':'<span class="miss">出席番号 未入力</span>　'}${name||'<span class="miss">名前 未入力</span>'}</div>
+    <div class="submeta">
+      <b>日付</b>　${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日（${WD[d.getDay()]}）<br>
+      <b>時刻</b>　開始 ${hm(d)} 〜 終了 ${hm(S.endAt)}<br>
+      <b>テーマ</b>　${themeTxt}
+    </div>
+    <div class="substats">
+      <div class="main"><div class="n">${solved}<small>問</small></div><div class="l">解いた問題</div></div>
+      <div><div class="n">${ok}<small>問</small></div><div class="l">正解</div></div>
+      <div><div class="n">${idk}<small>問</small></div><div class="l">解説を見た</div></div>
+    </div>
+    <div class="oxgrid">${ox||'<span class="oxlegend">まだ1問も答えていません</span>'}</div>
+    <div class="oxlegend">○ 正解　× 不正解　？ 解説を見た${mix?'　（丸数字はテーマ番号）':''}</div>`;
+  $('resMsg').style.display = tot ? 'block':'none';
+  $('resMsg').textContent= tot===0?'' : ok===tot ? 'ぜんぶ正解！すばらしい！' : ok/tot>=0.6 ? 'よくできました。まちがえた問題を「振り返る」で見直そう。' : 'まちがえた問題は、解説をもう一度読んでから、同じテーマでもう一度やってみよう。';
+  $('resList').innerHTML=S.log.map((l,i)=>{
+    const b= l.status==='ok'?'<span class="badge ok">✓ 正解</span>' : l.status==='ng'?'<span class="badge ng">✗ 不正解</span>' : '<span class="badge idk">？ 解説を見た</span>';
+    const h= l.hint?`<span class="badge h">💡ヒント${l.hint}</span>`:'';
+    return `<div class="qitem"><span class="qn">${i+1}.</span><span class="qs">${UNITS[l.p.unit-1].name}<br>答え：${l.p.ansHtml}</span>${b}${h}<button class="microbtn" onclick="openReview(${i})">振り返る</button></div>`;
+  }).join('');
+  renderUnits(); showScreen('screen-result');
+}
+function openReview(i){
+  const l=S.log[i], p=l.p;
+  $('rvTag').textContent=UNITS[p.unit-1].icon+' '+UNITS[p.unit-1].name;
+  $('rvText').innerHTML=p.text; $('rvFig').innerHTML=p.fig||'';
+  const box=$('rvAns');
+  if(l.status==='ok'){ box.className='msg show ok'; box.innerHTML=`✓ 正解　正しい答え：<b>${p.ansHtml}</b>`; }
+  else if(l.status==='ng'){ box.className='msg show ng'; box.innerHTML=`✗ 不正解　あなたの答え：${l.user} ${l.note||''}<br>正しい答え：<b>${p.ansHtml}</b>`; }
+  else { box.className='msg show info'; box.innerHTML=`正しい答え：<b>${p.ansHtml}</b>`; }
+  renderExplain($('rvExplain'),p,true); showScreen('screen-review');
+}
+function retrySame(){ startUnit(S.unit); }
+function backToStart(){ renderUnits(); showScreen('screen-start'); }
+
+/* ---- 名前・出席番号 ---- */
+function saveId(){ savePref('name',$('stuName').value); savePref('no',$('stuNo').value); }
+/* ---- 読み上げ ---- */
+function toSpeech(html){
+  return html.replace(/<span class="frac"><span>(.*?)<\/span><span>(.*?)<\/span><\/span>/g,'$2分の$1')
+    .replace(/<br\s*\/?>/g,'。').replace(/<[^>]+>/g,'')
+    .replace(/△/g,'三角形').replace(/∽/g,' 相似 ').replace(/∠/g,'角').replace(/∥/g,' 平行 ').replace(/⊥/g,' 垂直 ')
+    .replace(/□□□/g,'空欄').replace(/[＝=]/g,' イコール ').replace(/\s:\s/g,' 対 ').replace(/½/g,'2分の1').replace(/°/g,'度');
+}
+function speakQ(){
+  try{ speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(toSpeech(S.cur.text)); u.lang='ja-JP'; u.rate=0.9; speechSynthesis.speak(u); }catch(e){}
+}
+
+/* ---- 表示設定 ---- */
+function savePref(k,v){ try{ localStorage.setItem('sojiPref_'+k,v); }catch(e){} }
+function loadPref(k){ try{ return localStorage.getItem('sojiPref_'+k); }catch(e){ return null; } }
+function setTheme(mode){ document.body.classList.toggle('theme-dark',mode==='dark'); document.querySelectorAll('#themeSeg button').forEach(b=>b.classList.toggle('active',b.dataset.theme===mode)); savePref('theme',mode); }
+function setTextSize(step){ document.documentElement.style.fontSize=['16px','19px','22px'][step]; document.querySelectorAll('#sizeSeg button').forEach(b=>b.classList.toggle('active',+b.dataset.size===step)); savePref('size',step); }
+function setSpacing(step){ document.body.classList.toggle('spacious',step===1); document.querySelectorAll('#spaceSeg button').forEach(b=>b.classList.toggle('active',+b.dataset.sp===step)); savePref('sp',step); }
+
+/* ---- 物理キーボード対応（PC用） ---- */
+document.addEventListener('keydown',e=>{
+  if(!$('screen-quiz').classList.contains('active')) return;
+  if(e.key==='Enter'){ e.preventDefault(); S.done?goNext():submitAns(); return; }
+  if(S.done) return;
+  const t=S.cur.ans.type;
+  if((t==='num'||t==='ratio')){
+    if(/^[0-9]$/.test(e.key)) keyPress(e.key);
+    else if(e.key==='Backspace'){ e.preventDefault(); keyPress('⌫'); }
+    else if(e.key==='Tab'||e.key==='ArrowRight'||e.key==='ArrowDown'){ e.preventDefault(); keyPress('next'); }
+  } else if(t==='order'){
+    const L=e.key.toUpperCase(); if(S.cur.ans.letters.includes(L)) ordPress(L); else if(e.key==='Backspace'){ e.preventDefault(); ordBack(); }
+  }
+});
+
+/* ---- 初期化 ---- */
+(function init(){
+  if(!('speechSynthesis' in window)) $('speakBtn').style.display='none';
+  const th=loadPref('theme'); if(th) setTheme(th); else if(window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches) setTheme('dark');
+  const sz=loadPref('size'); if(sz!==null) setTextSize(+sz);
+  const sp=loadPref('sp'); if(sp!==null) setSpacing(+sp);
+  const nm=loadPref('name'); if(nm) $('stuName').value=nm; const nb=loadPref('no'); if(nb) $('stuNo').value=nb;
+  renderUnits();
+})();
+</script>
+</body>
+</html>
