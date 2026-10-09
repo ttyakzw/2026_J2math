@@ -1,10 +1,48 @@
-## 授業資料
-### 中学数学
-- [因数分解トライアル](https://ttyakzw.github.io/2026_J2math/factorization_game)
-- [平方根トライアル](https://ttyakzw.github.io/2026_J2math/app/sqrt.trial)
-- [2次方程式トライアル](https://ttyakzw.github.io/2026_J2math/app/quadratic%20timetrial.html)
-- [相似トライアル](https://ttyakzw.github.io/2026_J2math/app/similaritypractice.html)
-### 基礎ゼミ
-- [Wythoff](https://ttyakzw.github.io/2026_J2math/seminar/01_Wythoff/Wythoff_game.html)
-- [Bridgeit](https://ttyakzw.github.io/2026_J2math/seminar/02_Bridgeit/Breideit.html)
-  - [教師用](https://ttyakzw.github.io/2026_J2math/seminar/02_Bridgeit/teacher.html)  
+# SEVEN ATTACK（数学ゼミ・学園祭ワークショップ）
+
+2対2の数字カードゲーム「SEVEN ATTACK」を、スマホのブラウザで遊べるサイトです。
+インターネットにつながっていれば、アプリのインストールやログインなしで動きます。
+
+## ページ
+
+| ファイル | 内容 |
+|---|---|
+| `index.html` | メニュー（最初に開くページ） |
+| `game.html` | ゲーム本体。CPUと対戦、または1台のスマホを4人で回して遊ぶ |
+| `bonus.html` | 3-3ボーナスチャレンジ。CPU 3人と数字選びを何回も試せる |
+| `kaisetsu.html` | 数学の解説スライド。PCでは横長スライド、スマホでは縦に読める |
+| `qr.html` | 受付に表示するQRコード（このサイトのURLを自動でQRにする） |
+| `simulation/seven_attack_simulation.py` | Pythonによるシミュレーション |
+
+## GitHub Pages で公開する手順（gitを使わない方法）
+
+1. GitHub にログインし、右上の「＋」→「New repository」を選ぶ
+2. Repository name に `seven-attack` などと入れ、**Public** を選んで「Create repository」
+3. 「uploading an existing file」をクリックし、このフォルダの中身（`index.html` など）を全部ドラッグして「Commit changes」
+   - フォルダごとではなく、**中身**をアップロードする（`index.html` がリポジトリの一番上にあるように）
+4. リポジトリの「Settings」→ 左の「Pages」を開く
+5. 「Branch」で `main`、フォルダは `/ (root)` を選んで「Save」
+6. 1〜2分待つと、ページの上に `https://ユーザー名.github.io/seven-attack/` のURLが表示される
+7. そのURLの `qr.html` を受付のPCやタブレットで開くと、来場者用のQRコードが表示される
+
+内容を直したいときは、リポジトリで直したいファイルを開き、えんぴつのアイコンから編集して「Commit changes」すると、1〜2分でサイトに反映されます。
+
+## ルール（このサイトでの設定）
+
+- 1人7枚（1〜7）。出したカードはなくなる
+- チームの2枚のうち小さいほうの数字をくらべ、大きいチームが1点。同じなら大きいほうでくらべる
+- 2枚とも同じなら引き分けで、次のラウンドは倍の点数（続けて引き分けるとさらに倍）
+- 3対3になったら3-3ボーナス：4人が1〜7の数字を1つ選び、誰とも被らなければそのカードが手札にふえる（1ゲームに1回）
+- 先に4点とったチームの勝ち。カードがなくなったら点数でくらべる
+
+点数やボーナスの条件は、`game.html` の上のほうにある「設定」で変えられます。
+
+```js
+const WIN_SCORE = 4;   // 先に何点で勝ちか
+const BONUS_AT  = 3;   // この点数で並んだらボーナス（3-3ボーナス）
+```
+
+## CPUの動き
+
+- カード：基本はランダム。倍点のラウンドでは強いカードを出しやすい
+- 3-3ボーナス：「読み合いに強い選び方」（3〜7を 7:16:21:26:30 の割合でまぜる）で選ぶ

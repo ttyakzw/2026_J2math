@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SEVEN ATTACK QRコード</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@700;900&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:"Noto Sans JP","Hiragino Kaku Gothic ProN","Yu Gothic","Meiryo",sans-serif; font-weight:700; background:#fff; color:#111;
+         min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:22px; padding:24px; text-align:center; }
+  h1 { font-size:clamp(34px,6vw,64px); font-weight:900; }
+  #qr { padding:16px; border:6px solid #111; border-radius:20px; }
+  #qr img, #qr canvas { width:min(60vmin,420px) !important; height:auto !important; display:block; }
+  p { font-size:clamp(16px,2.4vw,24px); }
+  #url { font-size:14px; color:#666; word-break:break-all; font-weight:500; }
+  a { color:#666; font-size:14px; font-weight:500; }
+</style>
+</head>
+<body>
+  <h1>スマホで遊ぼう！</h1>
+  <div id="qr"></div>
+  <p>カメラでQRコードを読みこんでね</p>
+  <div id="url"></div>
+  <a href="index.html">← メニュー</a>
+<script>
+  // このページと同じフォルダの index.html のURLをQRコードにする
+  const url = new URL('./', location.href).href;
+  document.getElementById('url').textContent = url;
+  if (window.QRCode) new QRCode(document.getElementById('qr'), { text:url, width:512, height:512, correctLevel:QRCode.CorrectLevel.M });
+  else document.getElementById('qr').textContent = 'QRコードを表示できませんでした（ネットにつながっているか確認してね）';
+</script>
+</body>
+</html>

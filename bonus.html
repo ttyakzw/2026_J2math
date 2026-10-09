@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>3-3ボーナスチャレンジ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root { --ink:#111; --sub:#666; --line:#ddd; --soft:#f4f4f4; --accent:#e0322b; --blue:#2563c9; }
+  * { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
+  body { font-family:"Noto Sans JP","Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic","Meiryo",sans-serif; font-weight:700; color:var(--ink); background:#fff; }
+  #app { max-width:540px; margin:0 auto; padding:16px 16px 40px; }
+  header { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+  header a { color:var(--sub); text-decoration:none; font-size:14px; font-weight:500; }
+  .logo { font-size:22px; font-weight:900; }
+  h2 { font-size:24px; font-weight:900; line-height:1.3; margin:4px 0 6px; }
+  p { font-size:15px; line-height:1.6; }
+  .sub { color:var(--sub); font-weight:500; }
+  .accent { color:var(--accent); }
+  button { font:inherit; cursor:pointer; border:none; background:none; color:inherit; }
+
+  .modes { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; margin:10px 0 4px; }
+  .modes button { border:2px solid var(--line); border-radius:10px; padding:8px 4px; font-size:13px; line-height:1.3; }
+  .modes button.on { border-color:var(--ink); background:var(--ink); color:#fff; }
+  .modedesc { font-size:13px; min-height:2.6em; }
+
+  .nums { display:grid; grid-template-columns:repeat(7,1fr); gap:6px; margin:12px 0; }
+  .nums button { aspect-ratio:3/4; border:3px solid var(--ink); border-radius:10px; font-size:28px; font-weight:900; background:#fff; }
+  .nums button:active { background:var(--ink); color:#fff; }
+
+  .arena { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
+  .slot { border:3px solid var(--line); border-radius:12px; text-align:center; padding:6px 0 8px; }
+  .slot.me { border-color:var(--ink); }
+  .slot .w { font-size:12px; color:var(--sub); font-weight:500; }
+  .slot .n { font-size:40px; font-weight:900; line-height:1.15; }
+  .slot .r { font-size:12px; }
+  .slot.clash { background:var(--soft); color:#aaa; }
+  .slot.got .n, .slot.got .r { color:var(--accent); }
+  .slot .n { animation:pop .35s ease both; }
+  @keyframes pop { from { transform:scale(.4); opacity:0; } to { transform:scale(1); opacity:1; } }
+
+  .stats { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin:12px 0; }
+  .stats div { background:var(--soft); border-radius:12px; text-align:center; padding:8px 4px; }
+  .stats .k { font-size:12px; color:var(--sub); font-weight:500; }
+  .stats .v { font-size:28px; font-weight:900; }
+
+  table { width:100%; border-collapse:collapse; font-size:14px; margin-top:6px; }
+  th, td { border-bottom:1px solid var(--line); padding:6px 2px; text-align:center; }
+  th { color:var(--sub); font-size:12px; }
+  td.best { color:var(--accent); font-weight:900; }
+  .bar { height:10px; background:var(--ink); border-radius:3px; }
+  .note { margin-top:14px; background:var(--soft); border-radius:12px; padding:12px 14px; }
+  .small-btn { font-size:13px; padding:4px 10px; border:2px solid var(--line); border-radius:8px; color:var(--sub); }
+  .row { display:flex; justify-content:space-between; align-items:center; margin-top:14px; }
+  .link { display:block; text-align:center; margin-top:16px; padding:14px; border:3px solid var(--ink); border-radius:14px; color:var(--ink); text-decoration:none; font-size:17px; }
+</style>
+</head>
+<body>
+<div id="app">
+  <header><div class="logo">3-3ボーナス チャレンジ</div><a href="index.html">← メニュー</a></header>
+  <p>1〜7から数字を1つ選んでね。CPU 3人と<b>被らなければ</b>その数字をゲット！ 何回もやって、<b class="accent">平均</b>でたくさんゲットできる作戦を見つけよう。</p>
+
+  <p class="sub" style="margin-top:10px;font-size:13px">CPUの性格</p>
+  <div class="modes" id="modes"></div>
+  <p class="sub modedesc" id="modedesc"></p>
+
+  <div class="nums" id="nums"></div>
+  <div class="arena" id="arena"></div>
+
+  <div class="stats">
+    <div><div class="k">回数</div><div class="v" id="n">0</div></div>
+    <div><div class="k">ゲットした合計</div><div class="v" id="sum">0</div></div>
+    <div><div class="k">1回の平均</div><div class="v accent" id="avg">-</div></div>
+  </div>
+
+  <div class="row"><b style="font-size:15px">数字ごとの成績</b><button class="small-btn" id="reset">リセット</button></div>
+  <table id="table"></table>
+
+  <div class="note" id="note"></div>
+  <a class="link" href="kaisetsu.html">数学で考えると？ 解説を見る →</a>
+</div>
+
+<script>
+const K=[1,2,3,4,5,6,7];
+const MODES = {
+  random: { label:'テキトー', desc:'CPUは1〜7を同じ確率でテキトーに選ぶ。',
+            w:[1,1,1,1,1,1,1],
+            note:'計算では、7を選ぶと平均 <b>約4.4</b>（7 × 216/343）。大きい数字ほどおトク！' },
+  greedy: { label:'7が大好き', desc:'CPUは「7が一番いい」と考えて、半分以上の確率で7を選ぶ。',
+            w:[1,1,1,1,1,2,14],
+            note:'みんなが7を狙うと、7は被りやすい。<b>6</b>あたりがねらい目かも？' },
+  smart:  { label:'読み合い上手', desc:'CPUは「読み合いに強い選び方」で、3〜7をまぜて選ぶ。',
+            w:[0,0,7,16,21,26,30],
+            note:'計算では、3〜7の<b>どれを選んでも平均 約2.4</b>。どんな作戦でも、これ以上は勝てない！' },
+};
+let mode = 'random';
+let stats = fresh();
+function fresh(){ return { n:0, sum:0, byK:K.map(()=>({n:0,sum:0})) }; }
+function pick(w){ const t=w.reduce((a,b)=>a+b,0); let r=Math.random()*t; for(let i=0;i<w.length;i++){ r-=w[i]; if(r<0) return i+1; } return 7; }
+
+function renderModes(){
+  document.getElementById('modes').innerHTML = Object.entries(MODES).map(([k,m])=>`<button data-m="${k}" class="${k===mode?'on':''}">${m.label}</button>`).join('');
+  document.getElementById('modedesc').textContent = MODES[mode].desc;
+  document.getElementById('note').innerHTML = '💡 ' + MODES[mode].note;
+  document.querySelectorAll('#modes button').forEach(b=>b.onclick=()=>{ mode=b.dataset.m; stats=fresh(); renderModes(); renderArena(null); renderStats(); });
+}
+function renderArena(me, cpus){
+  const el=document.getElementById('arena');
+  if(me==null){ el.innerHTML=['あなた','CPU 1','CPU 2','CPU 3'].map((w,i)=>`<div class="slot ${i?'':'me'}"><div class="w">${w}</div><div class="n" style="animation:none;color:#ccc">?</div><div class="r">&nbsp;</div></div>`).join(''); return; }
+  const all=[me,...cpus];
+  el.innerHTML=all.map((v,i)=>{ const uniq=all.filter(x=>x===v).length===1;
+    return `<div class="slot ${i?'':'me'} ${uniq?'got':'clash'}"><div class="w">${i?'CPU '+i:'あなた'}</div><div class="n">${v}</div><div class="r">${uniq?'ゲット！':'被った'}</div></div>`; }).join('');
+}
+function renderStats(){
+  document.getElementById('n').textContent=stats.n;
+  document.getElementById('sum').textContent=stats.sum;
+  document.getElementById('avg').textContent=stats.n?(stats.sum/stats.n).toFixed(1):'-';
+  const avgs=stats.byK.map(s=>s.n? s.sum/s.n : null);
+  const best=Math.max(...avgs.filter(v=>v!==null), -1);
+  document.getElementById('table').innerHTML =
+    `<tr><th>選んだ数字</th><th>回数</th><th>ゲット率</th><th>1回の平均</th></tr>` +
+    K.map((k,i)=>{ const s=stats.byK[i], a=avgs[i];
+      return `<tr><td><b>${k}</b></td><td>${s.n}</td><td>${s.n?Math.round(s.sum/k/s.n*100)+'%':'-'}</td>
+        <td class="${a!==null&&a===best&&stats.n>=5?'best':''}">${a===null?'-':a.toFixed(1)}</td></tr>`; }).join('');
+}
+document.getElementById('nums').innerHTML=K.map(k=>`<button data-k="${k}">${k}</button>`).join('');
+document.querySelectorAll('#nums button').forEach(b=>b.onclick=()=>{
+  const me=+b.dataset.k, w=MODES[mode].w, cpus=[pick(w),pick(w),pick(w)];
+  renderArena(me,cpus);
+  const got = !cpus.includes(me) ? me : 0;
+  stats.n++; stats.sum+=got; stats.byK[me-1].n++; stats.byK[me-1].sum+=got;
+  renderStats();
+});
+document.getElementById('reset').onclick=()=>{ stats=fresh(); renderArena(null); renderStats(); };
+renderModes(); renderArena(null); renderStats();
+</script>
+</body>
+</html>

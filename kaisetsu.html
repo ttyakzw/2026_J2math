@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SEVEN ATTACK 解説</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root { --ink:#111; --sub:#666; --line:#ddd; --accent:#e0322b; --soft:#f4f4f4; --blue:#2563c9; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  html, body { height:100%; background:#222; overflow:hidden; }
+  body {
+    font-family:"Noto Sans JP","Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic","Meiryo",sans-serif;
+    font-weight:700; color:var(--ink); display:flex; align-items:center; justify-content:center;
+  }
+  #stage { width:1280px; height:720px; background:#fff; position:relative; transform-origin:center; flex-shrink:0; }
+  .slide { position:absolute; inset:0; padding:48px 80px 70px; display:none; flex-direction:column; }
+  .slide.active { display:flex; }
+  .step { font-size:22px; color:#fff; background:var(--ink); align-self:flex-start; padding:4px 16px; border-radius:999px; margin-bottom:14px; }
+  h1 { font-size:58px; font-weight:900; line-height:1.25; margin-bottom:26px; }
+  p { font-size:32px; line-height:1.6; }
+  .accent { color:var(--accent); } .blue { color:var(--blue); }
+  .sub { color:var(--sub); font-weight:500; }
+  .center { text-align:center; }
+  .box { background:var(--soft); border-radius:16px; padding:20px 30px; }
+  .key { border:5px solid var(--ink); border-radius:16px; padding:16px 28px; font-size:36px; font-weight:900; text-align:center; }
+  rt { font-size:.45em; font-weight:700; }
+  button { font:inherit; cursor:pointer; }
+  .btn { font-size:28px; font-weight:900; padding:12px 30px; border-radius:12px; border:4px solid var(--accent); background:var(--accent); color:#fff; }
+  .btn:active { transform:translateY(2px); }
+  .small-btn { font-size:16px; padding:4px 12px; border-radius:8px; border:2px solid var(--line); background:#fff; color:var(--sub); }
+  .pageno { position:absolute; right:30px; bottom:18px; font-size:18px; color:#aaa; font-weight:500; }
+  .reveal { visibility:hidden; } .reveal.show { visibility:visible; }
+
+  .cover { align-items:center; justify-content:center; text-align:center; }
+  .cover h1 { font-size:86px; margin:10px 0 24px; }
+
+  /* cards row */
+  .cards { display:flex; gap:12px; justify-content:center; }
+  .c { width:78px; height:104px; border:4px solid var(--ink); border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:46px; font-weight:900; }
+  .c.ng { background:var(--accent); border-color:var(--accent); color:#fff; }
+  .row { display:flex; align-items:center; gap:24px; }
+  .row .lbl { font-size:26px; width:150px; text-align:right; color:var(--sub); }
+
+  /* calc lines */
+  .calc { font-size:38px; line-height:1.7; }
+  .calc .big { font-size:52px; }
+
+  /* table */
+  table { border-collapse:collapse; width:100%; margin-top:8px; }
+  th, td { border:3px solid var(--ink); text-align:center; font-size:30px; padding:8px 0; }
+  th { background:var(--soft); font-size:24px; }
+  td.hi { color:var(--accent); font-size:36px; font-weight:900; }
+
+  /* bar chart */
+  .chart { display:flex; align-items:flex-end; gap:20px; height:300px; padding:0 20px; border-bottom:4px solid var(--ink); }
+  .bar { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:100%; position:relative; }
+  .bar .val { font-size:26px; margin-bottom:6px; white-space:nowrap; }
+  .bar .fill { width:100%; background:var(--ink); border-radius:8px 8px 0 0; transition:height .35s ease; min-height:3px; }
+  .bar.hi .fill { background:var(--accent); } .bar.hi .val { color:var(--accent); }
+  .bar.zero .fill { background:var(--line); } .bar.zero .val { color:#aaa; }
+  .bar .theory { position:absolute; left:-6px; right:-6px; border-top:4px dashed var(--accent); }
+  .labels { display:flex; gap:20px; padding:0 20px; margin-top:6px; }
+  .labels div { flex:1; text-align:center; font-size:32px; font-weight:900; }
+
+  /* picker */
+  .picker { display:flex; gap:28px; margin:4px 0 16px; }
+  .who { flex:1; text-align:center; }
+  .who .name { font-size:24px; margin-bottom:8px; color:var(--sub); }
+  .nums { display:flex; gap:6px; justify-content:center; }
+  .nums button { width:44px; height:52px; font-size:24px; font-weight:900; border:3px solid var(--ink); background:#fff; border-radius:8px; }
+  .nums button.on { background:var(--ink); color:#fff; }
+  .result { display:flex; gap:14px; }
+  .cell { flex:1; text-align:center; border:4px solid var(--line); border-radius:14px; padding:10px 0; }
+  .cell .n { font-size:40px; font-weight:900; } .cell .pt { font-size:24px; }
+  .cell.bad { background:var(--soft); color:#aaa; }
+  .cell.best { border-color:var(--accent); color:var(--accent); }
+
+  .list { display:flex; flex-direction:column; gap:18px; }
+  .list .item { display:flex; gap:22px; align-items:center; font-size:34px; }
+  .num-badge { flex:0 0 56px; height:56px; border-radius:50%; background:var(--ink); color:#fff; display:flex; align-items:center; justify-content:center; font-size:30px; font-weight:900; }
+
+  #note { position:absolute; left:0; right:0; bottom:0; background:#fffbe6; border-top:3px solid #f0c000; padding:12px 80px 16px; font-size:21px; font-weight:500; line-height:1.55; display:none; }
+  #note b { font-weight:900; }
+  body.notes #note { display:block; }
+
+  #nav { position:fixed; bottom:12px; left:50%; transform:translateX(-50%); display:flex; gap:8px; opacity:.3; transition:opacity .2s; z-index:9; }
+  #nav:hover { opacity:1; }
+  #nav button { font-size:15px; padding:6px 14px; border-radius:8px; border:none; background:#fff; }
+
+  /* ===== スマホ（縦向き）では、スライドを縦に並べて読む ===== */
+  #menuLink { position:fixed; top:10px; left:12px; z-index:9; font-size:14px; color:#fff; background:rgba(0,0,0,.45); padding:4px 10px; border-radius:8px; text-decoration:none; font-weight:500; opacity:.4; }
+  #menuLink:hover { opacity:1; }
+  @media (max-aspect-ratio: 1/1), (max-width: 700px) {
+    html, body { overflow:auto; height:auto; background:#fff; }
+    body { display:block; }
+    #stage { width:auto; height:auto; transform:none !important; }
+    .slide { position:relative; display:flex !important; inset:auto; padding:30px 16px 34px; border-bottom:10px solid var(--soft); }
+    .cover { min-height:70vh; }
+    .cover h1 { font-size:40px; }
+    h1 { font-size:28px; margin-bottom:16px; }
+    p, .calc, .calc p { font-size:17px !important; }
+    .key { font-size:19px; padding:12px; border-width:4px; }
+    .key span[style] { font-size:30px !important; }
+    .key span.sub { font-size:15px !important; }
+    .step { font-size:14px; }
+    .list .item { font-size:18px; gap:12px; }
+    .num-badge { flex-basis:36px; height:36px; font-size:18px; }
+    .row { flex-direction:column; gap:8px; align-items:stretch; }
+    .row .lbl { width:auto; text-align:left; font-size:15px; }
+    .cards { gap:5px; }
+    .c { width:auto; flex:1; height:auto; aspect-ratio:3/4; font-size:24px; border-width:3px; border-radius:8px; }
+    table { font-size:14px; }
+    th, td { font-size:15px; padding:5px 0; border-width:2px; }
+    th { font-size:11px; }
+    td.hi { font-size:17px; }
+    .box { padding:14px 16px; }
+    .chart { height:200px !important; gap:6px; padding:0 4px; }
+    .bar .val { font-size:13px; }
+    .labels { gap:6px; padding:0 4px; }
+    .labels div { font-size:18px; }
+    .btn { font-size:18px; padding:10px 16px; }
+    .picker { flex-direction:column; gap:10px; }
+    .who .name { font-size:14px; }
+    .nums button { width:36px; height:42px; font-size:18px; }
+    .result { gap:4px; }
+    .cell { padding:6px 0; border-width:3px; border-radius:8px; }
+    .cell .n { font-size:22px; } .cell .pt { font-size:10px; }
+    #hint { font-size:18px !important; }
+    #nav, .pageno, #note { display:none !important; }
+    .simrow { flex-wrap:wrap; gap:8px 12px !important; }
+    .simrow p { flex-basis:100%; font-size:14px !important; }
+    .simrow .small-btn { white-space:nowrap; }
+    #menuLink { position:static; display:block; background:var(--ink); opacity:1; border-radius:0; padding:12px 16px; font-size:15px; }
+  }
+</style>
+</head>
+<body>
+<a id="menuLink" href="index.html">← メニュー</a>
+<div id="stage">
+
+<!-- 1 表紙 -->
+<section class="slide cover active"
+  data-note="<b>台本：</b>遊んでくれてありがとうございました！ ここからは、さっきのゲームを数学で考えてみます。<br>3-3ボーナスで<b>7を選んだ人</b>、手をあげてください！（反応を見て）けっこう多いですね。では、7を選ぶのは本当に一番いいのでしょうか？">
+  <p class="sub">遊んでくれてありがとう！</p>
+  <h1>3-3ボーナスを<br>数学で考えよう</h1>
+  <p>さっき、<span class="accent">7</span>を選んだ人？ 🙋</p>
+  <p class="sub" style="font-size:24px;margin-top:10px">大きい数字がほしい。でも被ったらもらえない…</p>
+</section>
+
+<!-- 2 問題 -->
+<section class="slide"
+  data-note="<b>台本：</b>3-3ボーナスでは、選んだ数字のカードがもらえます。大きい数字のカードほど強いです。でも、ほかの人と同じ数字だと、何ももらえません。<br>だから大事なのは「被らないかどうか」です。まずは、ほかの3人がテキトーに選ぶとき、7が被らない確率を考えてみましょう。">
+  <div class="step">考えること</div>
+  <h1>7を選べば一番いい？</h1>
+  <div class="list">
+    <div class="item"><div class="num-badge">○</div><div>大きい数字のカードほど強い</div></div>
+    <div class="item"><div class="num-badge" style="background:var(--accent)">×</div><div>でも、ほかの人と<span class="accent">被ったら何ももらえない</span></div></div>
+  </div>
+  <div class="key" style="margin-top:40px">ほかの3人がテキトーに選ぶとき、<br>7が<span class="accent">誰とも被らない確率</span>は？</div>
+</section>
+
+<!-- 3 1人のとき -->
+<section class="slide"
+  data-note="<b>台本：</b>まず、相手が1人だけのときを考えます。相手は1〜7の7通りの選び方があります。そのうち、7だと被ってしまいます。被らないのは1〜6の6通りです。<br>だから、被らない確率は「7分の6」です。">
+  <div class="step">ステップ 1</div>
+  <h1>相手が<span class="accent">1人</span>のとき</h1>
+  <div class="row" style="margin-bottom:28px">
+    <div class="lbl">相手が選ぶ数字</div>
+    <div class="cards"><div class="c">1</div><div class="c">2</div><div class="c">3</div><div class="c">4</div><div class="c">5</div><div class="c">6</div><div class="c ng">7</div></div>
+  </div>
+  <p class="center">7通りのうち、被らないのは <b>6通り</b>（<span class="accent">7</span>だけが被る）</p>
+  <div class="key" style="margin-top:28px">被らない確率 ＝ <span class="accent" style="font-size:48px">6/7</span>　<span class="sub" style="font-size:28px">（約86%）</span></div>
+</section>
+
+<!-- 4 3人のとき -->
+<section class="slide"
+  data-note="<b>台本：</b>次に、相手が3人のときです。3人の選び方は全部で 7×7×7 で343通りあります。そのうち、3人とも7以外を選ぶのは 6×6×6 で216通りです。<br>だから、被らない確率は343分の216で、だいたい63%です。100回やったら、63回くらいは7のカードがもらえる、ということです。">
+  <div class="step">ステップ 2</div>
+  <h1>相手が<span class="accent">3人</span>のとき</h1>
+  <div class="calc">
+    <p class="calc">3人の選び方は全部で　<b>7 × 7 × 7 ＝ 343通り</b></p>
+    <p class="calc">3人とも7以外を選ぶのは　<b>6 × 6 × 6 ＝ 216通り</b></p>
+  </div>
+  <div class="key" style="margin-top:26px">被らない確率 ＝ 216/343 ≒ <span class="accent" style="font-size:56px">63%</span></div>
+  <p class="sub center" style="margin-top:16px;font-size:26px">100回やったら、63回くらいは7のカードがもらえる！</p>
+</section>
+
+<!-- 5 平均点 -->
+<section class="slide"
+  data-note="<b>台本：</b>では、100回やったら、もらえる数字の合計がいくつになるか計算してみます。7を選ぶと、63回成功して7ずつなので441。1回あたりにすると4.4です。<br>ほかの数字も同じように計算すると、7が一番大きくなります。この「1回あたり平均でもらえる数字」のことを、数学では<b>期待値（きたいち）</b>といいます。高校で習う内容です。">
+  <div class="step">ステップ 3</div>
+  <h1 style="margin-bottom:12px">100回やったら、いくつもらえる？</h1>
+  <table>
+    <tr><th>選ぶ数字</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th></tr>
+    <tr><th>100回でもらえる<br>数字の合計<br><span class="sub" style="font-size:18px">（数字 × 63回）</span></th><td>63</td><td>126</td><td>189</td><td>252</td><td>315</td><td>378</td><td class="hi">441</td></tr>
+    <tr><th>1回あたりの<br>平均</th><td>0.6</td><td>1.3</td><td>1.9</td><td>2.5</td><td>3.1</td><td>3.8</td><td class="hi">4.4</td></tr>
+  </table>
+  <div class="box" style="margin-top:22px">
+    <p>この「1回あたり平均でもらえる数字」を <ruby><span class="accent">期待値</span><rt>きたいち</rt></ruby> という（高校で習うよ）</p>
+    <p style="font-size:28px">→ 相手がテキトーなら、<b class="accent">7が一番おトク！</b></p>
+  </div>
+</section>
+
+<!-- 6 実験 -->
+<section class="slide"
+  data-note="<b>台本：</b>本当にそうなるか、コンピュータで試してみましょう。（ボタンを押す。来場者に押してもらってもOK）<br>何回も押すと、棒の高さが赤い点線に近づいていきます。赤い点線は、さっき計算で出した平均です。たくさんやるほど、計算どおりになっていきます。">
+  <div class="step">実験</div>
+  <h1 style="margin-bottom:8px">本当に？ コンピュータで試そう</h1>
+  <div class="simrow" style="display:flex;gap:20px;align-items:center;margin-bottom:14px">
+    <button class="btn" id="simBtn">1000回やってみる</button>
+    <button class="small-btn" id="simReset">リセット</button>
+    <p style="font-size:24px">合計 <span id="simN">0</span> 回　<span class="sub">／ <span class="accent">赤い点線</span> ＝ 計算した平均</span></p>
+  </div>
+  <div class="chart" id="simChart" style="height:310px"></div>
+  <div class="labels" id="simLabels"></div>
+  <p class="sub center" style="font-size:22px;margin-top:6px">棒の高さ ＝ その数字を選んだときに、1回あたり平均でもらえる数字</p>
+</section>
+
+<!-- 7 読み合い -->
+<section class="slide"
+  data-note="<b>台本：</b>でも、本当のゲームでは、みんなテキトーには選びませんよね。もしみんなが「7が一番いい」と考えて7を選んだら、どうなるでしょう？<br>（A〜Cさんを全員7にする）7は被って何ももらえません。一番いいのは6になります。<br>（来場者に数字を変えてもらう）相手の考えを読むと、一番いい数字が変わります。これが3-3ボーナスの心理戦です。">
+  <div class="step">でも…</div>
+  <h1 style="margin-bottom:14px">みんなが7を選んだら？</h1>
+  <div class="picker" id="picker"></div>
+  <div class="result" id="result"></div>
+  <p class="center" id="hint" style="font-size:30px;margin-top:18px"></p>
+  <p class="sub center" style="font-size:24px;margin-top:8px">相手の考えを読むと、一番いい数字が変わる！ ＝ <b>心理戦</b></p>
+</section>
+
+<!-- 8 ちょうどいい選び方 -->
+<section class="slide"
+  data-note="<b>台本：</b>じゃあ、読み合いに強い選び方はあるのでしょうか？ 実は数学で計算できます。<br>100回選ぶなら、7を30回、6を26回、5を21回、4を16回、3を7回くらい。1と2は選びません。<br>全員がこの選び方をすると、3〜7のどれを選んでも、平均が2.4で同じになります。だから、相手に読まれても損をしません。<br>この考え方は「ゲーム理論」という数学の分野で研究されています。">
+  <div class="step">おまけ</div>
+  <h1 style="margin-bottom:6px">読み合いに強い選び方</h1>
+  <p style="font-size:26px">100回選ぶなら、こんな<b>回数</b>でまぜて選ぶ</p>
+  <div class="chart" id="eqChart" style="height:250px;margin-top:10px"></div>
+  <div class="labels" id="eqLabels"></div>
+  <div class="box" style="margin-top:16px;padding:14px 26px">
+    <p style="font-size:26px">こうすると、3〜7の<span class="accent">どれを選んでも平均2.4</span>で同じ → 相手に読まれても損しない！</p>
+    <p class="sub" style="font-size:20px">※ この考え方は「ゲーム理論」という数学の分野で研究されています</p>
+  </div>
+</section>
+
+<!-- 9 まとめ -->
+<section class="slide"
+  data-note="<b>台本：</b>まとめです。被らない確率は、場合の数を数えると計算できました。数字と確率をかけると、1回あたり平均でもらえる数字、期待値が出ます。そして、相手も考えるときは、いろいろな数字をまぜて選ぶのが強い作戦です。<br>みなさんも、ほかのゲームで「平均でどれくらい？」と考えてみてください。ありがとうございました！">
+  <div class="step">まとめ</div>
+  <h1>ゲームの中に数学がかくれていた！</h1>
+  <div class="list">
+    <div class="item"><div class="num-badge">1</div><div><b>確率</b>：被らない確率は 216/343 ≒ 63%</div></div>
+    <div class="item"><div class="num-badge">2</div><div><b>期待値</b>：数字 × 確率 ＝ 1回あたり平均でもらえる数字</div></div>
+    <div class="item"><div class="num-badge">3</div><div><b>心理戦</b>：相手も考えるなら、数字をまぜて選ぶ</div></div>
+  </div>
+  <div class="key" style="margin-top:34px">ほかのゲームでも「平均でどれくらい？」と考えてみよう！</div>
+  <p class="sub" style="font-size:18px;margin-top:14px">数学ゼミ　※ 数字は1〜7、ほかの3人が選ぶ数字と被らなければもらえる、として計算しています</p>
+</section>
+
+<div id="note"></div>
+<div class="pageno" id="pageno"></div>
+</div>
+
+<div id="nav">
+  <button onclick="go(-1)">◀ 前へ</button>
+  <button onclick="go(1)">次へ ▶</button>
+  <button onclick="toggleNotes()">台本 (N)</button>
+  <button onclick="fs()">全画面 (F)</button>
+</div>
+
+<script>
+const K=[1,2,3,4,5,6,7];
+const EQ=[0,0,7,16,21,26,30];
+const Q=216/343;
+function labelsHTML(){ return K.map(k=>`<div>${k}</div>`).join(''); }
+
+/* simulation */
+let simSum=[0,0,0,0,0,0,0], simN=0;
+function renderSim(){
+  const max=7*Q/0.8, avg=simSum.map(s=>simN?s/simN:0);
+  document.getElementById('simChart').innerHTML=avg.map((v,i)=>`<div class="bar ${i===6?'hi':''}">
+    <div class="val">${simN?v.toFixed(1):'?'}</div>
+    <div class="fill" style="height:${v/max*80}%"></div>
+    <div class="theory" style="bottom:${(i+1)*Q/max*80}%"></div></div>`).join('');
+  document.getElementById('simN').textContent=simN.toLocaleString();
+}
+document.getElementById('simLabels').innerHTML=labelsHTML();
+document.getElementById('simBtn').onclick=()=>{
+  for(let t=0;t<1000;t++){ const o=[0,0,0].map(()=>1+Math.floor(Math.random()*7)); for(const k of K) if(!o.includes(k)) simSum[k-1]+=k; }
+  simN+=1000; renderSim();
+};
+document.getElementById('simReset').onclick=()=>{ simSum=[0,0,0,0,0,0,0]; simN=0; renderSim(); };
+
+/* picker */
+const others=[7,7,7];
+function renderPicker(){
+  const pk=document.getElementById('picker');
+  pk.innerHTML=['Aさん','Bさん','Cさん'].map((n,i)=>`<div class="who"><div class="name">${n}が選ぶ数字</div><div class="nums">${
+    K.map(k=>`<button class="${others[i]===k?'on':''}" data-i="${i}" data-k="${k}">${k}</button>`).join('')}</div></div>`).join('');
+  pk.querySelectorAll('button').forEach(b=>b.onclick=()=>{ others[+b.dataset.i]=+b.dataset.k; renderPicker(); });
+  let best=0; for(const k of K) if(!others.includes(k)) best=k;
+  document.getElementById('result').innerHTML=K.map(k=>{const hit=others.includes(k);
+    return `<div class="cell ${hit?'bad':''} ${k===best?'best':''}"><div class="n">${k}</div><div class="pt">${hit?'被る→なし':k+' ゲット'}</div></div>`}).join('');
+  document.getElementById('hint').innerHTML=`あなたが選ぶなら… <span class="accent">${best} が一番いい（${best}ゲット）</span>`;
+}
+
+/* equilibrium chart */
+document.getElementById('eqChart').innerHTML=EQ.map((v,i)=>`<div class="bar ${v===0?'zero':''} ${i===6?'hi':''}">
+  <div class="val">${v}回</div><div class="fill" style="height:${v/30*80}%"></div></div>`).join('');
+document.getElementById('eqLabels').innerHTML=labelsHTML();
+
+/* navigation */
+const slides=[...document.querySelectorAll('.slide')];
+let cur=0;
+function show(i){
+  cur=Math.max(0,Math.min(slides.length-1,i));
+  slides.forEach((s,j)=>s.classList.toggle('active',j===cur));
+  document.getElementById('pageno').textContent=`${cur+1} / ${slides.length}`;
+  document.getElementById('note').innerHTML=slides[cur].dataset.note||'';
+}
+function go(d){ show(cur+d); }
+function toggleNotes(){ document.body.classList.toggle('notes'); }
+function fs(){ if(!document.fullscreenElement) document.documentElement.requestFullscreen?.(); else document.exitFullscreen?.(); }
+document.addEventListener('keydown',e=>{
+  if(['ArrowRight','PageDown',' '].includes(e.key)){ e.preventDefault(); go(1); }
+  if(['ArrowLeft','PageUp'].includes(e.key)){ e.preventDefault(); go(-1); }
+  if(e.key==='f'||e.key==='F') fs();
+  if(e.key==='n'||e.key==='N') toggleNotes();
+});
+const mobile=()=>matchMedia('(max-aspect-ratio: 1/1), (max-width: 700px)').matches;
+function fit(){ if(mobile()){ document.getElementById('stage').style.transform='none'; return; } const s=Math.min(innerWidth/1280,innerHeight/720); document.getElementById('stage').style.transform=`scale(${s})`; }
+addEventListener('resize',fit);
+renderSim(); renderPicker(); fit(); show(0);
+</script>
+</body>
+</html>

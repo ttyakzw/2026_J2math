@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SEVEN ATTACK</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root { --ink:#111; --sub:#666; --soft:#f4f4f4; --accent:#e0322b; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:"Noto Sans JP","Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic","Meiryo",sans-serif; font-weight:700; color:var(--ink); background:#fff; }
+  main { max-width:540px; margin:0 auto; padding:48px 16px 32px; min-height:100vh; display:flex; flex-direction:column; }
+  .hero { text-align:center; margin-bottom:36px; }
+  .hero h1 { font-size:54px; font-weight:900; letter-spacing:.01em; line-height:1.1; }
+  .hero .tag { font-size:16px; margin-top:8px; letter-spacing:.08em; }
+  .hero p { font-size:15px; color:var(--sub); font-weight:500; margin-top:14px; line-height:1.7; }
+  a.card { display:flex; align-items:center; gap:16px; text-decoration:none; color:var(--ink); border:3px solid var(--ink); border-radius:18px; padding:18px; margin-bottom:14px; }
+  a.card:active { transform:translateY(1px); }
+  a.card.main { background:var(--ink); color:#fff; }
+  .num { flex:0 0 46px; height:46px; border-radius:50%; background:var(--accent); color:#fff; display:flex; align-items:center; justify-content:center; font-size:22px; font-weight:900; }
+  .t { font-size:21px; font-weight:900; }
+  .d { font-size:13px; font-weight:500; opacity:.75; margin-top:2px; line-height:1.5; }
+  footer { margin-top:auto; padding-top:24px; text-align:center; font-size:13px; color:var(--sub); font-weight:500; }
+  footer a { color:var(--sub); }
+</style>
+</head>
+<body>
+<main>
+  <div class="hero">
+    <h1>seven<br>attack</h1>
+    <div class="tag">2 VS 2 ・ NUMBER DUEL</div>
+    <p>2枚のカードの「小さい数字」でたたかう、<br>心理戦の数字カードゲーム</p>
+  </div>
+
+  <a class="card main" href="game.html">
+    <div class="num">1</div>
+    <div><div class="t">ゲームで遊ぶ</div><div class="d">CPUと対戦、または1台のスマホを4人で回して遊べる</div></div>
+  </a>
+  <a class="card" href="bonus.html">
+    <div class="num">2</div>
+    <div><div class="t">3-3ボーナスに挑戦</div><div class="d">CPU 3人と数字選び。どの数字がおトク？</div></div>
+  </a>
+  <a class="card" href="kaisetsu.html">
+    <div class="num">3</div>
+    <div><div class="t">数学で考えよう</div><div class="d">確率と期待値で、3-3ボーナスを解説</div></div>
+  </a>
+
+  <footer>数学ゼミ ／ 学園祭ワークショップ<br><a href="qr.html">受付用QRコード</a></footer>
+</main>
+</body>
+</html>

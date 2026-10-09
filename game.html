@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SEVEN ATTACK ゲーム</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root { --ink:#111; --sub:#666; --line:#ddd; --soft:#f4f4f4; --accent:#e0322b; --a:#e0322b; --b:#2563c9; }
+  * { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
+  html, body { background:#fff; }
+  body { font-family:"Noto Sans JP","Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic","Meiryo",sans-serif; font-weight:700; color:var(--ink); }
+  #app { max-width:540px; margin:0 auto; padding:16px 16px 40px; min-height:100vh; display:flex; flex-direction:column; }
+  header { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+  header a { color:var(--sub); text-decoration:none; font-size:14px; font-weight:500; }
+  .logo { font-size:22px; font-weight:900; letter-spacing:.02em; }
+  h2 { font-size:26px; font-weight:900; margin:6px 0 12px; line-height:1.3; }
+  p { font-size:16px; line-height:1.6; }
+  .sub { color:var(--sub); font-weight:500; }
+  .center { text-align:center; }
+  .ta { color:var(--a); } .tb { color:var(--b); }
+  button { font:inherit; cursor:pointer; border:none; background:none; color:inherit; }
+  .btn { display:block; width:100%; font-size:20px; font-weight:900; padding:16px; border-radius:14px; background:var(--ink); color:#fff; margin-top:12px; }
+  .btn.outline { background:#fff; color:var(--ink); border:3px solid var(--ink); }
+  .btn.red { background:var(--accent); }
+  .btn:disabled { opacity:.3; }
+  .btn:active { transform:translateY(1px); }
+  .spacer { flex:1; }
+
+  /* scoreboard */
+  .score { display:flex; align-items:center; justify-content:space-between; background:var(--soft); border-radius:14px; padding:10px 16px; margin-bottom:12px; }
+  .score .team { font-size:14px; } .score .pt { font-size:34px; font-weight:900; line-height:1; }
+  .score .mid { text-align:center; font-size:13px; color:var(--sub); font-weight:500; }
+  .stake { display:inline-block; background:var(--accent); color:#fff; border-radius:999px; padding:2px 10px; font-size:13px; font-weight:900; margin-top:4px; }
+
+  /* setup */
+  .seat { display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid var(--line); }
+  .seat .tag { width:44px; height:44px; flex:0 0 44px; border-radius:10px; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:900; }
+  .seat input { flex:1; min-width:0; font:inherit; font-size:17px; padding:10px; border:2px solid var(--line); border-radius:10px; }
+  .toggle { display:flex; border:2px solid var(--ink); border-radius:10px; overflow:hidden; flex:0 0 auto; }
+  .toggle button { padding:9px 12px; font-size:15px; }
+  .toggle button.on { background:var(--ink); color:#fff; }
+  .presets { display:flex; gap:8px; margin-bottom:6px; }
+  .presets button { flex:1; font-size:17px; padding:8px 6px; border:2px solid var(--line); border-radius:10px; line-height:1.3; }
+  .presets small { font-size:12px; color:var(--sub); font-weight:500; }
+  details { margin-top:14px; background:var(--soft); border-radius:12px; padding:10px 14px; }
+  summary { font-size:16px; cursor:pointer; }
+  details li { font-size:14px; line-height:1.6; margin:6px 0 0 18px; font-weight:500; }
+
+  /* cards */
+  .hand { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin:10px 0; }
+  .card { aspect-ratio:3/4; border:4px solid var(--ink); border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:40px; font-weight:900; background:#fff; }
+  .card.sel { background:var(--ink); color:#fff; transform:translateY(-6px); }
+  .card.small { font-size:30px; border-width:3px; }
+  .card.back { background:repeating-linear-gradient(45deg,#222 0 8px,#444 8px 16px); border-color:#222; }
+  .card.got { border-color:var(--accent); color:var(--accent); }
+  .card.lose { opacity:.35; }
+  .nums7 { display:grid; grid-template-columns:repeat(7,1fr); gap:6px; margin:10px 0; }
+  .nums7 .card { font-size:26px; border-width:3px; }
+
+  /* reveal */
+  .teambox { border:3px solid var(--line); border-radius:16px; padding:10px 12px; margin-bottom:10px; }
+  .teambox.win { border-color:currentColor; }
+  .teambox .head { display:flex; justify-content:space-between; font-size:15px; margin-bottom:8px; }
+  .pair { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .pair .who { font-size:13px; color:var(--sub); text-align:center; margin-bottom:4px; font-weight:500; }
+  .pair .card { width:76px; margin:0 auto; animation:flip .45s ease both; }
+  @keyframes flip { from { transform:rotateY(90deg); } to { transform:rotateY(0); } }
+  .lo { font-size:15px; text-align:center; margin-top:8px; }
+  .banner { text-align:center; font-size:24px; font-weight:900; padding:12px; border-radius:14px; color:#fff; margin:4px 0; }
+
+  .handoff { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; gap:10px; }
+  .handoff .big { font-size:30px; font-weight:900; }
+  .handoff .icon { font-size:60px; }
+
+  .history { margin-top:16px; }
+  .history h3 { font-size:15px; color:var(--sub); margin-bottom:6px; }
+  .history table { width:100%; border-collapse:collapse; font-size:14px; }
+  .history td, .history th { border-bottom:1px solid var(--line); padding:5px 2px; text-align:center; font-weight:500; }
+  .history th { font-weight:700; color:var(--sub); }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+/* ===================== 設定 ===================== */
+const WIN_SCORE = 4;          // 先に何点で勝ちか
+const BONUS_AT  = 3;          // この点数で並んだらボーナス（3-3ボーナス）
+const START_HAND = [1,2,3,4,5,6,7];
+const BONUS_CPU_WEIGHTS = [0,0,7,16,21,26,30]; // CPUのボーナスの選び方（読み合いに強い選び方）
+
+const SEATS = [
+  { key:'A1', team:0 }, { key:'B1', team:1 },
+  { key:'A2', team:0 }, { key:'B2', team:1 },
+];
+const TEAM = [ { name:'チームA', cls:'ta', color:'var(--a)' }, { name:'チームB', cls:'tb', color:'var(--b)' } ];
+
+/* ===================== 状態 ===================== */
+let setup = load() || {
+  names: ['あなた','CPU 1','CPU 2','CPU 3'],
+  cpu:   [false, true, true, true],
+};
+let G = null;   // ゲームの状態
+const app = document.getElementById('app');
+
+function load(){ try { return JSON.parse(localStorage.getItem('sa_setup')); } catch(e){ return null; } }
+function save(){ try { localStorage.setItem('sa_setup', JSON.stringify(setup)); } catch(e){} }
+function esc(s){ return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function rand(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+function weighted(weights){ const t=weights.reduce((a,b)=>a+b,0); let r=Math.random()*t; for(let i=0;i<weights.length;i++){ r-=weights[i]; if(r<0) return i+1; } return weights.length; }
+const humans = () => G.players.filter(p=>!p.cpu).length;
+
+/* ===================== 画面：セットアップ ===================== */
+function screenSetup(){
+  const tagColor = i => SEATS[i].team===0 ? 'var(--a)' : 'var(--b)';
+  app.innerHTML = `
+    <header><div class="logo">SEVEN ATTACK</div><a href="index.html">← メニュー</a></header>
+    <h2>だれが遊ぶ？</h2>
+    <div class="presets">
+      <button data-p="1"><b>1人</b><br><small>CPUと</small></button>
+      <button data-p="2"><b>2人</b><br><small>味方どうし</small></button>
+      <button data-p="4"><b>4人</b><br><small>1台を回す</small></button>
+    </div>
+    ${[0,2,1,3].map(i=>`
+      <div class="seat">
+        <div class="tag" style="background:${tagColor(i)}">${SEATS[i].key}</div>
+        <input data-i="${i}" value="${esc(setup.names[i])}" maxlength="8">
+        <div class="toggle">
+          <button data-i="${i}" data-c="0" class="${setup.cpu[i]?'':'on'}">人</button>
+          <button data-i="${i}" data-c="1" class="${setup.cpu[i]?'on':''}">CPU</button>
+        </div>
+      </div>`).join('')}
+    <p class="sub" style="font-size:13px;margin-top:8px">A1・A2 が<span class="ta">チームA</span>、B1・B2 が<span class="tb">チームB</span>。2人以上で遊ぶときは、1台のスマホを順番に回してね。</p>
+    <details>
+      <summary>ルールを見る</summary>
+      <ul>
+        <li>1人7枚（1〜7）のカードを持つ。出したカードはなくなる</li>
+        <li>毎ラウンド、4人が1枚ずつカードを出す（味方と相談はダメ）</li>
+        <li>チームの2枚のうち<b>小さいほうの数字</b>をくらべて、大きいチームが1点</li>
+        <li>小さいほうが同じなら、大きいほうでくらべる</li>
+        <li>2枚とも同じなら引き分け。次のラウンドは<b>倍の点数</b></li>
+        <li>3対3になったら<b>3-3ボーナス</b>：4人が1〜7の数字を1つずつ選ぶ。誰とも被らなければ、そのカードが手札にふえる</li>
+        <li>先に4点とったチームの勝ち（カードがなくなったら、点数が多いチームの勝ち）</li>
+      </ul>
+    </details>
+    <div class="spacer"></div>
+    <button class="btn red" id="start">ゲームスタート</button>
+  `;
+  app.querySelectorAll('.presets button').forEach(b=>b.onclick=()=>{
+    const n=+b.dataset.p;
+    if(n===1){ setup.cpu=[false,true,true,true]; setup.names=['あなた','CPU 1','CPU 2','CPU 3']; }
+    if(n===2){ setup.cpu=[false,true,false,true]; setup.names=['Aさん','CPU 1','Bさん','CPU 2']; }
+    if(n===4){ setup.cpu=[false,false,false,false]; setup.names=['Aさん','Cさん','Bさん','Dさん']; }
+    save(); screenSetup();
+  });
+  app.querySelectorAll('.seat input').forEach(inp=>inp.oninput=()=>{ setup.names[+inp.dataset.i]=inp.value; save(); });
+  app.querySelectorAll('.toggle button').forEach(b=>b.onclick=()=>{ setup.cpu[+b.dataset.i]=b.dataset.c==='1'; save(); screenSetup(); });
+  document.getElementById('start').onclick=startGame;
+}
+
+/* ===================== ゲーム進行 ===================== */
+function startGame(){
+  G = {
+    players: SEATS.map((s,i)=>({ name:(setup.names[i]||s.key).trim()||s.key, team:s.team, cpu:setup.cpu[i], hand:[...START_HAND] })),
+    score:[0,0], stake:1, bonusDone:false, round:0, history:[],
+  };
+  newRound();
+}
+
+function newRound(){
+  if (G.players.some(p=>p.hand.length===0)) return screenEnd(true);
+  G.round++;
+  G.picks = [null,null,null,null];
+  G.players.forEach((p,i)=>{ if(p.cpu) G.picks[i]=cpuCard(i); });
+  G.queue = G.players.map((p,i)=>i).filter(i=>!G.players[i].cpu);
+  nextHuman('card');
+}
+
+/* CPUのカードの出し方：基本はランダム。たまに作戦を立てる */
+function cpuCard(i){
+  const hand = [...G.players[i].hand].sort((a,b)=>a-b);
+  const r = Math.random();
+  if (G.stake>1 && r<0.6) return hand[hand.length-1];            // 倍点のときは強いカード
+  if (r<0.35) return hand[Math.floor(hand.length/2)];             // まん中のカード
+  return rand(hand);
+}
+
+function nextHuman(mode){
+  if (G.queue.length===0) return mode==='card' ? reveal() : bonusReveal();
+  const i = G.queue.shift();
+  if (humans()>1) screenHandoff(i, mode); else (mode==='card'? screenPick(i) : screenBonusPick(i));
+}
+
+function scoreHTML(){
+  return `<div class="score">
+    <div><div class="team ta">チームA</div><div class="pt ta">${G.score[0]}</div></div>
+    <div class="mid">ラウンド ${G.round}<br>先に${WIN_SCORE}点で勝ち${G.stake>1?`<br><span class="stake">このラウンド ×${G.stake}点</span>`:''}</div>
+    <div style="text-align:right"><div class="team tb">チームB</div><div class="pt tb">${G.score[1]}</div></div>
+  </div>`;
+}
+function headerHTML(){ return `<header><div class="logo">SEVEN ATTACK</div><a href="#" id="quit">やめる</a></header>`; }
+function bindQuit(){ const q=document.getElementById('quit'); if(q) q.onclick=e=>{ e.preventDefault(); if(confirmQuit()) screenSetup(); }; }
+function confirmQuit(){ return window.confirm ? window.confirm('ゲームをやめてメニューに戻りますか？') : true; }
+
+/* --- スマホを次の人にわたす画面 --- */
+function screenHandoff(i, mode){
+  const p=G.players[i];
+  app.innerHTML = `${headerHTML()}${scoreHTML()}
+    <div class="handoff">
+      <div class="icon">📱</div>
+      <div class="big ${TEAM[p.team].cls}">${esc(p.name)} さんの番</div>
+      <p class="sub">${mode==='card'?'ほかの人は画面を見ないでね':'3-3ボーナス！ ほかの人は見ないでね'}</p>
+      <button class="btn" id="go" style="max-width:300px">${esc(p.name)} です！ 見る</button>
+    </div>`;
+  bindQuit();
+  document.getElementById('go').onclick=()=> mode==='card'? screenPick(i) : screenBonusPick(i);
+}
+
+/* --- カードを選ぶ画面 --- */
+function screenPick(i){
+  const p=G.players[i]; let sel=null;
+  const hand=[...p.hand].sort((a,b)=>a-b);
+  const draw=()=>{
+    app.innerHTML = `${headerHTML()}${scoreHTML()}
+      <h2><span class="${TEAM[p.team].cls}">${esc(p.name)}</span> さん、出すカードを選んでね</h2>
+      <p class="sub">味方：${esc(G.players.find((q,j)=>j!==i&&q.team===p.team).name)}（相談はナシ！）</p>
+      <div class="hand">${hand.map((n,k)=>`<button class="card ${sel===k?'sel':''}" data-k="${k}">${n}</button>`).join('')}</div>
+      <p class="sub" style="font-size:13px">チームの2枚のうち<b>小さいほう</b>で勝負。大きいカードを出しても、味方が小さいと意味がないかも…？</p>
+      <div class="spacer"></div>
+      <button class="btn red" id="ok" ${sel===null?'disabled':''}>${sel===null?'カードを選んでね':`${hand[sel]} を出す`}</button>
+      ${historyHTML()}`;
+    bindQuit();
+    app.querySelectorAll('.hand .card').forEach(b=>b.onclick=()=>{ sel=+b.dataset.k; draw(); });
+    document.getElementById('ok').onclick=()=>{ if(sel===null) return; G.picks[i]=hand[sel]; nextHuman('card'); };
+  };
+  draw();
+}
+
+/* --- 結果発表 --- */
+function reveal(){
+  const t=[0,1].map(team=>{
+    const idx=[0,1,2,3].filter(i=>G.players[i].team===team);
+    const cards=idx.map(i=>G.picks[i]);
+    return { idx, cards, lo:Math.min(...cards), hi:Math.max(...cards) };
+  });
+  let winner=null, reason='';
+  if (t[0].lo!==t[1].lo){ winner = t[0].lo>t[1].lo?0:1; reason='小さいほうの数字で勝ち'; }
+  else if (t[0].hi!==t[1].hi){ winner = t[0].hi>t[1].hi?0:1; reason='小さいほうが同じ → 大きいほうで勝ち'; }
+  const gained = G.stake;
+  // カードを手札から消す
+  G.players.forEach((p,i)=>{ const k=p.hand.indexOf(G.picks[i]); if(k>=0) p.hand.splice(k,1); });
+  G.history.push({ round:G.round, a:t[0].cards, b:t[1].cards, winner, gained });
+  if (winner!==null){ G.score[winner]+=gained; G.stake=1; } else { G.stake*=2; }
+
+  app.innerHTML = `${headerHTML()}${scoreHTML()}
+    ${t.map((x,team)=>`
+      <div class="teambox ${winner===team?'win':''}" style="color:${TEAM[team].color}">
+        <div class="head"><span>${TEAM[team].name}</span><span>${winner===team?`+${gained}点！`:''}</span></div>
+        <div class="pair" style="color:var(--ink)">
+          ${x.idx.map(i=>`<div><div class="who">${esc(G.players[i].name)}</div><div class="card small">${G.picks[i]}</div></div>`).join('')}
+        </div>
+        <div class="lo">小さいほう <b style="font-size:22px">${x.lo}</b>　<span class="sub">大きいほう ${x.hi}</span></div>
+      </div>`).join('')}
+    <div class="banner" style="background:${winner===null?'#888':TEAM[winner].color}">
+      ${winner===null?`引き分け！ 次は ×${G.stake}点`:`${TEAM[winner].name}の勝ち！`}
+    </div>
+    <p class="center sub" style="font-size:14px">${winner===null?'2枚とも同じ数字だった':reason}</p>
+    <div class="spacer"></div>
+    <button class="btn" id="next">次へ</button>`;
+  bindQuit();
+  document.getElementById('next').onclick=afterRound;
+}
+
+function afterRound(){
+  if (G.score.some(s=>s>=WIN_SCORE)) return screenEnd(false);
+  if (!G.bonusDone && G.score[0]===BONUS_AT && G.score[1]===BONUS_AT) return startBonus();
+  newRound();
+}
+
+/* ===================== 3-3ボーナス ===================== */
+function startBonus(){
+  G.bonusDone=true;
+  G.bonus=[null,null,null,null];
+  G.players.forEach((p,i)=>{ if(p.cpu) G.bonus[i]=weighted(BONUS_CPU_WEIGHTS); });
+  G.queue = G.players.map((p,i)=>i).filter(i=>!G.players[i].cpu);
+  app.innerHTML = `${headerHTML()}${scoreHTML()}
+    <div class="handoff">
+      <div class="icon">⚡</div>
+      <div class="big">${BONUS_AT}-${BONUS_AT} ボーナス！</div>
+      <p>4人が1〜7の数字を1つずつ選ぶ。<br><b>誰とも被らなければ</b>、そのカードが手札にふえる！</p>
+      <p class="sub">大きい数字がほしい。でも、みんなもそう思ってる…？</p>
+      <button class="btn red" id="go" style="max-width:300px">はじめる</button>
+    </div>`;
+  bindQuit();
+  document.getElementById('go').onclick=()=>nextHuman('bonus');
+}
+
+function screenBonusPick(i){
+  const p=G.players[i]; let sel=null;
+  const draw=()=>{
+    app.innerHTML = `${headerHTML()}${scoreHTML()}
+      <h2><span class="${TEAM[p.team].cls}">${esc(p.name)}</span> さん、ほしい数字は？</h2>
+      <p class="sub">誰とも被らなければ、そのカードがもらえる（味方と被ってもダメ！）</p>
+      <div class="nums7">${[1,2,3,4,5,6,7].map(n=>`<button class="card ${sel===n?'sel':''}" data-n="${n}">${n}</button>`).join('')}</div>
+      <div class="spacer"></div>
+      <button class="btn red" id="ok" ${sel===null?'disabled':''}>${sel===null?'数字を選んでね':`${sel} に決めた！`}</button>`;
+    bindQuit();
+    app.querySelectorAll('.nums7 .card').forEach(b=>b.onclick=()=>{ sel=+b.dataset.n; draw(); });
+    document.getElementById('ok').onclick=()=>{ if(sel===null) return; G.bonus[i]=sel; nextHuman('bonus'); };
+  };
+  draw();
+}
+
+function bonusReveal(){
+  const got = G.bonus.map(n=>G.bonus.filter(m=>m===n).length===1);
+  G.players.forEach((p,i)=>{ if(got[i]) p.hand.push(G.bonus[i]); });
+  app.innerHTML = `${headerHTML()}${scoreHTML()}
+    <h2>ボーナスの結果</h2>
+    ${[0,1].map(team=>`
+      <div class="teambox" style="color:${TEAM[team].color}">
+        <div class="head"><span>${TEAM[team].name}</span></div>
+        <div class="pair" style="color:var(--ink)">
+          ${[0,1,2,3].filter(i=>G.players[i].team===team).map(i=>`<div>
+            <div class="who">${esc(G.players[i].name)}</div>
+            <div class="card small ${got[i]?'got':'lose'}">${G.bonus[i]}</div>
+            <div class="who" style="margin-top:4px;${got[i]?'color:var(--accent);font-weight:900':''}">${got[i]?`${G.bonus[i]} ゲット！`:'被った…'}</div></div>`).join('')}
+        </div>
+      </div>`).join('')}
+    <p class="sub center" style="font-size:14px">ゲットしたカードは手札にふえたよ</p>
+    <div class="spacer"></div>
+    <button class="btn" id="next">次のラウンドへ</button>`;
+  bindQuit();
+  document.getElementById('next').onclick=newRound;
+}
+
+/* ===================== 終了 ===================== */
+function screenEnd(outOfCards){
+  const [a,b]=G.score;
+  const w = a===b ? null : (a>b?0:1);
+  app.innerHTML = `${headerHTML()}
+    <div class="handoff">
+      <div class="icon">${w===null?'🤝':'🏆'}</div>
+      <div class="big" style="color:${w===null?'var(--ink)':TEAM[w].color}">${w===null?'引き分け！':`${TEAM[w].name}の勝ち！`}</div>
+      <p style="font-size:28px;font-weight:900"><span class="ta">${a}</span> − <span class="tb">${b}</span></p>
+      ${outOfCards?'<p class="sub">カードがなくなったので、点数でくらべたよ</p>':''}
+      <p class="sub">${esc(G.players.filter(p=>p.team===(w??0)).map(p=>p.name).join('・'))}${w===null?'':' おめでとう！'}</p>
+    </div>
+    ${historyHTML()}
+    <button class="btn red" id="again">もう一回</button>
+    <button class="btn outline" id="menu">メンバーを変える</button>
+    <a class="btn outline center" href="kaisetsu.html" style="text-decoration:none">数学の解説を見る →</a>`;
+  document.getElementById('again').onclick=startGame;
+  document.getElementById('menu').onclick=screenSetup;
+}
+
+function historyHTML(){
+  if(!G || !G.history.length) return '';
+  return `<div class="history"><h3>これまでのラウンド</h3><table>
+    <tr><th>R</th><th class="ta">チームA</th><th class="tb">チームB</th><th>結果</th></tr>
+    ${G.history.map(h=>`<tr><td>${h.round}</td><td>${h.a.join('・')}</td><td>${h.b.join('・')}</td>
+      <td>${h.winner===null?'引き分け':`<span class="${TEAM[h.winner].cls}">${h.winner?'B':'A'} +${h.gained}</span>`}</td></tr>`).join('')}
+  </table></div>`;
+}
+
+screenSetup();
+</script>
+</body>
+</html>
